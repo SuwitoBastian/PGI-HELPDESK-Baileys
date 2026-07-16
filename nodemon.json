@@ -1,0 +1,7 @@
+{
+  "ignore": [
+    "session/**",
+    "node_modules/**",
+    "frontend/dist/**"
+  ]
+}

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Dashboard Helpdesk IT</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="/css/dashboard.css">
+</head>
+
+<body>
+
+<div class="header">
+
+    <div class="header-left">
+        <h1>🏢 PGI IT SUPPORT HELPDESK</h1>
+
+        <p class="subtitle">
+            WhatsApp Helpdesk Monitoring System
+        </p>
+    </div>
+
+    <div class="header-right">
+
+        <div class="online">
+            🟢 WhatsApp Bot Online
+        </div>
+
+        <div id="clock"></div>
+
+    </div>
+
+</div>
+
+<div class="cards">
+
+    <div class="card open-card">
+        <h2><%= open %></h2>
+        <p>🔴 OPEN</p>
+    </div>
+
+    <div class="card process-card">
+        <h2><%= process %></h2>
+        <p>🟠 PROCESS</p>
+    </div>
+
+    <div class="card closed-card">
+        <h2><%= closed %></h2>
+        <p>🟢 CLOSED</p>
+    </div>
+
+    <div class="card total-card">
+        <h2><%= total %></h2>
+        <p>🎫 TOTAL</p>
+    </div>
+
+</div>
+
+<div class="box">
+
+<h2>🏢 Top Cabang</h2>
+
+<div class="ranking">
+
+<% topCabang.forEach((cabang,index)=>{ %>
+
+<div class="ranking-card">
+
+    <div class="ranking-left">
+
+        <div class="ranking-medal">
+            <%= index + 1 %>
+        </div>
+
+        <div class="ranking-icon">
+            🏢
+        </div>
+
+        <div class="ranking-info">
+            <h3><%= cabang.cabang %></h3>
+            <p><%= cabang.total %> Tiket</p>
+        </div>
+
+    </div>
+
+    <div class="ranking-crown">
+
+        <% if(index === 0){ %>
+            👑
+        <% } else if(index === 1){ %>
+            ♕
+        <% } else { %>
+            ♔
+        <% } %>
+
+    </div>
+
+</div>
+
+<% }) %>
+
+</div>
+<div class="box">
+
+<h2>🎫 Daftar Tiket</h2>
+
+<table id="tabelTiket">
+<thead>
+<tr>
+<th>No</th>
+<th>🎫 Ticket</th>
+<th>🏢 Cabang</th>
+<th>👤 Pelapor</th>
+<th>📱 No HP</th>
+<th>📝 Kendala</th>
+<th>🕒 Masuk</th>
+<th>✅ Selesai</th>
+<th>⏱ Durasi</th>
+<th>👨‍💻 Assignment</th>
+<th>✅ Penyelesai</th>
+<th>📌 Status</th>
+<th>⚙ Aksi</th>
+</tr>
+</thead>
+
+<tbody>
+
+<% tickets.forEach((ticket,index)=>{ %>
+
+<tr>
+
+<td><%= index + 1 %></td>
+
+<td>
+
+<span class="ticket-id">
+    <%= ticket.id %>
+</span>
+
+</td>
+
+<td>
+    <%= ticket.cabang %>
+</td>
+
+<td>
+    <%= ticket.nama || '-' %>
+</td>
+
+<td>
+    <%= ticket.nomor || '-' %>
+</td>
+
+<td>
+    <%= ticket.kendala %>
+</td>
+
+<td>
+    <%= ticket.waktu
+        ? new Date(ticket.waktu)
+            .toLocaleString('id-ID')
+        : '-' %>
+</td>
+
+<td>
+    <%= ticket.selesai
+        ? new Date(ticket.selesai)
+            .toLocaleString('id-ID')
+        : '-' %>
+</td>
+
+<td>
+
+<%
+let slaClass = '';
+
+if(ticket.durasi){
+
+    const jam =
+        parseInt(ticket.durasi);
+
+    if(jam >= 2){
+        slaClass = 'sla-danger';
+    }else if(jam >= 1){
+        slaClass = 'sla-warning';
+    }else{
+        slaClass = 'sla-good';
+    }
+
+}
+%>
+
+<span class="<%= slaClass %>">
+    <%= ticket.durasi || '-' %>
+</span>
+
+</td>
+
+<td>
+
+<span class="badge-assignment">
+
+<%= ticket.pic || "-" %>
+
+</span>
+
+</td>
+<td>
+
+<span class="badge-close">
+
+<%= ticket.pic_selesai || "-" %>
+
+</span>
+
+</td>
+
+<td>
+
+<span class="<%= 
+    ticket.status === 'OPEN'
+        ? 'status-open'
+        : ticket.status === 'PROCESS'
+        ? 'status-process'
+        : 'status-close'
+%>">
+
+<%= 
+    ticket.status === 'OPEN'
+        ? '🔴 OPEN'
+        : ticket.status === 'PROCESS'
+        ? '🟠 PROCESS'
+        : '🟢 CLOSED'
+%>
+
+</span>
+
+</td>
+
+<td>
+
+<% if(ticket.status !== 'CLOSED'){ %>
+
+<a href="/close/<%= ticket.id %>"
+onclick="return confirm('Selesaikan tiket ini?')">
+
+<button class="btn-close">
+Selesai
+</button>
+
+</a>
+
+<% } else { %>
+
+<a href="/open/<%= ticket.id %>"
+onclick="return confirm('Buka kembali tiket ini?')">
+
+<button class="btn-open">
+Buka Lagi
+</button>
+
+</a>
+
+<% } %>
+
+</td>
+
+</tr>
+
+<% }) %>
+</tbody>
+</table>
+
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+
+<script src="/js/dashboard.js"></script>
+
+</body>
+
+</html>

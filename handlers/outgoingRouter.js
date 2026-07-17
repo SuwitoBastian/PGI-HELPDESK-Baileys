@@ -24,7 +24,7 @@ module.exports = async (msg) => {
     const body =
         msg.body.trim().toLowerCase();
 
-    // Hanya command yang boleh diproses
+    // Command yang diizinkan
     const allowedCommands = [
         "done",
         "gl",
@@ -38,9 +38,16 @@ module.exports = async (msg) => {
         "9"
     ];
 
-    // Abaikan semua pesan yang dikirim bot sendiri
-    // selain command di atas
-    if (!allowedCommands.includes(body)) {
+    // Izinkan semua angka untuk pemilihan nomor ticket
+    const isNumber =
+        /^\d+$/.test(body);
+
+    // Abaikan pesan selain command
+    // dan pilihan nomor ticket
+    if (
+        !allowedCommands.includes(body) &&
+        !isNumber
+    ) {
         return;
     }
 

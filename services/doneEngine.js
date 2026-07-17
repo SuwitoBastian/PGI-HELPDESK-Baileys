@@ -106,6 +106,11 @@ async function pilihTicket(msg, session){
     if(isNaN(nomor))
         return true;
 
+    console.log(
+        "NOMOR TICKET DIPILIH :",
+        nomor
+    );
+
     // =====================
     // Refresh daftar
     // =====================
@@ -115,6 +120,10 @@ async function pilihTicket(msg, session){
         await showTicketList(
             msg,
             session
+        );
+
+        console.log(
+            "🔄 Daftar ticket direfresh"
         );
 
         return true;
@@ -133,18 +142,26 @@ async function pilihTicket(msg, session){
 `❌ Proses DONE dibatalkan.`
         );
 
+        console.log(
+            "❌ Proses DONE dibatalkan"
+        );
+
         return true;
 
     }
 
     // =====================
-    // Baru cek ticket
+    // Cek ticket
     // =====================
 
     const ticket =
         session.daftarTiket[nomor-1];
 
     if(!ticket){
+
+        console.log(
+            `❌ Ticket nomor ${nomor} tidak ditemukan`
+        );
 
         await msg.reply(
 `❌ Nomor ticket tidak ditemukan.
@@ -159,11 +176,21 @@ Silakan pilih nomor yang tersedia.
 
     }
 
-    session.selectedTicket = ticket;
+    console.log(
+        "TICKET TERPILIH :",
+        ticket.id
+    );
+
+    session.selectedTicket =
+        ticket;
 
     sessionService.setState(
         msg.from,
         "WAITING_DONE_CLOSE_PIC"
+    );
+
+    console.log(
+        "STATE → WAITING_DONE_CLOSE_PIC"
     );
 
     await msg.reply(
@@ -183,6 +210,10 @@ HL = Hilmi
 ⚠️ *NOTE*
 *_Mohon cabang tidak perlu membalas._*
 *_Kode PIC hanya digunakan oleh tim IT Support_*`
+    );
+
+    console.log(
+        "✅ Menu PIC penyelesai terkirim"
     );
 
     return true;

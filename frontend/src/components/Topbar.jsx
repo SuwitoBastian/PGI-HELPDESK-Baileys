@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PanelLeftClose, PanelLeftOpen, Clock3, Sun, Moon } from 'lucide-react'
 
 function useClock() {
   const [now, setNow] = useState(() => new Date())
@@ -23,7 +24,12 @@ function useClock() {
   return `${tanggal} • ${jam} WIB`
 }
 
-export default function Topbar() {
+export default function Topbar({
+  collapsed,
+  onToggleSidebar,
+  theme,
+  setTheme
+}) {
 
   const clock = useClock()
 
@@ -33,11 +39,45 @@ export default function Topbar() {
 
       <div className="page">
 
-        <h2>Helpdesk Monitoring</h2>
+        <button
+          className="sidebar-toggle"
+          onClick={onToggleSidebar}
+        >
+          {collapsed
+            ? <PanelLeftOpen size={20} />
+            : <PanelLeftClose size={20} />
+          }
+        </button>
+
+        <div>
+
+          <h2>Helpdesk Monitoring</h2>
+
+          <small>
+            Ringkasan aktivitas Helpdesk
+          </small>
+
+        </div>
 
       </div>
 
       <div className="topbar-right">
+          <button
+            className="theme-toggle"
+            onClick={() =>
+                setTheme(
+                    theme === "light"
+                        ? "dark"
+                        : "light"
+                )
+            }
+        >
+            {
+                theme === "light"
+                    ? <Moon size={18}/>
+                    : <Sun size={18}/>
+            }
+        </button>
 
         <span className="bot-status">
 
@@ -49,7 +89,9 @@ export default function Topbar() {
 
         <span className="topbar-clock">
 
-          🕒 {clock}
+          <Clock3 size={15} />
+
+          {clock}
 
         </span>
 

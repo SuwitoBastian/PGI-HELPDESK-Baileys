@@ -1,0 +1,58 @@
+/* ===========================================================
+   PGI DESIGN SYSTEM
+   Capacity Heatmap
+=========================================================== */
+
+.heatmap-list{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:24px;
+
+}
+
+.heatmap-item{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+}
+
+.heatmap-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.heatmap-header strong{
+
+    font-size:15px;
+
+    color:var(--text);
+
+}
+
+.heatmap-header span{
+
+    font-size:14px;
+
+    font-weight:700;
+
+    color:var(--text-secondary);
+
+}
+
+.heatmap-item .status{
+
+    margin-top:4px;
+
+}

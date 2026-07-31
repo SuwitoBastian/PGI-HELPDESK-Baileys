@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { LayoutDashboard, Headset } from 'lucide-react'
+
 import { useDashboard } from './hooks/useDashboard'
+import { MASTER_PIC } from "./constants/picList";
+import { ToastProvider } from "./context/ToastContext";
 
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
@@ -8,19 +12,105 @@ import StatusTabs from './components/StatusTabs'
 import TicketTable from './components/TicketTable'
 import SummaryView from './components/SummaryView'
 import FilterCard from './components/FilterCard'
+import TeamRotation from "./components/settings/TeamRotation";
 
 const PAGES = {
-  dashboard: {
-    title: 'Dashboard',
-    subtitle: 'Ringkasan lengkap seluruh aktivitas helpdesk.',
+
+  // ===========================
+  // ALL PERFORMANCE
+  // ===========================
+
+  "dashboard-overview": {
+    title: "All Performance",
+    subtitle: "Ringkasan performa seluruh Helpdesk.",
+    icon: LayoutDashboard,
   },
 
-  helpdesk: {
-    title: 'Helpdesk',
-    subtitle:
-      'Kelola tiket, filter status, dan proses penyelesaian dalam satu halaman.',
+  "dashboard-analytics": {
+    title: "All Performance",
+    subtitle: "Analisis performa seluruh Helpdesk.",
+    icon: LayoutDashboard,
   },
-}
+
+  "dashboard-trend": {
+  title: "All Performance",
+  subtitle: "Trend performa seluruh Helpdesk.",
+  icon: LayoutDashboard,
+},
+
+  // ===========================
+  // TEAM A
+  // ===========================
+
+  "team-a-overview": {
+    title: "Team A",
+    subtitle: "Ringkasan performa Team A.",
+    icon: LayoutDashboard,
+  },
+
+  "team-a-analytics": {
+    title: "Team A",
+    subtitle: "Analisis performa Team A.",
+    icon: LayoutDashboard,
+  },
+
+  "team-a-trend": {
+  title: "Team A",
+  subtitle: "Trend performa Team A.",
+  icon: LayoutDashboard,
+},
+
+  // ===========================
+  // TEAM B
+  // ===========================
+
+  "team-b-overview": {
+    title: "Team B",
+    subtitle: "Ringkasan performa Team B.",
+    icon: LayoutDashboard,
+  },
+
+  "team-b-analytics": {
+    title: "Team B",
+    subtitle: "Analisis performa Team B.",
+    icon: LayoutDashboard,
+  },
+
+  "team-b-trend": {
+  title: "Team B",
+  subtitle: "Trend performa Team B.",
+  icon: LayoutDashboard,
+},
+
+  // ===========================
+  // HELPDESK
+  // ===========================
+
+  helpdesk: {
+    title: "Helpdesk",
+    subtitle: "Kelola tiket Helpdesk.",
+    icon: Headset,
+  },
+
+  //Team Rotation
+
+  "team-rotation": {
+  title: "Operational Settings",
+  subtitle: "Konfigurasi Team Rotation.",
+  icon: LayoutDashboard,
+  },
+
+  // ===========================
+  // LEGACY
+  // ===========================
+
+  legacy: {
+    title: "Dashboard Lama",
+    subtitle: "Dashboard versi sebelumnya.",
+    icon: LayoutDashboard,
+  },
+
+};
 
 export default function App() {
 
@@ -28,12 +118,22 @@ export default function App() {
   // PAGE
   // =====================================================
 
- const [view, setView] = useState(() => {
+const [view, setView] = useState(() => {
+  return (
+    localStorage.getItem("helpdesk-page") ||
+    "dashboard-overview"
+  );
+});
 
-  return localStorage.getItem('helpdesk-page') || 'dashboard'
+const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+  return localStorage.getItem("helpdesk-sidebar") === "true";
+});
 
-})
-  const [filter, setFilter] = useState('ALL')
+const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("helpdesk-theme") || "light";
+});
+
+const [filter, setFilter] = useState('ALL')
 
   // =====================================================
   // FILTER FORM
@@ -48,6 +148,21 @@ export default function App() {
 
   const [startFilter, setStartFilter] = useState('')
   const [endFilter, setEndFilter] = useState('')
+
+  const selectedTeam = useMemo(() => {
+
+  if (view.startsWith("team-a")) {
+    return "TEAM_A";
+  }
+
+  if (view.startsWith("team-b")) {
+    return "TEAM_B";
+  }
+
+  return "";
+
+}, [view]);
+
   // =====================================================
 // SAVE LAST PAGE
 // =====================================================
@@ -61,6 +176,33 @@ useEffect(() => {
 
 }, [view])
 
+useEffect(() => {
+
+  localStorage.setItem(
+    'helpdesk-sidebar',
+    sidebarCollapsed
+  )
+
+}, [sidebarCollapsed])
+
+// ============================
+// THEME
+// ============================
+
+useEffect(() => {
+
+  document.documentElement.setAttribute(
+    "data-theme",
+    theme
+  );
+
+  localStorage.setItem(
+    "helpdesk-theme",
+    theme
+  );
+
+}, [theme]);
+
   // =====================================================
   // DASHBOARD
   // =====================================================
@@ -72,9 +214,10 @@ useEffect(() => {
     refresh
   } = useDashboard(
     startFilter,
-    endFilter
-  )
-
+    endFilter,
+    selectedTeam
+  );
+ 
   // =====================================================
   // COUNTS
   // =====================================================
@@ -145,99 +288,107 @@ useEffect(() => {
   // =====================================================
   // RENDER
   // =====================================================
+return (
 
-  return (
+  <ToastProvider>
 
-    <div className="layout">
+    <div className={`layout ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
 
       <Sidebar
         view={view}
         onNavigate={setView}
+        collapsed={sidebarCollapsed}
       />
 
       <div className="main">
 
-        <Topbar />
+        <Topbar
+          collapsed={sidebarCollapsed}
+          onToggleSidebar={() =>
+            setSidebarCollapsed(!sidebarCollapsed)
+          }
+          theme={theme}
+          setTheme={setTheme}
+        />
 
         <div className="content">
 
-        <div className="page-head">
+          <div className="page-head">
 
-  <h1>{page.title}</h1>
+              <div className="page-head-icon">
+                  <page.icon size={20} strokeWidth={2.1} />
+              </div>
 
-  <p>{page.subtitle}</p>
+              <div className="page-head-content">
+                  <h1>{page.title}</h1>
+                  <p>{page.subtitle}</p>
+              </div>
 
-</div>
+          </div>
 
-{view === 'helpdesk' && (
+          {view === 'helpdesk' && (
 
-  <FilterCard
+            <FilterCard
+              startInput={startInput}
+              endInput={endInput}
+              setStartInput={setStartInput}
+              setEndInput={setEndInput}
+              onApply={applyFilter}
+              onReset={resetFilter}
+            />
 
-    startInput={startInput}
-    endInput={endInput}
-
-    setStartInput={setStartInput}
-    setEndInput={setEndInput}
-
-    onApply={applyFilter}
-    onReset={resetFilter}
-
-  />
-
-)}
+          )}
 
           {loading && !data ? (
 
             <div className="state">
-
               Memuat data...
-
             </div>
 
           ) : error && !data ? (
 
             <div className="state error">
-
               ⚠️ {error}
-
             </div>
 
-          ) : view === 'dashboard' ? (
+          ) : view === "team-rotation" ? (
 
-            <SummaryView
-              data={data}
-            />
+              <TeamRotation />
+
+          ) : view !== "helpdesk" && view !== "legacy" ? (
+
+              <SummaryView
+                  data={data}
+                  team={selectedTeam || "ALL"}
+                  page={
+                      view.endsWith("trend")
+                          ? "trend"
+                          : view.endsWith("analytics")
+                              ? "analytics"
+                              : "overview"
+                  }
+              />
 
           ) : (
 
-            <>
+              <>
 
               <StatCards
                 data={data}
               />
 
               <StatusTabs
-
                 active={filter}
-
                 onChange={setFilter}
-
                 counts={counts}
-
               />
 
               <TicketTable
-
                 tickets={data.tickets}
-
                 statusFilter={filter}
-
-                picList={data.picList || []}
-
+                picList={MASTER_PIC}
                 onChanged={refresh}
-
                 onRefresh={refresh}
-
               />
 
             </>
@@ -250,6 +401,8 @@ useEffect(() => {
 
     </div>
 
-  )
+  </ToastProvider>
+
+);
 
 }

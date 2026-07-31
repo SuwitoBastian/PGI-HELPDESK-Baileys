@@ -1,31 +1,44 @@
-const ticketRepository =
-    require("../repositories/ticketRepository");
+function index(req, res) {
 
-function index(req,res){
+    console.log("=== DASHBOARD CONTROLLER AKTIF ===");
+
+    const engineerTeam = req.query.team || null;
+
+    console.log({
+    all: ticketRepository.countOpen(),
+    teamA: ticketRepository.countOpen("TEAM_A"),
+    teamB: ticketRepository.countOpen("TEAM_B")
+});
 
     const open =
-        ticketRepository.countOpen();
+        ticketRepository.countOpen(engineerTeam);
 
     const process =
-        ticketRepository.countProcess();
+        ticketRepository.countProcess(engineerTeam);
 
     const closed =
-        ticketRepository.countClosed();
+        ticketRepository.countClosed(engineerTeam);
 
     const hariIni =
-        ticketRepository.countToday();
+        ticketRepository.countToday(engineerTeam);
 
     const tickets =
-        ticketRepository.findAll();
+        ticketRepository.findAll(); // sementara jangan difilter dulu
 
     const total =
         tickets.length;
 
     const topCabang =
-        ticketRepository.topCabang(10);
+        ticketRepository.topCabang(
+            10,
+            engineerTeam
+        );
 
     const topPIC =
-        ticketRepository.topPIC(6);
+        ticketRepository.topPIC(
+            6,
+            engineerTeam
+        );
 
     res.render(
         "dashboard",
@@ -37,7 +50,8 @@ function index(req,res){
             total,
             tickets,
             topCabang,
-            topPIC
+            topPIC,
+            engineerTeam
         }
     );
 

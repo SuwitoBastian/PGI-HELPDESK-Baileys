@@ -22,6 +22,8 @@ async function exportTickets(data) {
 
         topPICSelesai,
 
+        engineerLeaderboards,
+
         start,
 
         end
@@ -89,15 +91,18 @@ summarySheet.getColumn("G").width = 10;
 summarySheet.getColumn("H").width = 4;
 
 // Top PIC
-summarySheet.getColumn("I").width = 6;
-summarySheet.getColumn("J").width = 22;
-summarySheet.getColumn("K").width = 10;
-
+// Engineer Leaderboards
+summarySheet.getColumn("I").width = 6;    // Rank
+summarySheet.getColumn("J").width = 22;   // Engineer
+summarySheet.getColumn("K").width = 10;   // Team
+summarySheet.getColumn("L").width = 12;   // Assigned
+summarySheet.getColumn("M").width = 12;   // Closed
+summarySheet.getColumn("N").width = 10;   // Score
 // ==========================
 // HEADER
 // ==========================
 
-summarySheet.mergeCells("A1:K2");
+summarySheet.mergeCells("A1:N2");
 
 const title = summarySheet.getCell("A1");
 
@@ -145,8 +150,8 @@ title.alignment = {
 
 };
 
-summarySheet.getRow(1).height = 34;
-summarySheet.getRow(2).height = 34;
+summarySheet.getRow(1).height = 38;
+summarySheet.getRow(2).height = 38;
 
 // ==========================
 // INFORMASI REPORT
@@ -488,7 +493,7 @@ topCabang.forEach((item, index) => {
     const row = 10 + index;
 
     summarySheet.getCell(`E${row}`).value = index + 1;
-    summarySheet.getCell(`F${row}`).value = item.cabang;
+    summarySheet.getCell(`F${row}`).value = item.name || "-";
     summarySheet.getCell(`G${row}`).value = item.total;
 
     ["E","F","G"].forEach(col => {
@@ -542,11 +547,11 @@ topCabang.forEach((item, index) => {
 // ==========================
 
 // Judul Card
-summarySheet.mergeCells("I8:K8");
+summarySheet.mergeCells("I8:N8");
 
 const picTitle = summarySheet.getCell("I8");
 
-picTitle.value = "TOP 6 PIC PENYELESAI";
+picTitle.value = "ENGINEER LEADERBOARDS";
 
 picTitle.font = {
     bold: true,
@@ -576,9 +581,12 @@ summarySheet.getRow(8).height = 22;
 // ==========================
 
 [
-    ["I9", "NO"],
-    ["J9", "PIC"],
-    ["K9", "TOTAL"]
+    ["I9", "RANK"],
+    ["J9", "ENGINEER"],
+    ["K9", "TEAM"],
+    ["L9", "ASSIGNED"],
+    ["M9", "CLOSED"],
+    ["N9", "SCORE"]
 ].forEach(([address, value]) => {
 
     const cell = summarySheet.getCell(address);
@@ -620,46 +628,70 @@ summarySheet.getRow(9).height = 20;
 // Isi Data
 // ==========================
 
-topPICSelesai.forEach((item, index) => {
+engineerLeaderboards
+    .slice(0, 6)
+    .forEach((engineer, index) => {
 
-    const row = 10 + index;
+        const row = 10 + index;
 
-    summarySheet.getCell(`I${row}`).value = index + 1;
-    summarySheet.getCell(`J${row}`).value = item.pic_selesai || "-";
-    summarySheet.getCell(`K${row}`).value = item.total;
+        summarySheet.getCell(`I${row}`).value = index + 1;
+        summarySheet.getCell(`J${row}`).value = engineer.name;
+        summarySheet.getCell(`K${row}`).value =
+                engineer.team === "TEAM_A"
+                ? "Team A"
+                : engineer.team === "TEAM_B"
+                ? "Team B"
+                : engineer.team;
+        summarySheet.getCell(`L${row}`).value = engineer.assigned;
+        summarySheet.getCell(`M${row}`).value = engineer.completed;
+        summarySheet.getCell(`N${row}`).value = engineer.score;
 
-    ["I","J","K"].forEach(col => {
+        ["I","J","K","L","M","N"].forEach(col => {
 
-        const cell = summarySheet.getCell(`${col}${row}`);
+            const cell = summarySheet.getCell(`${col}${row}`);
 
-        cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" }
+            cell.border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" }
+            };
+
+        });
+
+        summarySheet.getCell(`I${row}`).alignment = {
+            horizontal: "center",
+            vertical: "middle"
         };
 
+        summarySheet.getCell(`J${row}`).alignment = {
+            horizontal: "left",
+            vertical: "middle"
+        };
+
+        summarySheet.getCell(`K${row}`).alignment = {
+            horizontal: "center",
+            vertical: "middle"
+        };
+
+        summarySheet.getCell(`L${row}`).alignment = {
+            horizontal: "center",
+            vertical: "middle"
+        };
+
+        summarySheet.getCell(`M${row}`).alignment = {
+            horizontal: "center",
+            vertical: "middle"
+        };
+
+        summarySheet.getCell(`N${row}`).alignment = {
+            horizontal: "center",
+            vertical: "middle"
+        };
+
+        summarySheet.getRow(row).height = 20;
+
     });
-
-    summarySheet.getCell(`I${row}`).alignment = {
-        horizontal: "center",
-        vertical: "middle"
-    };
-
-    summarySheet.getCell(`J${row}`).alignment = {
-        horizontal: "left",
-        vertical: "middle"
-    };
-
-    summarySheet.getCell(`K${row}`).alignment = {
-        horizontal: "center",
-        vertical: "middle"
-    };
-
-    summarySheet.getRow(row).height = 20;
-
-});
-
 // ==========================
 // FINAL POLISH
 // ==========================
@@ -929,9 +961,10 @@ summarySheet.getRow(6).height = 20;
     // ==========================
 
     let currentRow = 4;
+
 tickets.forEach((ticket, index) => {
 
-    const row = detailSheet.insertRow(currentRow, [
+    const row = detailSheet.addRow([
 
         index + 1,
         ticket.id || "-",
@@ -947,31 +980,26 @@ tickets.forEach((ticket, index) => {
 
     row.height = 24;
 
-    // ==========================
-    // Warna Baris Berdasarkan Status
-    // ==========================
-
     let bgColor = null;
 
     switch ((ticket.status || "").toUpperCase()) {
 
         case "OPEN":
-            bgColor = "FF0000";   // Merah
+            bgColor = "FF0000";
             break;
 
         case "PROCESS":
-            bgColor = "FFFF00";   // Kuning
+            bgColor = "FFFF00";
             break;
 
         case "CLOSED":
-            bgColor = "00B050";   // Hijau
+            bgColor = "00B050";
             break;
 
     }
 
     row.eachCell((cell, colNumber) => {
 
-        // Border
         cell.border = {
 
             top: { style: "thin" },
@@ -981,7 +1009,6 @@ tickets.forEach((ticket, index) => {
 
         };
 
-        // Alignment
         cell.alignment = {
 
             vertical: "middle",
@@ -990,7 +1017,6 @@ tickets.forEach((ticket, index) => {
 
         };
 
-        // Background berdasarkan Status
         if (bgColor) {
 
             cell.fill = {
@@ -1008,8 +1034,6 @@ tickets.forEach((ticket, index) => {
         }
 
     });
-
-    currentRow++;
 
 });
 

@@ -1,74 +1,85 @@
 const repository =
-    require('../repositories/ticketRepository');
+    require("../repositories/ticketRepository");
 
-function assignByNomor(nomor, kodePIC){
+const daftarPIC =
+    require("../config/pic");
+
+const engineers =
+    require("../config/engineers");
+
+function assignByNomor(nomor, kodePIC) {
 
     const ticket =
         repository.findWaitingByNomor(nomor);
 
-    if(!ticket)
+    if (!ticket)
         return null;
 
     const pic =
         daftarPIC[kodePIC];
 
-    if(!pic)
+    if (!pic)
+        return null;
+
+    const engineer =
+        engineers[kodePIC];
+
+    if (!engineer)
         return null;
 
     repository.assignPIC(
+
         ticket.id,
-        pic
+
+        pic,
+
+        engineer.team
+
     );
 
     return {
 
         ticket,
 
-        pic
+        pic,
+
+        engineer
 
     };
 
 }
 
-const daftarPIC = {
-
-    GL: "Galih",
-    GALIH: "Galih",
-
-    SW: "Suwito",
-    SUWITO: "Suwito",
-
-    RP: "Rifaldo",
-    RIFALDO: "Rifaldo",
-
-    KA: "Andi",
-    ANDI: "Andi",
-
-    IW: "Iwan",
-    IWAN: "Iwan",
-
-    HL: "Hilmi",
-    HILMI: "Hilmi"
-
-};
-
-function assign(ticketId, kodePIC){
+function assign(ticketId, kodePIC) {
 
     const pic =
         daftarPIC[kodePIC];
 
-    if(!pic)
+    if (!pic)
+        return null;
+
+    const engineer =
+        engineers[kodePIC];
+
+    if (!engineer)
         return null;
 
     repository.assignPIC(
 
         ticketId,
 
-        pic
+        pic,
+
+        engineer.team
 
     );
 
-    return pic;
+    return {
+
+        pic,
+
+        engineer
+
+    };
 
 }
 

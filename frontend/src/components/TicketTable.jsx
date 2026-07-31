@@ -1,31 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import { assignPIC, closeTicket, openTicket } from '../api'
+import { useEffect, useMemo, useState } from "react";
+import useToast from "../hooks/useToast";
+import { assignPIC, closeTicket, openTicket } from "../api";
 
-const PAGE_SIZES = [10, 25, 50, 100]
-
-function fmt(dt) {
-  return dt ? new Date(dt).toLocaleString('id-ID') : '-'
-}
-
-function slaClass(durasi) {
-  if (!durasi) return ''
-  const n = parseInt(durasi, 10)
-  if (n >= 2) return 'sla-danger'
-  if (n >= 1) return 'sla-warning'
-  return 'sla-good'
-}
-
-function statusBadge(status) {
-  if (status === 'OPEN') return { cls: 'badge-open', label: 'Open' }
-  if (status === 'PROCESS') return { cls: 'badge-process', label: 'Dalam Proses' }
-  return { cls: 'badge-closed', label: 'Selesai' }
-}
+import TicketToolbar from "./helpdesk/TicketToolbar";
+import TicketList from "./helpdesk/TicketList";
+import TicketInspector from "./helpdesk/TicketInspector";
+import TicketPagination from "./helpdesk/TicketPagination";
 
 export default function TicketTable({ tickets = [], statusFilter = 'ALL', picList = [], onChanged, onRefresh }) {
+  const toast = useToast();
   const [search, setSearch] = useState('')
   const [pageSize, setPageSize] = useState(10)
   const [page, setPage] = useState(() => Number(localStorage.getItem('page')) || 0)
   const [busyId, setBusyId] = useState(null)
+  const [selectedTicket, setSelectedTicket] = useState(null)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -51,18 +39,71 @@ export default function TicketTable({ tickets = [], statusFilter = 'ALL', picLis
   }, [statusFilter])
 
   const rows = filtered.slice(current * pageSize, current * pageSize + pageSize)
+useEffect(() => {
 
-  async function run(id, fn) {
-    try {
-      setBusyId(id)
-      await fn()
-      await onChanged?.()
-    } catch (e) {
-      window.alert(e.message)
-    } finally {
-      setBusyId(null)
+    if (!rows.length) {
+        setSelectedTicket(null);
+        return;
     }
-  }
+
+    if (!selectedTicket) {
+        setSelectedTicket(rows[0]);
+        return;
+    }
+
+    const latest = rows.find(
+        (r) => r.id === selectedTicket.id
+    );
+
+    if (latest) {
+
+        setSelectedTicket(latest);
+
+    } else {
+
+        setSelectedTicket(rows[0]);
+
+    }
+
+}, [rows, selectedTicket]);
+
+async function run(id, fn, successMessage = null) {
+
+    try {
+
+        setBusyId(id);
+
+        const result = await fn();
+
+        await onChanged?.();
+
+        if (successMessage) {
+
+            toast.success(
+                "Berhasil",
+                successMessage
+            );
+
+        }
+
+        return result;
+
+    } catch (e) {
+
+        toast.error(
+            "Gagal",
+            e.message || "Terjadi kesalahan."
+        );
+
+        throw e;
+
+    } finally {
+
+        setBusyId(null);
+
+    }
+
+}
 
   function handleAssign(ticket, pic) {
     if (!pic) return
@@ -70,168 +111,111 @@ export default function TicketTable({ tickets = [], statusFilter = 'ALL', picLis
   }
 
   function handleClose(ticket) {
-    if (!window.confirm('Tandai tiket ini SELESAI?')) return
-    run(ticket.id, () => closeTicket(ticket.id))
+
+      return run(
+          ticket.id,
+          () => closeTicket(ticket.id),
+          "Ticket berhasil diselesaikan."
+      );
+
   }
 
   function handleReopen(ticket) {
-    if (!window.confirm('Buka kembali tiket ini?')) return
-    run(ticket.id, () => openTicket(ticket.id))
+    run(
+      ticket.id,
+      () => openTicket(ticket.id),
+      "Ticket berhasil dibuka kembali."
+    );
   }
 
   return (
-    <section className="panel">
-      <div className="panel-head">
-        <h2>🎫 Daftar Tiket</h2>
-        <p>Kelola tiket, assign PIC, dan ubah status penyelesaian.</p>
-      </div>
+<section className="panel">
 
-      <div className="toolbar">
-        <input
-          className="search"
-          type="search"
-          placeholder="🔍 Cari cabang, pelapor, kendala, PIC…"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(0)
-          }}
-        />
-        <button className="btn-refresh" title="Muat ulang" onClick={() => onRefresh?.()}>
-          ⟳
-        </button>
-      </div>
+    <TicketToolbar
 
-      <div className="table-wrap">
-        <table className="tbl">
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>Ticket</th>
-              <th>Cabang</th>
-              <th>Pelapor</th>
-              <th>Kendala</th>
-              <th>Masuk</th>
-              <th>Durasi</th>
-              <th>Status</th>
-              <th>PIC</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="empty">
-                  Tidak ada tiket.
-                </td>
-              </tr>
-            ) : (
-              rows.map((t, i) => {
-                const s = statusBadge(t.status)
-                const busy = busyId === t.id
-                return (
-                  <tr key={t.id}>
-                    <td>{current * pageSize + i + 1}</td>
-                    <td>
-                      <span className="ticket-id">{t.id}</span>
-                    </td>
-                    <td>
-                      <div className="cell-strong">{t.cabang}</div>
-                      <div className="muted">{t.nomor || '-'}</div>
-                    </td>
-                    <td>{t.nama || '-'}</td>
-                    <td>{t.kendala}</td>
-                    <td className="muted">{fmt(t.waktu)}</td>
-                    <td>
-                      <span className={slaClass(t.durasi)}>{t.durasi || '-'}</span>
-                    </td>
-                    <td>
-                      <span className={`badge ${s.cls}`}>{s.label}</span>
-                    </td>
-                    <td>
-                      {t.pic ? (
-                        <span className="pic-tag">{t.pic}</span>
-                      ) : (
-                        <span className="pic-empty">Belum di-assign</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="action-cell">
-                        {t.status !== 'CLOSED' && (
-                          <select
-                            className="assign-select"
-                            value=""
-                            disabled={busy || picList.length === 0}
-                            onChange={(e) => handleAssign(t, e.target.value)}
-                          >
-                            <option value="">
-                              {t.pic ? 'Ganti PIC…' : 'Assign PIC…'}
-                            </option>
-                            {picList.map((p) => (
-                              <option key={p} value={p}>
-                                {p}
-                              </option>
-                            ))}
-                          </select>
-                        )}
+        search={search}
 
-                        {t.status !== 'CLOSED' ? (
-                          <button
-                            className="btn btn-green"
-                            disabled={busy}
-                            onClick={() => handleClose(t)}
-                          >
-                            {busy ? '…' : 'Selesai'}
-                          </button>
-                        ) : (
-                          <button
-                            className="btn btn-outline"
-                            disabled={busy}
-                            onClick={() => handleReopen(t)}
-                          >
-                            {busy ? '…' : 'Buka Lagi'}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+        setSearch={(value) => {
 
-      <div className="pagination">
-        <span className="page-info">
-          Menampilkan {filtered.length === 0 ? 0 : current * pageSize + 1}–
-          {Math.min((current + 1) * pageSize, filtered.length)} dari {filtered.length} tiket
-        </span>
-        <div className="page-buttons">
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value))
-              setPage(0)
-            }}
-          >
-            {PAGE_SIZES.map((n) => (
-              <option key={n} value={n}>
-                {n} / halaman
-              </option>
-            ))}
-          </select>
-          <button disabled={current === 0} onClick={() => setPage(current - 1)}>
-            ←
-          </button>
-          <span className="page-num">
-            {current + 1} / {pageCount}
-          </span>
-          <button disabled={current >= pageCount - 1} onClick={() => setPage(current + 1)}>
-            →
-          </button>
+            setSearch(value);
+            setPage(0);
+
+        }}
+
+        total={filtered.length}
+
+        onRefresh={onRefresh}
+
+    />
+
+    <div className="ticket-workspace">
+
+        <div className="ticket-workspace-left">
+
+            <TicketList
+
+                rows={rows}
+
+                selectedTicket={selectedTicket}
+
+                onSelect={setSelectedTicket}
+
+                busyId={busyId}
+
+                picList={picList}
+
+                onAssign={handleAssign}
+
+                onClose={handleClose}
+
+                onReopen={handleReopen}
+
+            />
+
         </div>
-      </div>
-    </section>
+
+        <div className="ticket-workspace-right">
+
+            <TicketInspector
+
+                ticket={selectedTicket}
+
+                picList={picList}
+
+                busy={busyId === selectedTicket?.id}
+
+                onAssign={handleAssign}
+
+                onClose={handleClose}
+
+                onReopen={handleReopen}
+
+            />
+
+        </div>
+
+    </div>
+
+    <TicketPagination
+
+        page={current + 1}
+
+        setPage={(p) => setPage(p - 1)}
+
+        pageSize={pageSize}
+
+        setPageSize={(size) => {
+
+            setPageSize(size);
+
+            setPage(0);
+
+        }}
+
+        totalRows={filtered.length}
+
+    />
+
+</section>
   )
 }

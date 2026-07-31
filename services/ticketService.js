@@ -7,9 +7,12 @@ const generateTicketId =
 const { nowWIB } =
     require("../utils/dateTime");
 
+const operationalRotationService =
+    require("./operationalRotationService");
+
 function create(data){
 
-    const ticket={
+    const ticket = {
 
         id:
             generateTicketId(),
@@ -28,32 +31,35 @@ function create(data){
 
         kendala:
             data.kendala,
-            
+
         waktu:
             nowWIB(),
 
         assignmentGroup:
-            data.assignmentGroup
+            data.assignmentGroup,
+
+        engineerTeam:
+            operationalRotationService.getPrimaryTeam()
 
     };
 
     repository.create(ticket);
 
-console.log(
+    console.log(
 
-    "✅ Ticket",
+        "✅ Ticket",
 
-    ticket.id,
+        ticket.id,
 
-    "dibuat"
+        "dibuat"
 
-);
+    );
 
-return ticket;
+    return ticket;
 
 }
 
-module.exports={
+module.exports = {
 
     create
 

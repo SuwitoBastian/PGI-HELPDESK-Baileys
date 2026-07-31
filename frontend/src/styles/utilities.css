@@ -1,0 +1,155 @@
+/* ===========================================================
+   PGI DESIGN SYSTEM
+   Utilities
+=========================================================== */
+
+
+/* ===============================
+   Flex
+================================ */
+
+.flex{
+    display:flex;
+}
+
+.flex-column{
+    display:flex;
+    flex-direction:column;
+}
+
+.flex-center{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.flex-between{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.flex-start{
+    display:flex;
+    align-items:flex-start;
+}
+
+
+/* ===============================
+   Width
+================================ */
+
+.w-full{
+    width:100%;
+}
+
+
+/* ===============================
+   Radius
+================================ */
+
+.radius-sm{
+    border-radius:var(--radius-sm);
+}
+
+.radius-md{
+    border-radius:var(--radius-md);
+}
+
+.radius-lg{
+    border-radius:var(--radius-lg);
+}
+
+
+/* ===============================
+   Shadow
+================================ */
+
+.shadow-sm{
+    box-shadow:var(--shadow-sm);
+}
+
+.shadow-md{
+    box-shadow:var(--shadow-md);
+}
+
+.shadow-lg{
+    box-shadow:var(--shadow-lg);
+}
+
+
+/* ===============================
+   Background
+================================ */
+
+.bg-card{
+    background:var(--card);
+}
+
+.bg-success{
+    background:var(--success);
+}
+
+.bg-warning{
+    background:var(--warning);
+}
+
+.bg-danger{
+    background:var(--danger);
+}
+
+
+/* ===============================
+   Text
+================================ */
+
+.text{
+    color:var(--text);
+}
+
+.text-muted{
+    color:var(--text-secondary);
+}
+
+.text-primary{
+    color:var(--primary);
+}
+
+.text-success{
+    color:var(--success);
+}
+
+.text-warning{
+    color:var(--warning);
+}
+
+.text-danger{
+    color:var(--danger);
+}
+
+
+/* ===============================
+   Border
+================================ */
+
+.border{
+    border:1px solid var(--border);
+}
+
+
+/* ===============================
+   Transition
+================================ */
+
+.transition{
+    transition:.2s ease;
+}
+
+
+/* ===============================
+   Cursor
+================================ */
+
+.cursor-pointer{
+    cursor:pointer;
+}

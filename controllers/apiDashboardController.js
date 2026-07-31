@@ -4,60 +4,139 @@ const ticketRepository =
 const doneService =
     require("../services/doneService");
 
+const slaService =
+    require("../services/slaService");
+
+const feedbackService =
+    require("../services/feedbackService");
+
 const VALID_STATUS = ["OPEN", "PROCESS", "CLOSED"];
 
 /**
- * Data dashboard dalam bentuk JSON.
- * Field-nya sama persis dengan yang dirender dashboardController (EJS),
- * plus picList untuk dropdown assign PIC.
+ * Data dashboard JSON untuk React.
  */
+
 function dashboard(req, res) {
 
-    const { start, end } = req.query;
+    const {
+        start,
+        end,
+        team
+    } = req.query;
+
+    const engineerTeam = team || null;
 
     const useFilter =
         start && end;
 
     const open = useFilter
-        ? ticketRepository.countOpenByDate(start, end)
-        : ticketRepository.countOpen();
+        ? ticketRepository.countOpenByDate(
+            start,
+            end,
+            engineerTeam
+        )
+        : ticketRepository.countOpen(
+            engineerTeam
+        );
 
     const process = useFilter
-        ? ticketRepository.countProcessByDate(start, end)
-        : ticketRepository.countProcess();
+        ? ticketRepository.countProcessByDate(
+            start,
+            end,
+            engineerTeam
+        )
+        : ticketRepository.countProcess(
+            engineerTeam
+        );
 
     const closed = useFilter
-        ? ticketRepository.countClosedByDate(start, end)
-        : ticketRepository.countClosed();
+        ? ticketRepository.countClosedByDate(
+            start,
+            end,
+            engineerTeam
+        )
+        : ticketRepository.countClosed(
+            engineerTeam
+        );
 
     const hariIni =
-        ticketRepository.countToday();
+        ticketRepository.countToday(
+            engineerTeam
+        );
+
+    const total = useFilter
+        ? ticketRepository.countTotalByDate(
+            start,
+            end,
+            engineerTeam
+        )
+        : ticketRepository.countTotal(
+            engineerTeam
+        );
 
     const tickets = useFilter
-        ? ticketRepository.findAllByDate(start, end)
-        : ticketRepository.findAll();
-
-    const total =
-        tickets.length;
+        ? ticketRepository.findAllByDate(
+            start,
+            end,
+            engineerTeam
+        )
+        : ticketRepository.findAll(
+            engineerTeam
+        );
 
     const topCabang = useFilter
         ? ticketRepository.topCabangByDate(
-            10,
             start,
-            end
+            end,
+            10,
+            engineerTeam
         )
-        : ticketRepository.topCabang(10);
+        : ticketRepository.topCabang(
+            10,
+            engineerTeam
+        );
 
     const topPIC = useFilter
         ? ticketRepository.topPICByDate(
-            6,
             start,
-            end
+            end,
+            6,
+            engineerTeam
         )
-        : ticketRepository.topPIC(6);
+        : ticketRepository.topPIC(
+            6,
+            engineerTeam
+        );
 
     const picList =
         ticketRepository.listPICs();
+
+    const sla =
+        slaService.getSLAMetrics(
+            start,
+            end,
+            engineerTeam
+        );
+
+    // =====================================================
+    // Customer Feedback
+    // =====================================================
+
+    const feedback =
+        feedbackService.getLatestFeedback(5);
+
+    const feedbackStatistics =
+        feedbackService.getStatistics({
+
+            startDate: start || null,
+
+            endDate: end || null,
+
+            team: engineerTeam || "ALL",
+
+            keyword: ""
+
+        });
 
     res.json({
 
@@ -77,7 +156,13 @@ function dashboard(req, res) {
 
         topPIC,
 
-        picList
+        picList,
+
+        sla,
+
+        feedback,
+
+        feedbackStatistics
 
     });
 
@@ -85,7 +170,6 @@ function dashboard(req, res) {
 
 /**
  * Tutup tiket dari dashboard.
- * Pakai ulang doneService.close (menghitung durasi otomatis).
  */
 function closeTicket(req, res) {
 
@@ -110,66 +194,94 @@ function closeTicket(req, res) {
 }
 
 /**
- * Buka kembali tiket dari dashboard.
+ * Buka kembali tiket.
  */
 function reopenTicket(req, res) {
 
-    const ticket = ticketRepository.findById(req.params.id);
+    const ticket =
+        ticketRepository.findById(req.params.id);
 
     if (!ticket) {
-        return res.status(404).json({ error: "Tiket tidak ditemukan" });
+        return res.status(404).json({
+            error: "Tiket tidak ditemukan"
+        });
     }
 
-    ticketRepository.reopen(req.params.id);
+    ticketRepository.reopen(
+        req.params.id
+    );
 
-    res.json({ ok: true });
+    res.json({
+        ok: true
+    });
 
 }
 
 /**
- * Assign PIC ke tiket -> status menjadi PROCESS.
+ * Assign PIC.
  */
 function assignPIC(req, res) {
 
-    const ticket = ticketRepository.findById(req.params.id);
+    const ticket =
+        ticketRepository.findById(req.params.id);
 
     if (!ticket) {
-        return res.status(404).json({ error: "Tiket tidak ditemukan" });
+        return res.status(404).json({
+            error: "Tiket tidak ditemukan"
+        });
     }
 
-    const pic = (req.body && req.body.pic ? String(req.body.pic) : "").trim();
+    const pic = (
+        req.body &&
+        req.body.pic
+            ? String(req.body.pic)
+            : ""
+    ).trim();
 
     if (!pic) {
-        return res.status(400).json({ error: "PIC wajib diisi" });
+        return res.status(400).json({
+            error: "PIC wajib diisi"
+        });
     }
 
-    ticketRepository.assignPIC(req.params.id, pic);
+    ticketRepository.assignPIC(
+        req.params.id,
+        pic
+    );
 
-    res.json({ ok: true });
+    res.json({
+        ok: true
+    });
 
 }
 
 /**
  * Ubah status tiket.
- * CLOSED  -> doneService.close (set selesai + durasi)
- * OPEN    -> reopen
- * PROCESS -> updateState
  */
 function changeStatus(req, res) {
 
-    const ticket = ticketRepository.findById(req.params.id);
+    const ticket =
+        ticketRepository.findById(req.params.id);
 
     if (!ticket) {
-        return res.status(404).json({ error: "Tiket tidak ditemukan" });
+        return res.status(404).json({
+            error: "Tiket tidak ditemukan"
+        });
     }
 
-    const status = (req.body && req.body.status ? String(req.body.status) : "")
+    const status = (
+        req.body &&
+        req.body.status
+            ? String(req.body.status)
+            : ""
+    )
         .trim()
         .toUpperCase();
 
     if (!VALID_STATUS.includes(status)) {
         return res.status(400).json({
-            error: `Status tidak valid. Pilih salah satu: ${VALID_STATUS.join(", ")}`
+            error:
+                `Status tidak valid. Pilih salah satu: ${VALID_STATUS.join(", ")}`
         });
     }
 
@@ -195,7 +307,9 @@ function changeStatus(req, res) {
 
     }
 
-    res.json({ ok: true });
+    res.json({
+        ok: true
+    });
 
 }
 

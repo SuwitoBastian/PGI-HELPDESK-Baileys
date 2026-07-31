@@ -4,6 +4,9 @@ const repository =
 const { nowWIB } =
     require("../utils/dateTime");
 
+const engineers =
+    require("../config/engineers");
+
 function getTicketsByPIC(pic){
 
     return repository.findProcessByPIC(pic);
@@ -26,7 +29,7 @@ function getProcessTickets(){
 
 }
 
-function close(ticket, picSelesai) {
+function close(ticket, picSelesai, kodePIC) {
 
     const selesai =
         new Date();
@@ -42,18 +45,27 @@ function close(ticket, picSelesai) {
             )
         );
 
-    const durasi =
-        `${durasiMenit} Menit`;
+    const durasi = durasiMenit;
+
+    const engineer =
+        engineers[kodePIC];
+
+    const picSelesaiTeam =
+        engineer
+            ? engineer.team
+            : null;
 
     repository.closeTicket(
 
         ticket.id,
 
-        nowWIB(),      // selesai
+        nowWIB(),          // selesai
 
-        durasi,        // durasi
+        durasi,            // durasi
 
-        picSelesai     // pic_selesai
+        picSelesai,        // pic_selesai
+
+        picSelesaiTeam     // pic_selesai_team
 
     );
 

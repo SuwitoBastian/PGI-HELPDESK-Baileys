@@ -92,7 +92,7 @@ ${pic}
 
 🙏 *Silakan mengisi penilaian layanan berikut:*
 
-https://forms.gle/fct6HcB4FLJJfRKx9
+https://forms.gle/of1HSXAQa6xrsqGJA
 
 ⚠️ *_NOTE_*
 *_Penilaian ini wajib diisi sebagai evaluasi dan peningkatan layanan IT Support._*

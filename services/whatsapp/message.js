@@ -27,6 +27,13 @@ class Message {
 
         this.chatId = raw.key.remoteJid;
 
+        //console.log("\n========== CHAT DEBUG ==========");
+//console.log("Push Name  :", this.pushName);
+//console.log("Chat ID    :", this.chatId);
+//console.log("Participant:", this.participant);
+//console.log("Body       :", this.body);
+//console.log("================================\n");
+
         this.participant =
             raw.key.participant || raw.key.remoteJid;
 

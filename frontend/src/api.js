@@ -1,53 +1,321 @@
 // Relatif '/api' -> di dev diproxy Vite ke :3000, di produksi same-origin.
-const BASE = '/api'
+const BASE = "/api";
+
+/* ==========================================================
+   Helper
+========================================================== */
 
 async function post(path, body) {
-  const res = await fetch(`${BASE}${path}`, {
-    method: 'POST',
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  if (!res.ok) {
-    let msg = `Gagal (${res.status})`
-    try {
-      const j = await res.json()
-      if (j.error) msg = j.error
-    } catch {
-      /* ignore */
-    }
-    throw new Error(msg)
-  }
-  return res.json()
-}
 
-export async function getDashboard(start = "", end = "") {
+    const res = await fetch(`${BASE}${path}`, {
 
-  let url = `${BASE}/dashboard`;
+        method: "POST",
 
-  if (start && end) {
+        headers: body
+            ? {
+                  "Content-Type": "application/json"
+              }
+            : undefined,
 
-    const params = new URLSearchParams({
-      start,
-      end
+        body: body
+            ? JSON.stringify(body)
+            : undefined
+
     });
 
-    url += `?${params.toString()}`;
+    if (!res.ok) {
 
-  }
+        let msg = `Gagal (${res.status})`;
 
-  const res = await fetch(url);
+        try {
 
-  if (!res.ok) {
-    throw new Error(`Gagal memuat data (${res.status})`);
-  }
+            const json = await res.json();
 
-  return res.json();
+            if (json.error) {
+                msg = json.error;
+            }
+
+        } catch {
+
+            // Ignore
+
+        }
+
+        throw new Error(msg);
+
+    }
+
+    return res.json();
 
 }
 
-export const closeTicket = (id) => post(`/tickets/${encodeURIComponent(id)}/close`)
-export const openTicket = (id) => post(`/tickets/${encodeURIComponent(id)}/open`)
+/* ==========================================================
+   Dashboard
+========================================================== */
+
+export async function getDashboard(
+
+    start = "",
+    end = "",
+    team = ""
+
+) {
+
+    const params = new URLSearchParams();
+
+    if (start && end) {
+
+        params.append("start", start);
+        params.append("end", end);
+
+    }
+
+    if (team) {
+
+        params.append("team", team);
+
+    }
+
+    const url = params.toString()
+
+        ? `${BASE}/dashboard?${params.toString()}`
+
+        : `${BASE}/dashboard`;
+
+    const res = await fetch(url);
+
+    if (!res.ok) {
+
+        throw new Error(
+            `Gagal memuat dashboard (${res.status})`
+        );
+
+    }
+
+    return res.json();
+
+}
+
+/* ==========================================================
+   Analytics
+========================================================== */
+
+export async function getAnalytics(
+
+    start = "",
+    end = "",
+    team = ""
+
+) {
+
+    const params = new URLSearchParams();
+
+    if (start && end) {
+
+        params.append("start", start);
+        params.append("end", end);
+
+    }
+
+    if (team) {
+
+        params.append("team", team);
+
+    }
+
+    const url = params.toString()
+
+        ? `${BASE}/analytics?${params.toString()}`
+
+        : `${BASE}/analytics`;
+
+    const res = await fetch(url);
+
+    if (!res.ok) {
+
+        throw new Error(
+            `Gagal memuat analytics (${res.status})`
+        );
+
+    }
+
+    return res.json();
+
+}
+
+/* ==========================================================
+   Customer Feedback
+========================================================== */
+
+export async function getFeedback(filters = {}) {
+
+    const params = new URLSearchParams();
+
+    if (filters.startDate) {
+
+        params.append(
+            "startDate",
+            filters.startDate
+        );
+
+    }
+
+    if (filters.endDate) {
+
+        params.append(
+            "endDate",
+            filters.endDate
+        );
+
+    }
+
+    if (
+        filters.team &&
+        filters.team !== "ALL"
+    ) {
+
+        params.append(
+            "team",
+            filters.team
+        );
+
+    }
+
+    if (
+        filters.keyword &&
+        filters.keyword.trim()
+    ) {
+
+        params.append(
+            "keyword",
+            filters.keyword.trim()
+        );
+
+    }
+
+    const url = params.toString()
+
+        ? `${BASE}/feedback?${params.toString()}`
+
+        : `${BASE}/feedback`;
+
+    const res = await fetch(url);
+
+    if (!res.ok) {
+
+        throw new Error(
+            `Gagal memuat customer feedback (${res.status})`
+        );
+
+    }
+
+    return res.json();
+
+}
+
+/* ==========================================================
+   Export Customer Feedback Excel
+========================================================== */
+
+export function exportFeedbackExcel(filters = {}) {
+
+    const params = new URLSearchParams();
+
+    if (filters.startDate) {
+
+        params.append(
+            "startDate",
+            filters.startDate
+        );
+
+    }
+
+    if (filters.endDate) {
+
+        params.append(
+            "endDate",
+            filters.endDate
+        );
+
+    }
+
+    if (
+        filters.team &&
+        filters.team !== "ALL"
+    ) {
+
+        params.append(
+            "team",
+            filters.team
+        );
+
+    }
+
+    if (
+        filters.keyword &&
+        filters.keyword.trim()
+    ) {
+
+        params.append(
+            "keyword",
+            filters.keyword.trim()
+        );
+
+    }
+
+    const url = params.toString()
+
+        ? `${BASE}/feedback/export?${params.toString()}`
+        : `${BASE}/feedback/export`;
+
+    window.open(url, "_blank");
+
+}
+
+/* ==========================================================
+   Operational Rotation
+========================================================== */
+
+export async function getOperationalRotation() {
+
+    const res = await fetch(
+        `${BASE}/operational-rotation`
+    );
+
+    if (!res.ok) {
+
+        throw new Error(
+            `Gagal memuat operational rotation (${res.status})`
+        );
+
+    }
+
+    return res.json();
+
+}
+
+/* ==========================================================
+   Ticket Actions
+========================================================== */
+
+export const closeTicket = (id) =>
+    post(
+        `/tickets/${encodeURIComponent(id)}/close`
+    );
+
+export const openTicket = (id) =>
+    post(
+        `/tickets/${encodeURIComponent(id)}/open`
+    );
+
 export const assignPIC = (id, pic) =>
-  post(`/tickets/${encodeURIComponent(id)}/assign`, { pic })
+    post(
+        `/tickets/${encodeURIComponent(id)}/assign`,
+        { pic }
+    );
+
 export const changeStatus = (id, status) =>
-  post(`/tickets/${encodeURIComponent(id)}/status`, { status })
+    post(
+        `/tickets/${encodeURIComponent(id)}/status`,
+        { status }
+    );

@@ -1,4 +1,5 @@
 const db = require('../database/database');
+const { nowWIB } = require("../utils/dateTime");
 
 function buildDateClause(start, end) {
 
@@ -50,9 +51,10 @@ function create(ticket) {
             status,
             pic,
             waiting_pic,
-            assignment_group
+            assignment_group,
+            engineer_team
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
         ticket.id,
         ticket.nama,
@@ -66,7 +68,8 @@ function create(ticket) {
         'OPEN',
         null,
         1,
-        ticket.assignmentGroup
+        ticket.assignmentGroup,
+        ticket.engineerTeam
     );
 
 }
@@ -146,6 +149,163 @@ function findProcessByPIC(pic) {
     `).all(pic);
 
 }
+/**
+ * Statistik Engineer
+ */
+function countAssignedByPIC(
+    pic,
+    start = null,
+    end = null,
+    engineerTeam = null
+) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE pic = ?
+    `;
+
+    const params = [pic];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
+
+}
+
+function countCompletedByPIC(
+    pic,
+    start = null,
+    end = null,
+    engineerTeam = null
+) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE pic_selesai = ?
+    `;
+
+    const params = [pic];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(selesai)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_selesai_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
+
+}
+
+function countProcessByPIC(
+    pic,
+    start = null,
+    end = null,
+    engineerTeam = null
+) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE status = 'PROCESS'
+        AND pic = ?
+    `;
+
+    const params = [pic];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
+
+}
+
+function findProcessNormalSLA() {
+
+    return db.prepare(`
+        SELECT *
+        FROM tickets
+        WHERE status = 'PROCESS'
+        AND sla_status = 'NORMAL'
+        AND assigned_at IS NOT NULL
+        ORDER BY assigned_at ASC
+    `).all();
+
+}
+function markSLAExpired(id) {
+
+    db.prepare(`
+        UPDATE tickets
+        SET sla_status = 'EXPIRED'
+        WHERE id = ?
+    `).run(id);
+
+}
 
 /**
  * Tiket CLOSED
@@ -162,38 +322,110 @@ function findClosed() {
 }
 
 /**
+ * Ticket CLOSED untuk perhitungan SLA Metrics
+ */
+function findClosedForSLA(
+    start,
+    end,
+    engineerTeam = null
+) {
+
+    let sql = `
+        SELECT
+            id,
+            waktu,
+            assigned_at,
+            selesai,
+            sla_status
+        FROM tickets
+        WHERE status = 'CLOSED'
+    `;
+
+    const params = [];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(selesai)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_selesai_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
+        ORDER BY selesai DESC
+    `;
+
+    return db.prepare(sql).all(...params);
+
+}
+
+/**
  * Assign PIC
  */
-function assignPIC(id, pic) {
+function assignPIC(id, pic, picTeam) {
 
     db.prepare(`
         UPDATE tickets
         SET
             pic = ?,
+            engineer_team = ?,
+            pic_team = ?,
             status = 'PROCESS',
-            waiting_pic = 0
+            waiting_pic = 0,
+            assigned_at = ?
         WHERE id = ?
-    `).run(pic, id);
+    `).run(
+        pic,
+        picTeam,
+        picTeam,
+        nowWIB(),
+        id
+    );
 
 }
 
 /**
  * Tutup tiket
  */
-function closeTicket(id, selesai, durasi, picSelesai) {
+function closeTicket(
+    id,
+    selesai,
+    durasi,
+    picSelesai,
+    picSelesaiTeam
+) {
 
-    const result = db.prepare(`
+    db.prepare(`
         UPDATE tickets
         SET
-            status='CLOSED',
-            selesai=?,
-            durasi=?,
-            pic_selesai=?
-        WHERE id=?
+            status = 'CLOSED',
+            selesai = ?,
+            durasi = ?,
+            pic_selesai = ?,
+            pic_selesai_team = ?
+        WHERE id = ?
     `).run(
         selesai,
         durasi,
         picSelesai,
+        picSelesaiTeam,
         id
     );
 
@@ -242,258 +474,555 @@ function findProcessByNomor(nomor){
 /**
  * Semua ticket
  */
-function findAll() {
+function findAll(engineerTeam = null) {
 
-    return db.prepare(`
+    let sql = `
         SELECT *
         FROM tickets
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            WHERE pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
         ORDER BY waktu DESC
-    `).all();
+    `;
+
+    return db.prepare(sql).all(...params);
 
 }
-function findAllByDate(start, end) {
 
-    const {
-        where,
-        params
-    } = buildDateClause(start, end);
+function findAllByDate(
+    start,
+    end,
+    engineerTeam = null
+) {
 
-    const rows = db.prepare(`
+    let sql = `
         SELECT *
         FROM tickets
-        ${where}
-        ORDER BY waktu DESC
-    `).all(...params);
+        WHERE DATE(waktu)
+        BETWEEN DATE(?)
+        AND DATE(?)
+    `;
 
-    return rows;
+    const params = [
+        start,
+        end
+    ];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
+        ORDER BY waktu DESC
+    `;
+
+    return db.prepare(sql).all(...params);
+
+}
+
+/**
+ * Total Ticket
+ */
+function countTotal(engineerTeam = null) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            WHERE pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
+
+}
+
+function countTotalByDate(
+    start,
+    end,
+    engineerTeam = null
+) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE DATE(waktu)
+        BETWEEN DATE(?)
+        AND DATE(?)
+    `;
+
+    const params = [
+        start,
+        end
+    ];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
+
 }
 
 /**
  * Jumlah OPEN
  */
-function countOpen() {
+function countOpen(engineerTeam = null) {
 
-    return db.prepare(`
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE status = 'OPEN'
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND engineer_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
+
+}
+
+function countOpenByDate(
+    start,
+    end,
+    engineerTeam = null
+) {
+
+    let sql = `
         SELECT COUNT(*) total
         FROM tickets
         WHERE status='OPEN'
-    `).get().total;
-
-}
-
-function countOpenByDate(start, end) {
-
-    return db.prepare(`
-
-        SELECT COUNT(*) total
-
-        FROM tickets
-
-        WHERE status='OPEN'
-
         AND DATE(waktu)
         BETWEEN DATE(?)
         AND DATE(?)
+    `;
 
-    `).get(
-
+    const params = [
         start,
-
         end
+    ];
 
-    ).total;
+    if (engineerTeam) {
+
+        sql += `
+            AND engineer_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
 
 }
 
-function countProcessByDate(start, end) {
+function countProcessByDate(
+    start,
+    end,
+    engineerTeam = null
+) {
 
-    return db.prepare(`
-
+    let sql = `
         SELECT COUNT(*) total
-
         FROM tickets
-
-        WHERE status='PROCESS'
-
+        WHERE status = 'PROCESS'
         AND DATE(waktu)
         BETWEEN DATE(?)
         AND DATE(?)
+    `;
 
-    `).get(
-
+    const params = [
         start,
-
         end
+    ];
 
-    ).total;
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
 
 }
 
-function countClosedByDate(start, end) {
+function countClosedByDate(
+    start,
+    end,
+    engineerTeam = null
+) {
 
-    return db.prepare(`
-
+    let sql = `
         SELECT COUNT(*) total
-
         FROM tickets
+        WHERE
+            status = 'CLOSED'
+            AND DATE(selesai)
+                BETWEEN DATE(?)
+                AND DATE(?)
+    `;
 
-        WHERE status='CLOSED'
-
-        AND DATE(waktu)
-        BETWEEN DATE(?)
-        AND DATE(?)
-
-    `).get(
-
+    const params = [
         start,
-
         end
+    ];
 
-    ).total;
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_selesai_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
 
 }
 
-function topCabangByDate(limit = 10, start, end){
+function countBranchHandled(
+    engineerTeam = null,
+    start = null,
+    end = null
+) {
 
-    return db.prepare(`
+    let sql = `
+        SELECT COUNT(DISTINCT cabang) total
+        FROM tickets
+        WHERE status = 'CLOSED'
+    `;
 
+    const params = [];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(selesai)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_selesai_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
+
+}
+
+function topCabangByDate(
+    start,
+    end,
+    limit = 10,
+    engineerTeam = null
+) {
+
+    let sql = `
         SELECT
-
-            cabang,
-
-            COUNT(*) total
-
+            cabang AS name,
+            COUNT(*) AS total
         FROM tickets
-
         WHERE DATE(waktu)
-        BETWEEN DATE(?)
-        AND DATE(?)
+            BETWEEN DATE(?)
+            AND DATE(?)
+            AND cabang IS NOT NULL
+            AND cabang <> ''
+    `;
 
-        GROUP BY cabang
-
-        ORDER BY total DESC
-
-        LIMIT ?
-
-    `).all(
-
+    const params = [
         start,
+        end
+    ];
 
-        end,
+    if (engineerTeam) {
 
-        limit
+        sql += `
+            AND pic_team = ?
+        `;
 
-    );
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
+        GROUP BY cabang
+        ORDER BY total DESC, cabang ASC
+        LIMIT ?
+    `;
+
+    params.push(limit);
+
+    return db.prepare(sql).all(...params);
 
 }
 
-function topPICByDate(limit = 6, start, end) {
+function topPICByDate(
+    start,
+    end,
+    limit = 6,
+    engineerTeam = null
+) {
 
-    return db.prepare(`
-
+    let sql = `
         SELECT
-
             pic,
-
             COUNT(*) total
-
         FROM tickets
+        WHERE
+            status = 'PROCESS'
+            AND pic IS NOT NULL
+            AND pic <> ''
+            AND DATE(waktu)
+                BETWEEN DATE(?)
+                AND DATE(?)
+    `;
 
-        WHERE pic IS NOT NULL
-
-        AND DATE(waktu)
-        BETWEEN DATE(?)
-        AND DATE(?)
-
-        GROUP BY pic
-
-        ORDER BY total DESC
-
-        LIMIT ?
-
-    `).all(
-
+    const params = [
         start,
+        end
+    ];
 
-        end,
+    if (engineerTeam) {
 
-        limit
+        sql += `
+            AND pic_team = ?
+        `;
 
-    );
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
+        GROUP BY pic
+        ORDER BY total DESC, pic ASC
+        LIMIT ?
+    `;
+
+    params.push(limit);
+
+    return db.prepare(sql).all(...params);
 
 }
 
 /**
  * Jumlah PROCESS
  */
-function countProcess() {
+function countProcess(engineerTeam = null) {
 
-    return db.prepare(`
+    let sql = `
         SELECT COUNT(*) total
         FROM tickets
-        WHERE status='PROCESS'
-    `).get().total;
+        WHERE status = 'PROCESS'
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
 
 }
 
 /**
  * Jumlah CLOSED
  */
-function countClosed() {
+function countClosed(engineerTeam = null) {
 
-    return db.prepare(`
+    let sql = `
         SELECT COUNT(*) total
         FROM tickets
-        WHERE status='CLOSED'
-    `).get().total;
+        WHERE status = 'CLOSED'
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_selesai_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
 
 }
 
 /**
  * Jumlah ticket hari ini
  */
-function countToday() {
+function countToday(engineerTeam = null) {
 
-    return db.prepare(`
+    let sql = `
         SELECT COUNT(*) total
         FROM tickets
-        WHERE DATE(waktu)=DATE('now','localtime')
-    `).get().total;
+        WHERE DATE(waktu) = DATE('now', 'localtime')
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    return db.prepare(sql).get(...params).total;
 
 }
 
 /**
  * Top Cabang
  */
-function topCabang(limit = 10){
+function topCabang(limit = 10, engineerTeam = null) {
 
-    return db.prepare(`
+    let sql = `
         SELECT
-            cabang,
-            COUNT(*) total
+            cabang AS name,
+            COUNT(*) AS total
         FROM tickets
+        WHERE cabang IS NOT NULL
+            AND cabang <> ''
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
         GROUP BY cabang
         ORDER BY total DESC, cabang ASC
         LIMIT ?
-    `).all(limit);
+    `;
+
+    params.push(limit);
+
+    return db.prepare(sql).all(...params);
 
 }
 
 /**
  * Top PIC Assignment
  */
-function topPIC(limit = 6){
+/**
+ * Top PIC Assignment
+ */
+function topPIC(limit = 6, engineerTeam = null) {
 
-    return db.prepare(`
+    let sql = `
         SELECT
             pic,
             COUNT(*) total
         FROM tickets
-        WHERE pic IS NOT NULL
+        WHERE
+            status = 'PROCESS'
+            AND pic IS NOT NULL
+            AND pic <> ''
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
         GROUP BY pic
         ORDER BY total DESC, pic ASC
         LIMIT ?
-    `).all(limit);
+    `;
+
+    params.push(limit);
+
+    return db.prepare(sql).all(...params);
 
 }
 
@@ -544,40 +1073,112 @@ function markOpenReminderSent(ticketIds)
 
 }
 
-function topPICSelesaiByDate(limit = 6, start, end) {
+/**
+ * Feedback Google Form
+ */
+function markFeedbackSent(ticketId) {
 
-    return db.prepare(`
-        SELECT
-            pic_selesai,
-            COUNT(*) total
-        FROM tickets
-        WHERE pic_selesai IS NOT NULL
-        AND DATE(waktu)
-        BETWEEN DATE(?)
-        AND DATE(?)
-        GROUP BY pic_selesai
-        ORDER BY total DESC
-        LIMIT ?
-    `).all(
-        start,
-        end,
-        limit
+    db.prepare(`
+        UPDATE tickets
+        SET
+            feedback_sent = 1,
+            feedback_sent_at = ?
+        WHERE id = ?
+    `).run(
+
+        nowWIB(),
+
+        ticketId
+
     );
 
 }
 
-function topPICSelesai(limit = 6) {
+function topPICSelesaiByDate(
+    start,
+    end,
+    limit = 6,
+    engineerTeam = null
+) {
 
-    return db.prepare(`
+    let sql = `
         SELECT
             pic_selesai,
             COUNT(*) total
         FROM tickets
-        WHERE pic_selesai IS NOT NULL
+        WHERE
+            status = 'CLOSED'
+            AND pic_selesai IS NOT NULL
+            AND pic_selesai <> ''
+            AND DATE(selesai)
+                BETWEEN DATE(?)
+                AND DATE(?)
+    `;
+
+    const params = [
+        start,
+        end
+    ];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_selesai_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
         GROUP BY pic_selesai
-        ORDER BY total DESC
+        ORDER BY total DESC, pic_selesai ASC
         LIMIT ?
-    `).all(limit);
+    `;
+
+    params.push(limit);
+
+    return db.prepare(sql).all(...params);
+
+}
+
+function topPICSelesai(
+    limit = 6,
+    engineerTeam = null
+) {
+
+    let sql = `
+        SELECT
+            pic_selesai,
+            COUNT(*) total
+        FROM tickets
+        WHERE
+            status = 'CLOSED'
+            AND pic_selesai IS NOT NULL
+            AND pic_selesai <> ''
+    `;
+
+    const params = [];
+
+    if (engineerTeam) {
+
+        sql += `
+            AND pic_selesai_team = ?
+        `;
+
+        params.push(engineerTeam);
+
+    }
+
+    sql += `
+        GROUP BY pic_selesai
+        ORDER BY total DESC, pic_selesai ASC
+        LIMIT ?
+    `;
+
+    params.push(limit);
+
+    return db.prepare(sql).all(...params);
 
 }
 
@@ -613,6 +1214,8 @@ module.exports = {
 
     markOpenReminderSent,
 
+    markFeedbackSent,
+
     // Dashboard
     findAll,
 
@@ -644,6 +1247,24 @@ module.exports = {
 
     topPICByDate,
 
-    listPICs
+    listPICs,
+
+    findProcessNormalSLA,
+
+    findClosedForSLA,
+
+    markSLAExpired,
+
+    countAssignedByPIC,
+
+    countCompletedByPIC,
+
+    countProcessByPIC,
+
+    countTotal,
+
+    countTotalByDate,
+
+    countBranchHandled
 
 };

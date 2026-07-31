@@ -1,0 +1,640 @@
+/* ===========================================================
+   TEAM ROTATION
+   Helpdesk V3 Enterprise
+=========================================================== */
+
+/* ===========================
+   Layout
+=========================== */
+
+.rotation-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,minmax(0,1fr));
+
+    gap:24px;
+
+    margin-bottom:28px;
+
+}
+
+
+/* ===========================
+   Card
+=========================== */
+
+.rotation-card{
+
+    background:#fff;
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 2px 10px rgba(15,23,42,.04);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        border-color .2s ease;
+
+}
+
+.rotation-card:hover{
+
+    transform:translateY(-2px);
+
+    border-color:#dbe5f3;
+
+    box-shadow:
+        0 12px 28px rgba(15,23,42,.08);
+
+}
+
+
+/* ===========================
+   Header
+=========================== */
+
+.rotation-card-header{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:22px 24px 18px;
+
+    border-bottom:1px solid var(--border);
+
+    background:#fff;
+
+}
+
+.rotation-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+}
+
+.rotation-status.active{
+    color:#198754;
+    background:#d1e7dd;
+}
+
+.rotation-status.scheduled{
+
+    color:#6c757d;
+
+    background:#f8f9fa;
+
+    border:1px solid #dee2e6;
+
+}
+
+.rotation-status.next{
+    color:#b26a00;
+    background:#fff3cd;
+}
+
+
+
+.rotation-card-header h3{
+
+    margin:0;
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:#0f172a;
+
+    letter-spacing:-.2px;
+
+}
+
+
+/* ===========================
+   Body
+=========================== */
+
+.rotation-card-body{
+
+    padding:22px 24px;
+
+}
+
+
+/* ===========================
+   Rows
+=========================== */
+
+.rotation-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+
+    padding:14px 0;
+
+    border-bottom:1px solid #f1f5f9;
+
+}
+
+.rotation-row:last-of-type{
+
+    border-bottom:none;
+
+}
+
+.rotation-row span:first-child{
+
+    font-size:14px;
+
+    font-weight:500;
+
+    color:#64748b;
+
+}
+
+.rotation-row strong{
+
+    font-size:15px;
+
+    font-weight:700;
+
+    color:#0f172a;
+
+}
+
+
+/* ===========================
+   Divider
+=========================== */
+
+.rotation-card-body hr{
+
+    margin:24px 0;
+
+    border:none;
+
+    border-top:1px solid var(--border);
+
+}
+
+
+/* ===========================
+   Action
+=========================== */
+
+.rotation-actions{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+}
+
+.rotation-actions .btn{
+
+    min-width:180px;
+
+}
+
+
+/* ===========================
+   Badge Team
+=========================== */
+
+.badge-team-a{
+
+    background:#dcfce7;
+
+    color:#15803d;
+
+}
+
+.badge-team-b{
+
+    background:#dbeafe;
+
+    color:#2563eb;
+
+}
+/* ===========================
+   Select
+=========================== */
+
+.rotation-select{
+
+    min-width:180px;
+
+    padding:10px 14px;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    background:#fff;
+
+    color:#0f172a;
+
+    font-size:14px;
+
+    font-weight:500;
+
+    outline:none;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+
+    cursor:pointer;
+
+}
+
+.rotation-select:hover{
+
+    border-color:#bfd4ff;
+
+}
+
+.rotation-select:focus{
+
+    border-color:var(--primary);
+
+    box-shadow:0 0 0 4px rgba(37,99,235,.12);
+
+}
+
+
+/* ===========================
+   Button
+=========================== */
+
+.rotation-actions .btn{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    padding:11px 20px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:var(--primary);
+
+    color:#fff;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:
+        background .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+
+}
+
+.rotation-actions .btn:hover{
+
+    background:var(--primary-hover);
+
+    transform:translateY(-1px);
+
+    box-shadow:
+        0 10px 22px rgba(37,99,235,.22);
+
+}
+
+.rotation-actions .btn i{
+
+    font-size:15px;
+
+}
+
+
+/* ===========================
+   Schedule Table
+=========================== */
+
+.rotation-card .table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+.rotation-card .table thead{
+
+    background:#f8fafc;
+
+}
+
+.rotation-card .table th{
+
+    padding:14px 16px;
+
+    text-align:left;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    letter-spacing:.04em;
+
+    text-transform:uppercase;
+
+    color:#64748b;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.rotation-card .table td{
+
+    padding:16px;
+
+    font-size:14px;
+
+    color:#0f172a;
+
+    border-bottom:1px solid #f1f5f9;
+
+    vertical-align:middle;
+
+}
+
+.rotation-card .table tbody tr{
+
+    transition:
+        background .18s ease;
+
+}
+
+.rotation-card .table tbody tr:hover{
+
+    background:#fbfdff;
+
+}
+
+.rotation-card .table tbody tr:last-child td{
+
+    border-bottom:none;
+
+}
+
+
+/* ===========================
+   Responsive Table
+=========================== */
+
+.table-responsive{
+
+    width:100%;
+
+    overflow-x:auto;
+
+}
+
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width:1024px){
+
+    .rotation-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
+@media (max-width:768px){
+
+    .rotation-card-header{
+
+        padding:18px;
+
+    }
+
+    .rotation-card-body{
+
+        padding:18px;
+
+    }
+
+    .rotation-row{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:10px;
+
+    }
+
+    .rotation-select{
+
+        width:100%;
+
+        min-width:unset;
+
+    }
+
+    .rotation-actions{
+
+        justify-content:stretch;
+
+    }
+
+    .rotation-actions .btn{
+
+        width:100%;
+
+    }
+
+    .rotation-card .table th,
+
+    .rotation-card .table td{
+
+        white-space:nowrap;
+
+    }
+
+}
+
+/* ===========================================================
+   Operational Rotation Widget
+=========================================================== */
+
+.rotation-widget{
+
+    width:320px;
+
+    background:#fff;
+
+    border:1px solid var(--border);
+
+    border-radius:16px;
+
+    padding:18px 20px;
+
+    box-shadow:0 2px 10px rgba(15,23,42,.04);
+
+}
+
+.rotation-widget-header{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    margin-bottom:16px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:#0f172a;
+
+}
+
+.rotation-widget-header svg{
+
+    color:var(--primary);
+
+}
+
+.rotation-widget-teams{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:12px;
+
+}
+
+.rotation-widget-team{
+
+    border-radius:12px;
+
+    padding:14px;
+
+    text-align:center;
+
+}
+
+.rotation-widget-team strong{
+
+    display:block;
+
+    font-size:15px;
+
+    font-weight:700;
+
+}
+
+.rotation-widget-team small{
+
+    display:block;
+
+    margin-top:4px;
+
+    font-size:12px;
+
+    color:#64748b;
+
+}
+
+.rotation-widget-team.team-a{
+
+    background:#dcfce7;
+
+}
+
+.rotation-widget-team.team-a strong{
+
+    color:#15803d;
+
+}
+
+.rotation-widget-team.team-b{
+
+    background:#dbeafe;
+
+}
+
+.rotation-widget-team.team-b strong{
+
+    color:#2563eb;
+
+}
+
+.rotation-widget-footer{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-top:16px;
+
+    padding-top:14px;
+
+    border-top:1px solid var(--border);
+
+    font-size:12px;
+
+    color:#64748b;
+
+}
+
+.rotation-widget-footer strong{
+
+    color:#111827;
+
+    font-size:13px;
+
+}
+
+@media (max-width:992px){
+
+    .rotation-widget{
+
+        width:100%;
+
+    }
+
+}

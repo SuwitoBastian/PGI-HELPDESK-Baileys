@@ -1,43 +1,96 @@
-const express = require('express');
-
-const path = require('path');
+const express = require("express");
+const path = require("path");
 
 const app = express();
 
-const config = require('./config');
+const config = require("./config");
 
-const exportRoutes =
-    require("./routes/exportRoutes");
+/* ==========================================================
+   Database Migration
+========================================================== */
 
-const migrate =
-    require('./database/migrate');
+const migrate = require("./database/migrate");
 
 migrate();
+
+/* ==========================================================
+   Scheduler
+========================================================== */
+
+const {
+    startSLAScheduler
+} = require("./scheduler/slaScheduler");
+
+startSLAScheduler();
+
+/* ==========================================================
+   WhatsApp
+========================================================== */
 
 const whatsapp =
     require("./services/whatsapp");
 
-const dashboardRoute =
-    require("./routes/dashboardRoute");
+/* ==========================================================
+   Routes
+========================================================== */
 
 const apiRoute =
     require("./routes/apiRoute");
 
-app.set(
-    "view engine",
-    "ejs"
-);
+const dashboardRoute =
+    require("./routes/dashboardRoute");
+
+const operationalRotationRoutes =
+    require("./routes/operationalRotationRoutes");
+
+const trendRoutes =
+    require("./routes/trend");
+
+const exportRoutes =
+    require("./routes/exportRoutes");
+
+const analyticsRoutes =
+    require("./routes/analyticsRoutes");
+
+const feedbackRoutes =
+    require("./routes/feedbackRoutes");
+
+/* ==========================================================
+   Express
+========================================================== */
+
+app.set("view engine", "ejs");
 
 app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
 
 app.use(
     express.static("public")
 );
 
-// API JSON untuk dashboard React
+/* ==========================================================
+   API Routes
+========================================================== */
+
 app.use(
     "/api",
     apiRoute
+);
+
+app.use(
+    "/api/operational-rotation",
+    operationalRotationRoutes
+);
+
+app.use(
+    "/api/trend",
+    trendRoutes
+);
+
+app.use(
+    "/api/analytics",
+    analyticsRoutes
 );
 
 app.use(
@@ -45,31 +98,61 @@ app.use(
     exportRoutes
 );
 
-// Dashboard EJS lama tetap tersedia sebagai backup di /legacy
+app.use(
+    "/api/feedback",
+    feedbackRoutes
+);
+
+/* ==========================================================
+   Legacy Dashboard
+========================================================== */
+
 app.use(
     "/legacy",
     dashboardRoute
 );
 
-// Sajikan hasil build React (frontend/dist) sebagai dashboard utama
-const distDir = path.join(__dirname, "frontend", "dist");
+/* ==========================================================
+   React Dashboard
+========================================================== */
 
-app.use(express.static(distDir));
+const distDir =
+    path.join(__dirname, "frontend", "dist");
 
-// Fallback SPA: request GET non-API/non-asset -> index.html React
+app.use(
+    express.static(distDir)
+);
+
 app.use((req, res, next) => {
 
-    if (req.method !== "GET" || req.path.startsWith("/api")) {
+    if (
+        req.method !== "GET" ||
+        req.path.startsWith("/api")
+    ) {
         return next();
     }
 
-    res.sendFile(path.join(distDir, "index.html"), (err) => {
-        if (err) {
-            next();
+    res.sendFile(
+
+        path.join(
+            distDir,
+            "index.html"
+        ),
+
+        err => {
+
+            if (err)
+                next();
+
         }
-    });
+
+    );
 
 });
+
+/* ==========================================================
+   Start Server
+========================================================== */
 
 async function start() {
 

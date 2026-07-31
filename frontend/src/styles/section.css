@@ -1,0 +1,116 @@
+/* ===========================================================
+   PGI DESIGN SYSTEM
+   Dashboard Section
+=========================================================== */
+
+.dashboard-section{
+
+    margin-top:40px;
+
+}
+
+.dashboard-section:first-child{
+
+    margin-top:0;
+
+}
+
+.dashboard-section-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:24px;
+
+    margin-bottom:20px;
+
+}
+
+.dashboard-section-header-left{
+
+    flex:1;
+
+    min-width:0;
+
+}
+
+.dashboard-section-header-right{
+
+    flex-shrink:0;
+
+}
+
+.dashboard-section-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:6px;
+
+}
+
+.dashboard-section-title svg{
+
+    color:var(--primary);
+
+}
+
+.dashboard-section-title h2{
+
+    margin:0;
+
+    font-size:22px;
+
+    font-weight:700;
+
+    color:var(--text);
+
+}
+
+.dashboard-section-header p{
+
+    margin:0;
+
+    color:var(--text-secondary);
+
+    font-size:14px;
+
+    line-height:1.5;
+
+}
+
+.dashboard-section-content{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:24px;
+
+}
+
+@media (max-width:768px){
+
+    .dashboard-section-header{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+        gap:16px;
+
+    }
+
+    .dashboard-section-header-right{
+
+        width:100%;
+
+    }
+
+}

@@ -1,57 +1,105 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { getDashboard } from '../api'
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+    getDashboard,
+    getAnalytics,
+    getOperationalRotation
+} from "../api";
 
-// Ambil data dashboard + polling tiap 30 detik (menggantikan location.reload()).
+import { getDailyTrend } from "../services/dashboard/trendService";
+
+// Ambil data dashboard + polling tiap 30 detik.
 export function useDashboard(
     start = "",
     end = "",
+    team = "",
     intervalMs = 30000
 ) {
-  const [data, setData] = useState(null)
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const timer = useRef(null)
 
-const refresh = useCallback(async () => {
+    const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    try {
+    const timer = useRef(null);
 
-        const d =
-            await getDashboard(
-                start,
-                end
-            );
+    const refresh = useCallback(async () => {
 
-        setData(d);
+        try {
 
-        setError(null);
+            const [
+                dashboard,
+                analytics,
+                rotation,
+                trend
+            ] = await Promise.all([
+                getDashboard(
+                    start,
+                    end,
+                    team
+                ),
 
-    } catch (e) {
+                getAnalytics(
+                    start,
+                    end,
+                    team
+                ),
 
-        setError(e.message);
+                getOperationalRotation(),
 
-    } finally {
+                getDailyTrend({
+                    startDate: start,
+                    endDate: end,
+                    team
+                })
+            ]);
 
-        setLoading(false);
+            setData({
+                ...dashboard,
+                analytics,
+                rotation,
+                trend: trend?.trend || trend || []
+            });
 
-    }
+            setError(null);
 
-}, [start, end]);
+        } catch (e) {
 
-  useEffect(() => {
-    refresh();
-    timer.current = 
-    setInterval(
-      refresh,
-      intervalMs
-    );
-    return () =>
-      clearInterval(timer.current);
+            console.error(e);
 
-  }, [
-      refresh,
-      intervalMs
-  ]);
+            setError(e.message);
 
-  return { data, error, loading, refresh }
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    }, [
+        start,
+        end,
+        team
+    ]);
+
+    useEffect(() => {
+
+        refresh();
+
+        timer.current = setInterval(
+            refresh,
+            intervalMs
+        );
+
+        return () => clearInterval(timer.current);
+
+    }, [
+        refresh,
+        intervalMs
+    ]);
+
+    return {
+        data,
+        error,
+        loading,
+        refresh
+    };
+
 }

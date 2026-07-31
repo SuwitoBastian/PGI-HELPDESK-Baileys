@@ -7,28 +7,11 @@ const doneService =
 const notificationService =
     require('./notificationService');
 
-const daftarPIC = {
+const ticketRepository =
+    require('../repositories/ticketRepository');
 
-    GL: "Galih",
-    GALIH: "Galih",
-
-    SW: "Suwito",
-    SUWITO: "Suwito",
-
-    RP: "Rifaldo",
-    RIFALDO: "Rifaldo",
-
-    KA: "Andi",
-    ANDI: "Andi",
-
-    IW: "Iwan",
-    IWAN: "Iwan",
-
-    HL: "Hilmi",
-    HILMI: "Hilmi"
-
-};
-
+const daftarPIC =
+    require("../config/pic");
 
 async function start(msg){
 
@@ -294,7 +277,8 @@ console.log("Menutup Ticket...");
 
 doneService.close(
     ticket,
-    session.selectedClosePIC
+    session.selectedClosePIC,
+    session.selectedClosePICCode
 );
 
 // Kirim notifikasi ke cabang
@@ -307,6 +291,9 @@ await notificationService.ticketClosed(
     session.selectedClosePIC
 
 );
+
+// Tandai link feedback berhasil dikirim
+ticketRepository.markFeedbackSent(ticket.id);
 
 // Balasan ke IT
 await msg.reply(
@@ -396,6 +383,9 @@ HL`
 
     session.selectedClosePIC =
         picSelesai;
+
+    session.selectedClosePICCode =
+        kode;
 
     sessionService.setState(
         msg.from,

@@ -10,9 +10,12 @@ frontend/node_modules/
 .env
 .env.*
 
+!.env.example
+
 # ============================
 # Baileys Session
 # ============================
+auth_info/
 session/
 Baileys-master/
 
@@ -33,6 +36,7 @@ Baileys-master/
 # ============================
 # Logs
 # ============================
+logs/
 *.log
 npm-debug.log*
 

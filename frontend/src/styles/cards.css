@@ -1,0 +1,1152 @@
+/* ===========================================================
+   PGI DESIGN SYSTEM
+   Cards
+=========================================================== */
+
+.card{
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-lg);
+
+    overflow:hidden;
+
+    display:flex;
+
+    flex-direction:column;
+
+    padding:18px;
+
+    transition:
+
+        transform .25s ease,
+
+        box-shadow .25s ease,
+
+        border-color .25s ease;
+
+}
+
+.card:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+
+        0 16px 34px rgba(15,23,42,.08);
+
+}
+
+.card-header{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:1px;
+
+    padding:22px 24px 16px;
+
+    margin-bottom:10px;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.card-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:#0f172a;
+
+    line-height:1.2;
+
+    margin:0;
+
+    letter-spacing:-.2px;
+
+}
+
+.card-title svg{
+
+    width:18px;
+
+    height:18px;
+
+    flex-shrink:0;
+
+}
+
+.card-description{
+
+    margin:2px 0 0;
+
+    font-size:13px;
+
+    color:#64748b;
+
+    line-height:1.45;
+
+    margin-top:6px;
+
+}
+
+.card-content{
+
+    padding:0 24px 20px;
+
+    flex:1;
+
+}
+
+.card-footer{
+
+    margin-top:auto;
+    padding-top:18px;
+
+}
+/* ======================================================
+   Status Distribution
+====================================================== */
+
+.status-distribution-card .card-header{
+    padding-bottom:12px;
+    margin-bottom:8px;
+}
+
+.status-distribution-card .card-content{
+    padding-top:8px;
+}
+
+/* ======================================================
+   Layout
+====================================================== */
+
+.dist-layout{
+
+    display:grid;
+
+    grid-template-columns:240px minmax(0,1fr);
+
+    gap:20px;
+
+    align-items:center;
+
+}
+
+/* ======================================================
+   Donut
+====================================================== */
+
+.dist-chart{
+
+    position:relative;
+
+    width:220px;
+
+    height:210px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    margin:auto;
+
+}
+
+.donut-center{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    pointer-events:none;
+
+    text-align:center;
+
+}
+
+.donut-center strong{
+
+    font-size:2rem;
+
+    font-weight:700;
+
+    line-height:1;
+
+    color:#0f172a;
+
+}
+
+.donut-center span{
+
+    margin-top:5px;
+
+    font-size:.9rem;
+
+    font-weight:500;
+
+    color:#64748b;
+
+}
+
+/* ======================================================
+   Legend
+====================================================== */
+
+.dist-legend{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+    min-width:0;
+
+}
+
+.dist-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    gap:16px;
+
+    padding:12px 16px;
+
+    min-height:60px;
+
+    background:#fcfdff;
+
+    border:1px solid #e8edf5;
+
+    border-radius:12px;
+}
+
+.dist-item:hover{
+
+    transform:translateY(-2px);
+
+    background:#ffffff;
+
+    border-color:#d6e3f3;
+
+    box-shadow:0 6px 16px rgba(15,23,42,.05);
+
+}
+.dist-item-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    flex:1;
+    min-width:0;
+}
+
+.dist-item-left span:last-child{
+
+    font-size:.95rem;
+
+    font-weight:600;
+
+    color:#0f172a;
+
+}
+
+.dist-item-right{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+
+    flex-shrink:0;
+}
+
+.dist-percent{
+    display:block;
+    position:static;
+
+    font-size:1.55rem;
+    font-weight:700;
+
+    line-height:1.2;
+    margin:0;
+}
+
+.dist-count{
+    display:block;
+    position:static;
+
+    margin-top:4px;
+    line-height:1.2;
+}
+
+.dist-dot{
+
+    width:12px;
+
+    height:12px;
+
+    border-radius:50%;
+
+    flex-shrink:0;
+
+}
+
+/* ======================================================
+   Responsive
+====================================================== */
+
+@media (max-width:900px){
+
+    .dist-layout{
+
+        grid-template-columns:1fr;
+
+        gap:20px;
+
+    }
+
+    .dist-chart{
+
+        width:100%;
+
+        height:210px;
+
+    }
+
+}
+
+.status-distribution-card .card-description{
+    margin-top:4px;
+}
+
+
+
+/* ===========================================================
+   CARD MODIFIERS
+=========================================================== */
+
+/* ===========================================================
+   TEAM PERFORMANCE
+=========================================================== */
+
+.team-performance-card .team-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+
+    gap:16px;
+
+}
+
+.team-performance-card .team-card{
+
+    border:1px solid var(--border);
+
+    border-radius:16px;
+
+    padding:16px;
+
+    background:#fff;
+
+    transition:.25s ease;
+
+}
+
+.team-performance-card .team-card:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.team-performance-card .team-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
+}
+
+.team-performance-card .team-top h4{
+
+    margin:0;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    color:#0f172a;
+
+}
+
+.team-performance-card .team-status{
+
+    font-size:11px;
+
+    font-weight:600;
+
+    color:#fff;
+
+    padding:4px 10px;
+
+    border-radius:999px;
+
+}
+
+.team-performance-card .team-completion{
+
+    margin-bottom:12px;
+
+}
+
+.team-performance-card .team-completion small{
+
+    display:block;
+
+    font-size:11px;
+
+    color:#64748b;
+
+    margin-bottom:4px;
+
+}
+
+.team-performance-card .team-completion strong{
+
+    font-size:28px;
+
+    font-weight:700;
+
+    color:#0f172a;
+
+    line-height:1;
+
+}
+
+.team-performance-card .team-progress{
+
+    margin-bottom:18px;
+
+}
+
+.team-performance-card .progress{
+
+    height:6px;
+
+    background:#e2e8f0;
+
+    border-radius:999px;
+
+    overflow:hidden;
+
+}
+
+.team-performance-card .progress-fill{
+
+    height:100%;
+
+    border-radius:999px;
+
+    transition:width .4s ease;
+
+}
+
+.team-performance-card .team-metrics{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+}
+
+.team-performance-card .metric{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:8px 0;
+
+    border-top:1px solid #f1f5f9;
+
+}
+
+.team-performance-card .metric:first-child{
+
+    border-top:none;
+
+    padding-top:0;
+
+}
+
+.team-performance-card .metric span{
+
+    font-size:12px;
+
+    color:#64748b;
+
+}
+
+.team-performance-card .metric strong{
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:#0f172a;
+
+}
+
+.sla-performance-card{}
+
+.status-distribution-card{}
+
+.recent-activity-card{}
+
+.engineer-leaderboard-card,
+.top-branch-card{
+
+    height:100%;
+    flex:1;
+
+}
+
+/* =========================================================
+   Top Branch Card
+========================================================= */
+
+.top-branch-card .card-content {
+    overflow: hidden;
+}
+
+.show-more-btn {
+
+    width: 100%;
+
+    margin-top: 16px;
+    padding: 12px 16px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: var(--text-secondary);
+
+    font-size: .9rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background .25s ease,
+        border-color .25s ease,
+        color .25s ease,
+        transform .2s ease;
+
+}
+
+.show-more-btn svg {
+
+    transition:
+        transform .25s ease;
+
+}
+
+.show-more-btn:hover {
+
+    color: var(--primary);
+    border-color: var(--primary);
+
+    background: rgba(var(--primary-rgb), .06);
+
+}
+
+.show-more-btn:hover svg {
+
+    transform: translateY(1px);
+
+}
+
+.show-more-btn:active {
+
+    transform: scale(.98);
+
+}
+
+.show-more-btn:focus-visible {
+
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+
+}
+
+
+/* ===========================================================
+   OPERATIONAL INSIGHT
+=========================================================== */
+
+.operational-insight-card{
+
+    padding:14px;
+
+}
+
+.operational-insight-card .card-header{
+
+    padding:0 0 10px;
+
+    margin-bottom:10px;
+
+}
+
+.operational-insight-card .insight-grid{
+
+    margin-top:0;
+
+}
+
+.operational-insight-card .insight-banner{
+
+    margin-top:10px;
+
+}
+/* ===========================================================
+   STATUS DISTRIBUTION V2
+=========================================================== */
+
+.status-card .card-content{
+    padding-top:8px;
+}
+
+/* =========================
+   Layout
+========================= */
+
+.status-body{
+    display:block;
+}
+
+.status-chart{
+    position:relative;
+    width:280px;
+    height:220px; 
+    margin:8px auto 0;
+}
+.status-center{
+
+    position:absolute;
+
+    top:48%;
+    left:50%;
+
+    transform:translate(-50%, -50%); /* coba -54%, kalau masih kurang naik gunakan -55% */
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-align:center;
+    pointer-events:none;
+    z-index:20;
+}
+
+.status-chart .recharts-wrapper{
+    position:relative;
+    z-index:1;
+}
+
+.status-center strong{
+    font-size:30px;
+    font-weight:700;
+    color:#111827;
+    line-height:1;
+    margin:0;
+}
+
+.status-center span{
+    margin-top:2px;
+    line-height:1.2;
+    font-size:13px;
+    color:#6b7280;
+}
+
+/* =========================
+   Legend
+========================= */
+
+.status-list{
+    width:100%;
+    margin-top:12px;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+.status-row{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:18px;
+
+    padding:10px 20px;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:12px;
+
+    background:#ffffff;
+
+    transition:
+        transform .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+
+}
+
+.status-row:hover{
+    transform:translateY(-2px);
+    border-color:#dbeafe;
+    background:#fbfdff;
+    box-shadow:0 8px 18px rgba(15,23,42,.05);
+}
+.status-info{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    min-width:0;
+
+    flex:1;
+
+}
+
+.status-dot{
+
+    width:12px;
+
+    height:12px;
+
+    border-radius:999px;
+
+    flex-shrink:0;
+
+}
+
+.status-label{
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:#111827;
+
+}
+
+.status-ticket{
+
+    margin-top:3px;
+
+    font-size:12px;
+
+    color:#64748b;
+
+}
+
+.status-value{
+
+    flex-shrink:0;
+
+    font-size:22px;
+
+    font-weight:700;
+
+    color:#111827;
+
+    line-height:1;
+
+    font-variant-numeric:tabular-nums;
+
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width:900px){
+
+    .status-body{
+
+        flex-direction:column;
+
+        align-items:center;
+
+    }
+
+    .status-chart{
+
+        width:100%;
+
+        max-width:240px;
+
+        position: relative;
+
+        isolation: isolate;
+
+    }
+
+    .status-list{
+
+        width:100%;
+
+    }
+
+}
+/* ===========================================================
+   SLA PERFORMANCE V2
+=========================================================== */
+
+.sla-performance-card .card-header{
+    padding-bottom:12px;
+    margin-bottom:8px;
+}
+
+.sla-performance-card .card-content{
+    padding-top:8px;
+}
+
+/* =========================
+   Metric List
+========================= */
+
+.sla-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.sla-row{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:18px;
+
+    min-height:70px;
+
+    padding:14px 18px;
+
+    background:#fff;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:14px;
+
+    transition:
+        transform .22s ease,
+        border-color .22s ease,
+        box-shadow .22s ease,
+        background .22s ease;
+
+}
+
+.sla-row:hover{
+
+    transform:translateY(-2px);
+
+    border-color:#dbeafe;
+
+    background:#fbfdff;
+
+    box-shadow:0 10px 20px rgba(15,23,42,.05);
+
+}
+
+.sla-left{
+
+    display:flex;
+    align-items:center;
+    gap:14px;
+
+    flex:1;
+    min-width:0;
+
+}
+
+.sla-left svg{
+
+    color:#3b82f6;
+
+    opacity:.9;
+
+    flex-shrink:0;
+
+}
+
+.sla-left span{
+
+    display:block;
+
+    font-size:12px;
+
+    color:#64748b;
+
+    letter-spacing:.2px;
+
+    margin-bottom:3px;
+
+}
+
+.sla-left strong{
+
+    display:block;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    line-height:1.15;
+
+    color:#111827;
+
+}
+
+/* =========================
+   Badge
+========================= */
+
+.sla-badge{
+
+    flex-shrink:0;
+
+    padding:5px 10px;
+
+    border-radius:999px;
+
+    font-size:11px;
+
+    font-weight:600;
+
+    letter-spacing:.2px;
+
+}
+
+/* =========================
+   Progress
+========================= */
+
+.sla-progress{
+
+    margin-top:20px;
+
+    padding-top:20px;
+
+    border-top:1px solid var(--border);
+
+}
+
+.sla-progress-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:10px;
+
+}
+
+.sla-progress-header span{
+
+    font-size:13px;
+
+    color:#64748b;
+
+}
+
+.sla-progress-header strong{
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:#111827;
+
+}
+
+.sla-progress-bar{
+
+    height:10px;
+
+    background:#edf2f7;
+
+    border-radius:999px;
+
+    overflow:hidden;
+
+}
+
+.sla-progress-fill{
+
+    height:100%;
+
+    border-radius:999px;
+
+    background:linear-gradient(
+        90deg,
+        #22c55e 0%,
+        #16a34a 100%
+    );
+
+    transition:width .8s ease;
+
+}
+
+/* =========================
+   Footer
+========================= */
+
+.sla-footer{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:14px;
+
+    margin-top:20px;
+
+}
+
+.sla-status{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding:16px 18px;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:14px;
+
+    transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        border-color .22s ease,
+        background .22s ease;
+
+}
+
+.sla-status:hover{
+
+    transform:translateY(-2px);
+
+    background:#fcfdff;
+
+    border-color:#dbeafe;
+
+    box-shadow:0 10px 20px rgba(15,23,42,.05);
+
+}
+
+.sla-status svg{
+
+    flex-shrink:0;
+
+}
+
+.sla-status strong{
+
+    display:block;
+
+    font-size:32px;
+
+    font-weight:700;
+
+    line-height:1;
+
+    color:#111827;
+
+}
+
+.sla-status.normal{
+
+    background:#f5fcf7;
+
+}
+
+.sla-status.expired{
+
+    background:#fff7f7;
+
+}
+
+.sla-status span{
+
+    display:block;
+
+    margin-top:4px;
+
+    font-size:12px;
+
+    color:#64748b;
+
+}

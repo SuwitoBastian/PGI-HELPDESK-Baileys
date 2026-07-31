@@ -2,61 +2,69 @@ const fs = require('fs');
 
 const exportService = require('../services/exportService');
 const ticketRepository = require('../repositories/ticketRepository');
-
+const engineerAnalytics = require('../services/analytics/engineerAnalytics');
 
 async function exportExcel(req, res) {
 
     try {
 
-const { start, end } = req.query;
+        const { start, end } = req.query;
 
-const useFilter =
-    start && end;
+        const useFilter = start && end;
 
-const tickets = useFilter
-    ? ticketRepository.findAllByDate(start, end)
-    : ticketRepository.findAll();
+        const tickets = useFilter
+            ? ticketRepository.findAllByDate(start, end)
+            : ticketRepository.findAll();
 
-const open = useFilter
-    ? ticketRepository.countOpenByDate(start, end)
-    : ticketRepository.countOpen();
+        const open = useFilter
+            ? ticketRepository.countOpenByDate(start, end)
+            : ticketRepository.countOpen();
 
-const process = useFilter
-    ? ticketRepository.countProcessByDate(start, end)
-    : ticketRepository.countProcess();
+        const process = useFilter
+            ? ticketRepository.countProcessByDate(start, end)
+            : ticketRepository.countProcess();
 
-const closed = useFilter
-    ? ticketRepository.countClosedByDate(start, end)
-    : ticketRepository.countClosed();
+        const closed = useFilter
+            ? ticketRepository.countClosedByDate(start, end)
+            : ticketRepository.countClosed();
 
-const topCabang = useFilter
-    ? ticketRepository.topCabangByDate(10, start, end)
-    : ticketRepository.topCabang(10);
+        const topCabang = useFilter
+            ? ticketRepository.topCabangByDate(start, end, 10)
+            : ticketRepository.topCabang(10);
 
-const topPICSelesai = useFilter
-    ? ticketRepository.topPICSelesaiByDate(6, start, end)
-    : ticketRepository.topPICSelesai(6);
+        // Sementara masih dipakai sampai card lama diganti
+        const topPICSelesai = useFilter
+            ? ticketRepository.topPICSelesaiByDate(start, end, 6)
+            : ticketRepository.topPICSelesai(6);
 
-const result =
-    await exportService.exportTickets({
+        // Data yang sama dengan Dashboard Engineer Leaderboards
+        const engineerLeaderboards =
+            engineerAnalytics.getEngineers(
+                useFilter ? start : null,
+                useFilter ? end : null
+            );
 
-        tickets,
+        const result = await exportService.exportTickets({
 
-        open,
+            tickets,
 
-        process,
+            open,
 
-        closed,
+            process,
 
-        topCabang,
+            closed,
 
-        topPICSelesai,
+            topCabang,
 
-        start,
+            topPICSelesai,
 
-        end
+            engineerLeaderboards,
 
-    });
+            start,
+
+            end
+
+        });
 
         if (!result.success) {
 
@@ -81,7 +89,6 @@ const result =
                 if (err) {
 
                     console.error(err);
-
                     return;
 
                 }

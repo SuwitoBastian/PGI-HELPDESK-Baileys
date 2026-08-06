@@ -10,7 +10,7 @@ function start() {
     console.log("⏰ Jadwal : 07:45 WIB (Senin - Sabtu)");
 
     cron.schedule(
-        "45 7 * * 1-6",
+        "45 7 * * *",
         async () => {
 
             console.log("");

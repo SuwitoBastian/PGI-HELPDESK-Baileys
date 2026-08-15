@@ -7,18 +7,6 @@ function build(
     location = null
 ) {
 
-    if (location) {
-
-        return repository.countCompletedByPICAndLocation(
-            engineer.name,
-            start,
-            end,
-            location
-        );
-
-    }
-
-
     return repository.countCompletedByPIC(
         engineer.name,
         start,

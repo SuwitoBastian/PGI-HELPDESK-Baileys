@@ -7,18 +7,6 @@ function build(
     location = null
 ) {
 
-    if (location) {
-
-        return repository.countProcessByPICAndLocation(
-            engineer.name,
-            start,
-            end,
-            location
-        );
-
-    }
-
-
     return repository.countProcessByPIC(
         engineer.name,
         start,

@@ -7,18 +7,6 @@ function build(
     location = null
 ) {
 
-    if (location) {
-
-        return repository.countAssignedByPICAndLocation(
-            engineer.name,
-            start,
-            end,
-            location
-        );
-
-    }
-
-
     return repository.countAssignedByPIC(
         engineer.name,
         start,

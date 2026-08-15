@@ -355,13 +355,9 @@
 =========================================================== */
 
 .team-performance-card .team-grid{
-
     display:grid;
-
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-
+    grid-template-columns:repeat(2,minmax(0,1fr));
     gap:16px;
-
 }
 
 .team-performance-card .team-card{
@@ -638,6 +634,12 @@
 
     margin-bottom:10px;
 
+}
+
+.overview-card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .operational-insight-card .insight-grid{
@@ -1148,5 +1150,470 @@
     font-size:12px;
 
     color:#64748b;
+
+}
+/* ===========================================================
+   LOCATION ANALYTICS
+   Khusus AKR / HO Analytics
+   All Performance tidak terpengaruh
+=========================================================== */
+
+.team-performance-card.location-mode .card-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
+}
+
+
+/* Team grid menjadi transparent terhadap grid parent */
+
+.team-performance-card.location-mode .team-grid {
+    display: contents;
+}
+
+
+/* Location Performance */
+
+.team-performance-card.location-mode .team-grid > .team-card {
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+
+/* Location Overview */
+
+.team-performance-card.location-mode .location-overview-card {
+    min-width: 0;
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* ===========================================================
+   LOCATION OVERVIEW HEADER
+=========================================================== */
+
+.team-performance-card.location-mode
+.location-overview-header {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+
+}
+
+
+/* ===========================================================
+   OVERVIEW ICON
+=========================================================== */
+
+.team-performance-card.location-mode
+.overview-icon {
+
+    width: 44px;
+
+    height: 44px;
+
+    flex: 0 0 44px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #ecfdf5;
+
+    color: #16a34a;
+
+    border: 1px solid #d1fae5;
+
+}
+
+
+/* ===========================================================
+   OVERVIEW BADGE
+=========================================================== */
+
+.team-performance-card.location-mode
+.overview-type-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    background: #ecfdf5;
+
+    color: #16a34a;
+
+    border: 1px solid #d1fae5;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: .04em;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+}
+
+
+/* ===========================================================
+   OVERVIEW DOT
+=========================================================== */
+
+.team-performance-card.location-mode
+.overview-badge-dot {
+
+    width: 6px;
+
+    height: 6px;
+
+    flex: 0 0 6px;
+
+    border-radius: 50%;
+
+    background: #16a34a;
+
+}
+
+
+/* ===========================================================
+   COMPACT COMPLETION
+=========================================================== */
+
+.team-performance-card.location-mode .team-completion {
+    margin-bottom: 10px;
+}
+
+.team-performance-card.location-mode .team-completion strong {
+    font-size: 38px;
+}
+
+.team-performance-card.location-mode .team-progress {
+    margin-bottom: 12px;
+}
+
+/* ===========================================================
+   LOCATION CARD HEADER POLISH
+   Khusus AKR / HO Analytics
+=========================================================== */
+
+.team-performance-card.location-mode
+.location-card-header {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 22px;
+
+}
+
+
+/* ===========================================================
+   IDENTITY
+=========================================================== */
+
+.team-performance-card.location-mode
+.location-card-identity {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    min-width: 0;
+
+}
+
+
+/* ===========================================================
+   LOCATION ICON
+=========================================================== */
+
+.team-performance-card.location-mode
+.location-icon {
+
+    width: 44px;
+
+    height: 44px;
+
+    flex: 0 0 44px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    border: 1px solid #dbeafe;
+
+}
+
+
+/* ===========================================================
+   TITLE
+=========================================================== */
+
+.team-performance-card.location-mode
+.location-card-title {
+
+    min-width: 0;
+
+}
+
+
+.team-performance-card.location-mode
+.location-card-title h4 {
+
+    margin: 0;
+
+    font-size: 18px;
+
+    line-height: 1.25;
+
+    font-weight: 700;
+
+    color: #0f172a;
+
+}
+
+
+/* ===========================================================
+   LOCATION SUBTITLE
+=========================================================== */
+
+.team-performance-card.location-mode
+.location-card-subtitle {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    margin-top: 5px;
+
+    font-size: 14px;
+
+    line-height: 1.2;
+
+    color: #64748b;
+
+}
+
+
+/* ===========================================================
+   STATUS BADGE
+=========================================================== */
+
+.team-performance-card.location-mode
+.location-card-header .team-status {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    flex-shrink: 0;
+
+    margin-top: 2px;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+}
+
+
+/* ===========================================================
+   STATUS DOT
+=========================================================== */
+
+.team-performance-card.location-mode
+.location-card-header .status-dot {
+
+    width: 6px;
+
+    height: 6px;
+
+    flex: 0 0 6px;
+
+    border-radius: 50%;
+
+}
+
+
+/* ===========================================================
+   CARD POLISH
+=========================================================== */
+
+.team-performance-card.location-mode
+.team-grid > .team-card,
+
+.team-performance-card.location-mode
+.location-overview-card {
+
+    border-radius: 18px;
+
+    border: 1px solid #e2e8f0;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 2px 8px rgba(15, 23, 42, .03);
+
+}
+
+
+/* ===========================================================
+   COMPLETION - COMPACT
+=========================================================== */
+
+.team-performance-card.location-mode
+.team-completion {
+
+    margin-bottom: 10px;
+
+}
+
+
+.team-performance-card.location-mode
+.team-completion strong {
+
+    font-size: 38px;
+
+    line-height: 1;
+
+}
+
+
+/* ===========================================================
+   PROGRESS
+=========================================================== */
+
+.team-performance-card.location-mode
+.team-progress {
+
+    margin-bottom: 12px;
+
+}
+
+
+/* ===========================================================
+   HOVER
+=========================================================== */
+
+.team-performance-card.location-mode
+.team-grid > .team-card:hover,
+
+.team-performance-card.location-mode
+.location-overview-card:hover {
+
+    border-color: #d5deea;
+
+    box-shadow:
+        0 8px 24px rgba(15, 23, 42, .06);
+
+    transform: translateY(-1px);
+
+}
+
+
+/* ===========================================================
+   MOBILE
+=========================================================== */
+
+@media (max-width: 700px) {
+
+    .team-performance-card.location-mode
+    .location-card-header {
+
+        align-items: flex-start;
+
+    }
+
+
+    .team-performance-card.location-mode
+    .location-icon {
+
+        width: 40px;
+
+        height: 40px;
+
+        flex-basis: 40px;
+
+    }
+
+
+    .team-performance-card.location-mode
+    .location-card-title h4 {
+
+        font-size: 16px;
+
+    }
+
+
+    .team-performance-card.location-mode
+    .location-card-header .team-status {
+
+        font-size: 9px;
+
+        padding: 5px 8px;
+
+    }
+
+}
+
+
+/* ===========================================================
+   MOBILE
+=========================================================== */
+
+@media (max-width: 768px) {
+
+    .team-performance-card.location-mode .card-content {
+        grid-template-columns: 1fr;
+    }
 
 }

@@ -107,6 +107,58 @@ CREATE TABLE IF NOT EXISTS feedback (
         ON DELETE SET NULL
 
 )
+`,
+
+`
+CREATE TABLE IF NOT EXISTS engineers (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    code TEXT NOT NULL UNIQUE,
+
+    name TEXT NOT NULL,
+
+    whatsapp TEXT,
+
+    team TEXT NOT NULL
+        CHECK(team IN ('TEAM_A','TEAM_B')),
+
+    role TEXT NOT NULL
+        DEFAULT 'MEMBER'
+        CHECK(role IN ('LEADER','MEMBER')),
+
+    aktif INTEGER NOT NULL
+        DEFAULT 1,
+
+    created_at DATETIME
+        DEFAULT CURRENT_TIMESTAMP
+
+)
+`,
+
+`
+CREATE TABLE IF NOT EXISTS operational_assignment (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    rotation_id INTEGER NOT NULL,
+
+    engineer_code TEXT NOT NULL,
+
+    created_at DATETIME
+        DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(rotation_id)
+        REFERENCES operational_rotation(id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY(engineer_code)
+        REFERENCES engineers(code)
+        ON DELETE CASCADE,
+
+    UNIQUE(rotation_id, engineer_code)
+
+)
 `
 
 ];

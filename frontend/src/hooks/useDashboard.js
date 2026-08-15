@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import {
     getDashboard,
     getAnalytics,
@@ -7,11 +8,28 @@ import {
 
 import { getDailyTrend } from "../services/dashboard/trendService";
 
-// Ambil data dashboard + polling tiap 30 detik.
+
+// =====================================================
+// DASHBOARD HOOK
+// =====================================================
+// Mengambil:
+// - Dashboard
+// - Analytics
+// - Operational Rotation
+// - Daily Trend
+//
+// location:
+//   ""    = ALL
+//   "AKR" = HO - AKR Tower
+//   "HO"  = Head Office
+//
+// Polling setiap 30 detik.
+// =====================================================
+
 export function useDashboard(
     start = "",
     end = "",
-    team = "",
+    location = "",
     intervalMs = 30000
 ) {
 
@@ -20,6 +38,11 @@ export function useDashboard(
     const [loading, setLoading] = useState(true);
 
     const timer = useRef(null);
+
+
+    // =====================================================
+    // REFRESH
+    // =====================================================
 
     const refresh = useCallback(async () => {
 
@@ -31,41 +54,61 @@ export function useDashboard(
                 rotation,
                 trend
             ] = await Promise.all([
+
+                // Dashboard
                 getDashboard(
                     start,
                     end,
-                    team
+                    location
                 ),
 
+                // Analytics
                 getAnalytics(
                     start,
                     end,
-                    team
+                    location
                 ),
 
+                // Operational Rotation
                 getOperationalRotation(),
 
+                // Daily Trend
                 getDailyTrend({
                     startDate: start,
                     endDate: end,
-                    team
+                    location
                 })
+
             ]);
+
+
+            // =====================================================
+            // SET DATA
+            // =====================================================
 
             setData({
                 ...dashboard,
+
                 analytics,
+
                 rotation,
+
                 trend: trend?.trend || trend || []
             });
+
 
             setError(null);
 
         } catch (e) {
 
-            console.error(e);
+            console.error(
+                "useDashboard error:",
+                e
+            );
 
-            setError(e.message);
+            setError(
+                e?.message || "Gagal memuat data dashboard."
+            );
 
         } finally {
 
@@ -76,8 +119,13 @@ export function useDashboard(
     }, [
         start,
         end,
-        team
+        location
     ]);
+
+
+    // =====================================================
+    // POLLING
+    // =====================================================
 
     useEffect(() => {
 
@@ -88,12 +136,24 @@ export function useDashboard(
             intervalMs
         );
 
-        return () => clearInterval(timer.current);
+
+        return () => {
+
+            if (timer.current) {
+                clearInterval(timer.current);
+            }
+
+        };
 
     }, [
         refresh,
         intervalMs
     ]);
+
+
+    // =====================================================
+    // RETURN
+    // =====================================================
 
     return {
         data,

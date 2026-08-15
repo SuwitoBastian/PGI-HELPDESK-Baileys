@@ -8,22 +8,71 @@ import {
     Tooltip
 } from "recharts";
 
+
 function formatDate(date) {
 
-    const d = new Date(date);
+    const d =
+        new Date(date);
 
-    return d.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short"
-    });
+    return d.toLocaleDateString(
+        "id-ID",
+        {
+            day: "2-digit",
+            month: "short"
+        }
+    );
 
 }
 
-export default function DailyTrendCard({ trend = [] }) {
+
+// =====================================================
+// RANGE LABEL
+// =====================================================
+
+function getRangeLabel(range) {
+
+    switch (range) {
+
+        case 7:
+            return "Last 7 Days";
+
+        case 30:
+            return "Last 30 Days";
+
+        case 90:
+            return "Last 90 Days";
+
+        case "ALL":
+            return "All Period";
+
+        default:
+            return "Selected Period";
+
+    }
+
+}
+
+
+// =====================================================
+// COMPONENT
+// =====================================================
+
+export default function DailyTrendCard({
+
+    trend = [],
+
+    range = 30
+
+}) {
+
+    const rangeLabel =
+        getRangeLabel(range);
+
 
     return (
 
         <div className="trend-card">
+
 
             <div
                 className="trend-card-accent"
@@ -32,21 +81,33 @@ export default function DailyTrendCard({ trend = [] }) {
                 }}
             />
 
+
             <div className="trend-card-body">
+
+
+                {/* =================================================
+                    HEADER
+                ================================================= */}
 
                 <div className="trend-header">
 
                     <div>
 
                         <div className="trend-title">
+
                             Daily Ticket Trend
+
                         </div>
 
+
                         <div className="trend-subtitle">
+
                             Ticket volume by day
+
                         </div>
 
                     </div>
+
 
                     <div
                         className="trend-badge"
@@ -55,10 +116,17 @@ export default function DailyTrendCard({ trend = [] }) {
                             color: "#2563eb"
                         }}
                     >
-                        Last {trend.length} Days
+
+                        {rangeLabel}
+
                     </div>
 
                 </div>
+
+
+                {/* =================================================
+                    CHART
+                ================================================= */}
 
                 <div
                     style={{
@@ -79,7 +147,9 @@ export default function DailyTrendCard({ trend = [] }) {
                                 fontSize: 14
                             }}
                         >
+
                             Tidak ada data.
+
                         </div>
 
                     ) : (
@@ -105,6 +175,7 @@ export default function DailyTrendCard({ trend = [] }) {
                                     stroke="#e5e7eb"
                                 />
 
+
                                 <XAxis
                                     dataKey="date"
                                     tickFormatter={formatDate}
@@ -118,6 +189,7 @@ export default function DailyTrendCard({ trend = [] }) {
                                     axisLine={false}
                                 />
 
+
                                 <YAxis
                                     allowDecimals={false}
                                     tick={{
@@ -128,6 +200,7 @@ export default function DailyTrendCard({ trend = [] }) {
                                     axisLine={false}
                                 />
 
+
                                 <Tooltip
                                     labelFormatter={formatDate}
                                     formatter={(value) => [
@@ -135,6 +208,7 @@ export default function DailyTrendCard({ trend = [] }) {
                                         "Total"
                                     ]}
                                 />
+
 
                                 <Line
                                     type="linear"

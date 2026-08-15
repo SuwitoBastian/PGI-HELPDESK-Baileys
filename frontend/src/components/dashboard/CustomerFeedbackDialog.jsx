@@ -4,15 +4,16 @@ import {
     X,
     Star,
     MessageSquareText,
-    BarChart3,
     Clock3
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
+
 import {
     getFeedback,
     exportFeedbackExcel
 } from "../../api";
+
 
 export default function CustomerFeedbackDialog({
 
@@ -22,176 +23,285 @@ export default function CustomerFeedbackDialog({
 
 }) {
 
-    const [keyword, setKeyword] = useState("");
+    const [keyword, setKeyword] =
+        useState("");
 
-    const [startDate, setStartDate] = useState("");
+    const [startDate, setStartDate] =
+        useState("");
 
-    const [endDate, setEndDate] = useState("");
+    const [endDate, setEndDate] =
+        useState("");
 
-    const [team, setTeam] = useState("ALL");
+    /*
+    ==========================================================
+    LOCATION
+    ==========================================================
+    */
 
-    const [rows, setRows] = useState([]);
+    const [location, setLocation] =
+        useState("ALL");
 
-    const [summary, setSummary] = useState(statistics);
 
-    const [loading, setLoading] = useState(false);
+    const [rows, setRows] =
+        useState([]);
+
+    const [summary, setSummary] =
+        useState(statistics);
+
+    const [loading, setLoading] =
+        useState(false);
+
 
     const PAGE_SIZE = 10;
 
-    const [currentPage, setCurrentPage] = useState(1);
 
-    const totalPages = Math.ceil(rows.length / PAGE_SIZE);
+    const [currentPage, setCurrentPage] =
+        useState(1);
 
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
 
-    const endIndex = startIndex + PAGE_SIZE;
+    const totalPages =
+        Math.ceil(
+            rows.length / PAGE_SIZE
+        );
 
-    const paginatedRows = rows.slice(startIndex, endIndex);
+
+    const startIndex =
+        (currentPage - 1) * PAGE_SIZE;
+
+
+    const endIndex =
+        startIndex + PAGE_SIZE;
+
+
+    const paginatedRows =
+        rows.slice(
+            startIndex,
+            endIndex
+        );
+
+
+    /*
+    ==========================================================
+    EXPORT
+    ==========================================================
+    */
 
     function handleExport() {
 
         exportFeedbackExcel({
 
             startDate,
+
             endDate,
-            team,
+
+            location,
+
             keyword
 
         });
 
     }
+
+
+    /*
+    ==========================================================
+    LOAD FEEDBACK
+    ==========================================================
+    */
 
     async function loadFeedback() {
 
-    try {
+        try {
 
-        setLoading(true);
+            setLoading(true);
 
-        const response = await getFeedback({
 
-            startDate,
+            const response =
+                await getFeedback({
 
-            endDate,
+                    startDate,
 
-            team,
+                    endDate,
 
-            keyword
+                    location,
 
-        });
+                    keyword
 
-        setRows(response.data || []);
+                });
 
-        setSummary(response.statistics || {});
 
-    } catch (err) {
+            setRows(
+                response.data || []
+            );
 
-        console.error(
-            "Load Feedback Error :",
-            err
-        );
 
-        setRows([]);
+            setSummary(
+                response.statistics || {}
+            );
 
-        setSummary({
 
-            total_feedback: 0,
+        }
 
-            total_link_sent: 0,
+        catch (err) {
 
-            waiting_feedback: 0,
+            console.error(
+                "Load Feedback Error :",
+                err
+            );
 
-            average_response_rating: 0,
 
-            average_solution_rating: 0
+            setRows([]);
 
-        });
 
-    } finally {
+            setSummary({
 
-        setLoading(false);
+                total_feedback: 0,
+
+                total_link_sent: 0,
+
+                waiting_feedback: 0,
+
+                average_response_rating: 0,
+
+                average_solution_rating: 0
+
+            });
+
+        }
+
+        finally {
+
+            setLoading(false);
+
+        }
 
     }
 
-}
-  useEffect(() => {
 
-    setSummary(statistics);
-
-    if (!open) return;
-
-    loadFeedback();
-
-}, [
-
-    open,
-
-    startDate,
-
-    endDate,
-
-    team,
-
-    keyword
-
-]);
+    /*
+    ==========================================================
+    LOAD WHEN FILTER CHANGES
+    ==========================================================
+    */
 
     useEffect(() => {
 
-    setCurrentPage(1);
+        setSummary(statistics);
 
-}, [
 
-    keyword,
+        if (!open) return;
 
-    startDate,
 
-    endDate,
+        loadFeedback();
 
-    team
+    }, [
 
-]);
+        open,
+
+        startDate,
+
+        endDate,
+
+        location,
+
+        keyword
+
+    ]);
+
+
+    /*
+    ==========================================================
+    RESET PAGE
+    ==========================================================
+    */
+
+    useEffect(() => {
+
+        setCurrentPage(1);
+
+    }, [
+
+        keyword,
+
+        startDate,
+
+        endDate,
+
+        location
+
+    ]);
+
+
+    /*
+    ==========================================================
+    CLOSE
+    ==========================================================
+    */
 
     if (!open) return null;
 
+
+    /*
+    ==========================================================
+    STAR RATING
+    ==========================================================
+    */
+
     function renderStars(value = 0) {
 
-    const rating = Math.round(Number(value));
+        const rating =
+            Math.round(
+                Number(value)
+            );
 
-    return (
 
-        <div className="rating-stars">
+        return (
 
-            {
+            <div className="rating-stars">
 
-                Array.from({ length: 5 }).map((_, index) => (
+                {
 
-                    <Star
+                    Array.from({
+                        length: 5
+                    }).map((_, index) => (
 
-                        key={index}
+                        <Star
 
-                        size={14}
+                            key={index}
 
-                        fill={
-                            index < rating
-                                ? "currentColor"
-                                : "none"
-                        }
+                            size={14}
 
-                    />
+                            fill={
+                                index < rating
+                                    ? "currentColor"
+                                    : "none"
+                            }
 
-                ))
+                        />
 
-            }
+                    ))
 
-        </div>
+                }
 
-    );
+            </div>
 
-}
+        );
+
+    }
+
+
+    /*
+    ==========================================================
+    STATUS
+    ==========================================================
+    */
 
     function renderStatus(item) {
 
-        if (item.feedback_status === "received") {
+        if (
+            item.feedback_status ===
+            "received"
+        ) {
 
             return (
 
@@ -205,6 +315,7 @@ export default function CustomerFeedbackDialog({
 
         }
 
+
         return (
 
             <span className="badge-waiting">
@@ -217,12 +328,23 @@ export default function CustomerFeedbackDialog({
 
     }
 
+
+    /*
+    ==========================================================
+    EMPTY CELL
+    ==========================================================
+    */
+
     function renderCell(value) {
 
         if (
+
             value === null ||
+
             value === undefined ||
+
             String(value).trim() === ""
+
         ) {
 
             return (
@@ -237,9 +359,17 @@ export default function CustomerFeedbackDialog({
 
         }
 
+
         return value;
 
     }
+
+
+    /*
+    ==========================================================
+    RENDER
+    ==========================================================
+    */
 
     return (
 
@@ -252,41 +382,76 @@ export default function CustomerFeedbackDialog({
                     <div className="feedback-title">
 
                         <h2>
+
                             Customer Feedback
+
                         </h2>
 
+
                         <p>
+
                             Monitor customer satisfaction and engineer performance after ticket completion.
+
                         </p>
 
+
                         <span className="feedback-last-update">
-                            Last updated : {new Date().toLocaleString("id-ID")}
+
+                            Last updated :{" "}
+
+                            {
+                                new Date()
+                                    .toLocaleString(
+                                        "id-ID"
+                                    )
+                            }
+
                         </span>
 
                     </div>
 
+
                     <div className="feedback-header-action">
 
-                       <button
+                        <button
+
                             className="feedback-export-btn"
-                            onClick={handleExport}
+
+                            onClick={
+                                handleExport
+                            }
+
                         >
-                        <Download size={12} />
+
+                            <Download
+                                size={12}
+                            />
+
                             Export Excel
+
                         </button>
 
+
                         <button
+
                             className="feedback-close-btn"
-                            onClick={onClose}
+
+                            onClick={
+                                onClose
+                            }
+
                         >
 
-                            <X size={12} />
+                            <X
+                                size={12}
+                            />
 
                         </button>
 
                     </div>
 
                 </div>
+
 
                 <div className="modal-body">
 
@@ -297,89 +462,160 @@ export default function CustomerFeedbackDialog({
                         <div className="summary-card">
 
                             <div className="summary-icon response">
-                                <Star size={24}/>
+
+                                <Star
+                                    size={24}
+                                />
+
                             </div>
+
 
                             <div className="summary-content">
 
-                                <small>Average Response</small>
+                                <small>
+
+                                    Average Response
+
+                                </small>
+
 
                                 <h3>
-                                    {Number(
-                                        summary.average_response_rating || 0
-                                    ).toFixed(1)}
+
+                                    {
+                                        Number(
+                                            summary.average_response_rating || 0
+                                        ).toFixed(1)
+                                    }
+
                                 </h3>
 
+
                                 <span>
+
                                     Average customer response rating
+
                                 </span>
 
                             </div>
 
                         </div>
+
 
                         <div className="summary-card">
 
                             <div className="summary-icon solution">
-                                <Star size={24}/>
+
+                                <Star
+                                    size={24}
+                                />
+
                             </div>
+
 
                             <div className="summary-content">
 
-                                <small>Average Solution</small>
+                                <small>
+
+                                    Average Solution
+
+                                </small>
+
 
                                 <h3>
-                                    {Number(
-                                        summary.average_solution_rating || 0
-                                    ).toFixed(1)}
+
+                                    {
+                                        Number(
+                                            summary.average_solution_rating || 0
+                                        ).toFixed(1)
+                                    }
+
                                 </h3>
 
+
                                 <span>
+
                                     Average solution satisfaction
+
                                 </span>
 
                             </div>
 
                         </div>
+
 
                         <div className="summary-card">
 
                             <div className="summary-icon link">
-                                <MessageSquareText size={24}/>
+
+                                <MessageSquareText
+                                    size={24}
+                                />
+
                             </div>
+
 
                             <div className="summary-content">
 
-                                <small>Link Feedback Terkirim</small>
+                                <small>
+
+                                    Link Feedback Terkirim
+
+                                </small>
+
 
                                 <h3>
-                                    {summary.total_link_sent || 0}
+
+                                    {
+                                        summary.total_link_sent || 0
+                                    }
+
                                 </h3>
 
+
                                 <span>
+
                                     Google Form Berhasil Dikirim
+
                                 </span>
 
                             </div>
 
                         </div>
 
+
                         <div className="summary-card">
 
                             <div className="summary-icon waiting">
-                                <Clock3 size={24}/>
+
+                                <Clock3
+                                    size={24}
+                                />
+
                             </div>
+
 
                             <div className="summary-content">
 
-                                <small>Belum Mengisi Feedback</small>
+                                <small>
+
+                                    Belum Mengisi Feedback
+
+                                </small>
+
 
                                 <h3>
-                                    {summary.waiting_feedback || 0}
+
+                                    {
+                                        summary.waiting_feedback || 0
+                                    }
+
                                 </h3>
 
+
                                 <span>
+
                                     Menunggu customer mengisi Google Form
+
                                 </span>
 
                             </div>
@@ -387,6 +623,7 @@ export default function CustomerFeedbackDialog({
                         </div>
 
                     </div>
+
 
                     {/* Filter */}
 
@@ -400,11 +637,14 @@ export default function CustomerFeedbackDialog({
 
                             </label>
 
+
                             <input
 
                                 type="date"
 
-                                value={startDate}
+                                value={
+                                    startDate
+                                }
 
                                 onChange={e =>
                                     setStartDate(
@@ -416,6 +656,7 @@ export default function CustomerFeedbackDialog({
 
                         </div>
 
+
                         <div className="filter-item">
 
                             <label>
@@ -424,11 +665,14 @@ export default function CustomerFeedbackDialog({
 
                             </label>
 
+
                             <input
 
                                 type="date"
 
-                                value={endDate}
+                                value={
+                                    endDate
+                                }
 
                                 onChange={e =>
                                     setEndDate(
@@ -440,30 +684,50 @@ export default function CustomerFeedbackDialog({
 
                         </div>
 
+
                         <div className="filter-item">
 
                             <label>
 
-                                Team
+                                Location
 
                             </label>
 
+
                             <select
+
                                 className="assign-select"
-                                value={team}
-                                onChange={e => setTeam(e.target.value)}
+
+                                value={
+                                    location
+                                }
+
+                                onChange={e =>
+                                    setLocation(
+                                        e.target.value
+                                    )
+                                }
+
                             >
 
                                 <option value="ALL">
-                                    All Team
+
+                                    All Location
+
                                 </option>
 
-                                <option value="TEAM_A">
-                                    Team A
+
+                                <option value="AKR">
+
+                                    HO - AKR Tower
+
                                 </option>
 
-                                <option value="TEAM_B">
-                                    Team B
+
+                                <option value="HO">
+
+                                    Head Office
+
                                 </option>
 
                             </select>
@@ -472,19 +736,25 @@ export default function CustomerFeedbackDialog({
 
                     </div>
 
+
                     {/* Toolbar */}
 
                     <div className="feedback-toolbar">
 
                         <div className="search-box">
 
-                            <Search size={18} />
+                            <Search
+                                size={18}
+                            />
+
 
                             <input
 
                                 className="search"
 
-                                value={keyword}
+                                value={
+                                    keyword
+                                }
 
                                 onChange={e =>
                                     setKeyword(
@@ -500,26 +770,36 @@ export default function CustomerFeedbackDialog({
 
                     </div>
 
+
+                    {/* Loading */}
+
+                    {
+                        loading && (
+
+                            <div className="feedback-loading">
+
+                                <MessageSquareText
+
+                                    size={20}
+
+                                    strokeWidth={1.8}
+
+                                />
+
+
+                                <span>
+
+                                    Memuat data customer feedback...
+
+                                </span>
+
+                            </div>
+
+                        )
+                    }
+
+
                     {/* Table */}
-
-                    {loading && (
-
-                    <div className="feedback-loading">
-
-                        <MessageSquareText
-                            size={20}
-                            strokeWidth={1.8}
-                        />
-
-                        <span>
-
-                            Memuat data customer feedback...
-
-                        </span>
-
-                    </div>
-
-                )}
 
                     <div className="table-wrap">
 
@@ -528,177 +808,273 @@ export default function CustomerFeedbackDialog({
                             <thead>
 
                                 <tr>
-                                    <th>Ticket</th>
-                                    <th>Feedback Activity</th>
-                                    <th>Branch</th>
-                                    <th>Issue</th>
-                                    <th>Engineer</th>
-                                    <th>Response</th>
-                                    <th>Solution</th>
-                                    <th>Comment</th>
-                                    <th>Status</th>
+
+                                    <th>
+                                        Ticket
+                                    </th>
+
+                                    <th>
+                                        Feedback Activity
+                                    </th>
+
+                                    <th>
+                                        Branch
+                                    </th>
+
+                                    <th>
+                                        Issue
+                                    </th>
+
+                                    <th>
+                                        Engineer
+                                    </th>
+
+                                    <th>
+                                        Response
+                                    </th>
+
+                                    <th>
+                                        Solution
+                                    </th>
+
+                                    <th>
+                                        Comment
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
 
                                 </tr>
 
                             </thead>
 
+
                             <tbody>
 
                                 {
 
-                                    rows.length === 0 ? (
+                                    rows.length === 0
 
-                                        <tr>
+                                        ? (
 
-                                            <td
-                                                colSpan={9}
-                                                className="empty"
-                                            >
+                                            <tr>
 
-                                                <div className="feedback-empty">
+                                                <td
 
-                                                    <MessageSquareText
-                                                        size={46}
-                                                        strokeWidth={1.4}
-                                                    />
+                                                    colSpan={9}
 
-                                                    <h3>
+                                                    className="empty"
 
-                                                        Belum ada aktivitas customer feedback.
-                                                        Aktivitas akan muncul setelah sistem mengirim link Google Form kepada customer.
+                                                >
 
-                                                    </h3>
+                                                    <div className="feedback-empty">
 
-                                                    <p>
+                                                        <MessageSquareText
 
-                                                        Feedback Google Form akan
-                                                        muncul secara otomatis
-                                                        setelah customer mengisi
-                                                        form yang dikirim oleh
-                                                        sistem.
+                                                            size={46}
 
-                                                    </p>
+                                                            strokeWidth={1.4}
 
-                                                </div>
+                                                        />
 
-                                            </td>
 
-                                        </tr>
+                                                        <h3>
 
-                                    ) : (
+                                                            Belum ada aktivitas customer feedback.
 
-                                        paginatedRows.map(item => (
+                                                            Aktivitas akan muncul setelah sistem mengirim link Google Form kepada customer.
 
-                                            <tr
-                                            key={
-                                                item.ticket_id ||
-                                                item.id
-                                            }
-                                            className={
-                                                item.feedback_status === "waiting"
-                                                    ? "feedback-row-waiting"
-                                                    : ""
-                                            }
-                                        >
+                                                        </h3>
 
-                                                <td>
 
-                                                    <span className="ticket-code">
+                                                        <p>
 
-                                                        {item.ticket_id || "-"}
+                                                            Feedback Google Form akan muncul secara otomatis setelah customer mengisi form yang dikirim oleh sistem.
 
-                                                    </span>
-
-                                                </td>
-
-                                                <td>
-
-                                                  {
-                                                    item.feedback_status === "received"
-
-                                                        ? new Date(
-                                                            item.feedback_at
-                                                        ).toLocaleString("id-ID")
-
-                                                        : new Date(
-                                                            item.feedback_sent_at ||
-                                                            item.selesai
-                                                        ).toLocaleString("id-ID")
-                                                    }
-
-                                                </td>
-
-                                                <td>
-
-                                                    {renderCell(item.branch)}
-
-                                                </td>
-
-                                                <td>
-
-                                                    {renderCell(item.issue_category)}
-
-                                                </td>
-
-                                                <td>
-
-                                                    {renderCell(item.engineer)}
-
-                                                </td>
-
-                                                <td>
-
-                                                    {
-                                                        item.response_rating
-                                                            ? renderStars(item.response_rating)
-                                                            : renderCell(null)
-                                                    }
-
-                                                </td>
-
-                                                <td>
-
-                                                    {
-                                                        item.solution_rating
-                                                            ? renderStars(item.solution_rating)
-                                                            : renderCell(null)
-                                                    }
-
-                                                </td>
-
-                                                <td>
-
-                                                    <div
-                                                        className="feedback-comment"
-                                                        title={item.comment}
-                                                    >
-
-                                                        {
-
-                                                            item.comment ||
-                                                            "-"
-
-                                                        }
+                                                        </p>
 
                                                     </div>
 
                                                 </td>
 
-                                                <td>
-
-                                                    {
-
-                                                        renderStatus(item)
-
-                                                    }
-
-                                                </td>
-
                                             </tr>
 
-                                        ))
+                                        )
 
-                                    )
+                                        : (
+
+                                            paginatedRows.map(
+                                                item => (
+
+                                                    <tr
+
+                                                        key={
+                                                            item.ticket_id ||
+                                                            item.id
+                                                        }
+
+                                                        className={
+
+                                                            item.feedback_status ===
+                                                            "waiting"
+
+                                                                ? "feedback-row-waiting"
+
+                                                                : ""
+
+                                                        }
+
+                                                    >
+
+                                                        <td>
+
+                                                            <span className="ticket-code">
+
+                                                                {
+                                                                    item.ticket_id ||
+                                                                    "-"
+                                                                }
+
+                                                            </span>
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            {
+
+                                                                item.feedback_status ===
+                                                                "received"
+
+                                                                    ? new Date(
+                                                                        item.feedback_at
+                                                                    ).toLocaleString(
+                                                                        "id-ID"
+                                                                    )
+
+                                                                    : new Date(
+                                                                        item.feedback_sent_at ||
+                                                                        item.selesai
+                                                                    ).toLocaleString(
+                                                                        "id-ID"
+                                                                    )
+
+                                                            }
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            {
+                                                                renderCell(
+                                                                    item.branch
+                                                                )
+                                                            }
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            {
+                                                                renderCell(
+                                                                    item.issue_category
+                                                                )
+                                                            }
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            {
+                                                                renderCell(
+                                                                    item.engineer
+                                                                )
+                                                            }
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            {
+
+                                                                item.response_rating
+
+                                                                    ? renderStars(
+                                                                        item.response_rating
+                                                                    )
+
+                                                                    : renderCell(
+                                                                        null
+                                                                    )
+
+                                                            }
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            {
+
+                                                                item.solution_rating
+
+                                                                    ? renderStars(
+                                                                        item.solution_rating
+                                                                    )
+
+                                                                    : renderCell(
+                                                                        null
+                                                                    )
+
+                                                            }
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            <div
+
+                                                                className="feedback-comment"
+
+                                                                title={
+                                                                    item.comment
+                                                                }
+
+                                                            >
+
+                                                                {
+                                                                    item.comment ||
+                                                                    "-"
+                                                                }
+
+                                                            </div>
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            {
+                                                                renderStatus(
+                                                                    item
+                                                                )
+                                                            }
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                )
+                                            )
+
+                                        )
 
                                 }
 
@@ -708,59 +1084,90 @@ export default function CustomerFeedbackDialog({
 
                     </div>
 
+
                     {/* Pagination */}
 
                     <div className="pagination">
 
-                    <div className="page-info">
+                        <div className="page-info">
 
-                        Showing{" "}
+                            Showing{" "}
 
-                        {rows.length === 0 ? 0 : startIndex + 1}
+                            {
+                                rows.length === 0
+                                    ? 0
+                                    : startIndex + 1
+                            }
 
-                        {"–"}
+                            {"–"}
 
-                        {rows.length === 0 ? 0 : Math.min(startIndex + PAGE_SIZE, rows.length)}
+                            {
+                                rows.length === 0
+                                    ? 0
+                                    : Math.min(
+                                        startIndex + PAGE_SIZE,
+                                        rows.length
+                                    )
+                            }
 
-                        {" "}of{" "}
+                            {" "}of{" "}
 
-                        {rows.length}
+                            {
+                                rows.length
+                            }
 
-                        {" "}feedback
+                            {" "}feedback
 
-                    </div>
+                        </div>
+
 
                         <div className="page-buttons">
 
-                        <button
+                            <button
 
-                            disabled={currentPage === 1}
+                                disabled={
+                                    currentPage === 1
+                                }
 
-                            onClick={() => setCurrentPage(currentPage - 1)}
+                                onClick={() =>
+                                    setCurrentPage(
+                                        currentPage - 1
+                                    )
+                                }
 
-                        >
+                            >
 
-                            ◀
+                                ◀
 
-                        </button>
+                            </button>
 
-                        <span className="page-num">
 
-                            {currentPage}
+                            <span className="page-num">
 
-                        </span>
+                                {
+                                    currentPage
+                                }
 
-                        <button
+                            </span>
 
-                            disabled={currentPage === totalPages}
 
-                            onClick={() => setCurrentPage(currentPage + 1)}
+                            <button
 
-                        >
+                                disabled={
+                                    currentPage === totalPages
+                                }
 
-                            ▶
+                                onClick={() =>
+                                    setCurrentPage(
+                                        currentPage + 1
+                                    )
+                                }
 
-                        </button>
+                            >
+
+                                ▶
+
+                            </button>
 
                         </div>
 

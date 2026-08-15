@@ -2516,6 +2516,8 @@
 
     color:var(--foreground);
 
+    letter-spacing:.2px;
+
 }
 
 .trend-item-text{
@@ -2672,6 +2674,7 @@
 .trend-item-body{
 
     width:100%;
+    flex:1;
 
 }
 

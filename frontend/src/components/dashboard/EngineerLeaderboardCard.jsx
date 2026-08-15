@@ -1,7 +1,12 @@
-import { Trophy } from "lucide-react";
+import { Trophy, MapPin } from "lucide-react";
 import { useState } from "react";
 
 import EngineerDetailDialog from "./EngineerDetailDialog";
+
+
+// =====================================================
+// CAPACITY CLASS
+// =====================================================
 
 function getCapacityClass(level) {
 
@@ -26,6 +31,11 @@ function getCapacityClass(level) {
 
 }
 
+
+// =====================================================
+// CAPACITY LABEL
+// =====================================================
+
 function getCapacityLabel(level) {
 
     switch (level) {
@@ -43,174 +53,395 @@ function getCapacityLabel(level) {
             return "Full Capacity";
 
         default:
-            return level;
+            return level || "-";
 
     }
 
 }
 
+
+// =====================================================
+// LOCATION LABEL
+// =====================================================
+
+function getLocationLabel(location) {
+
+    switch (location) {
+
+        case "AKR":
+            return "HO - AKR Tower";
+
+        case "HO":
+            return "Head Office";
+
+        default:
+            return location || "-";
+
+    }
+
+}
+
+
+// =====================================================
+// COMPONENT
+// =====================================================
+
 export default function EngineerLeaderboardCard({
 
-    engineers = []
+    engineers = [],
+
+    location = ""
 
 }) {
 
-    const [selectedEngineer, setSelectedEngineer] = useState(null);
+    const [
+        selectedEngineer,
+        setSelectedEngineer
+    ] = useState(null);
+
+
+    /*
+    =====================================================
+    LOCATION MODE
+    =====================================================
+
+    Jika location dipilih:
+
+        AKR
+        HO
+
+    maka lokasi tidak perlu ditampilkan lagi
+    pada setiap engineer karena sudah diketahui
+    dari halaman yang sedang dibuka.
+
+    ALL:
+        lokasi engineer tetap ditampilkan.
+    */
+
+    const showEngineerLocation =
+        !location;
+
 
     return (
 
         <div className="card engineer-leaderboard-card">
 
+
+            {/* =================================================
+                HEADER
+            ================================================= */}
+
             <div className="card-header">
 
                 <div className="card-title">
 
-                    <Trophy size={20} />
+                    <Trophy
+                        size={20}
+                        strokeWidth={2}
+                    />
 
-                    <span>Engineer Leaderboard</span>
+                    <span>
+                        Engineer Leaderboard
+                    </span>
 
                 </div>
 
+
                 <p className="card-description">
 
-                    Performa engineer berdasarkan penyelesaian tiket dan skor.
+                    Performa engineer berdasarkan
+                    penyelesaian tiket dan skor.
 
                 </p>
 
             </div>
 
+
+            {/* =================================================
+                CONTENT
+            ================================================= */}
+
             <div className="card-content">
 
                 <div className="leaderboard-list">
 
-                    {engineers.map((engineer, index) => (
 
-                        <div
-                            key={`${engineer.team}-${engineer.name}`}
-                            className="leaderboard-item"
-                            onClick={() => setSelectedEngineer(engineer)}
-                        >
+                    {/* =================================================
+                        EMPTY
+                    ================================================= */}
 
-                            <div className="leaderboard-top">
+                    {engineers.length === 0 ? (
 
-                                <div className="leaderboard-left">
+                        <div className="leaderboard-empty">
 
-                                    <div
-                                        className={`leaderboard-rank rank-${
-                                            index === 0
-                                                ? "gold"
-                                                : index === 1
-                                                ? "silver"
-                                                : index === 2
-                                                ? "bronze"
-                                                : "default"
-                                        }`}
-                                    >
-
-                                        {String(index + 1).padStart(2, "0")}
-
-                                    </div>
-
-                                    <div>
-
-                                        <div className="leaderboard-name">
-
-                                            {engineer.name}
-
-                                        </div>
-
-                                        <div className="leaderboard-team">
-
-                                            Team {engineer.team}
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                                <div className="leaderboard-score">
-
-                                    <strong>
-
-                                        {engineer.score}
-
-                                    </strong>
-
-                                    <span>
-
-                                        Score
-
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                            <div className="leaderboard-progress">
-
-                                <div
-                                    className="leaderboard-progress-fill"
-                                    style={{
-                                        width: `${Math.min(engineer.contribution, 100)}%`
-                                    }}
-                                />
-
-                            </div>
-
-                            <div className="leaderboard-footer">
-
-                                <div className="leaderboard-metric">
-
-                                    <span>
-
-                                        Completed
-
-                                    </span>
-
-                                    <strong>
-
-                                        {engineer.completed}
-
-                                    </strong>
-
-                                    <small>
-
-                                        Ticket
-
-                                    </small>
-
-                                </div>
-
-                                <div
-                                    className={`leaderboard-capacity ${getCapacityClass(
-                                        engineer.capacity.level
-                                    )}`}
-                                >
-
-                                    <span className="capacity-dot"></span>
-
-                                    <span>
-
-                                        {getCapacityLabel(engineer.capacity.level)}
-
-                                    </span>
-
-                                </div>
-
-                            </div>
+                            Belum ada data engineer.
 
                         </div>
 
-                    ))}
+                    ) : (
+
+                        engineers.map(
+                            (engineer, index) => (
+
+                                <div
+                                    key={
+                                        `${engineer.location || "ALL"}-${engineer.code || engineer.name}-${index}`
+                                    }
+                                    className="leaderboard-item"
+                                    onClick={() =>
+                                        setSelectedEngineer(
+                                            engineer
+                                        )
+                                    }
+                                >
+
+
+                                    {/* =================================================
+                                        TOP
+                                    ================================================= */}
+
+                                    <div className="leaderboard-top">
+
+
+                                        {/* =============================================
+                                            LEFT
+                                        ============================================= */}
+
+                                        <div className="leaderboard-left">
+
+
+                                            {/* =============================================
+                                                RANK
+                                            ============================================= */}
+
+                                            <div
+                                                className={
+                                                    `leaderboard-rank rank-${
+                                                        index === 0
+                                                            ? "gold"
+                                                            : index === 1
+                                                                ? "silver"
+                                                                : index === 2
+                                                                    ? "bronze"
+                                                                    : "default"
+                                                    }`
+                                                }
+                                            >
+
+                                                {String(
+                                                    index + 1
+                                                ).padStart(
+                                                    2,
+                                                    "0"
+                                                )}
+
+                                            </div>
+
+
+                                            {/* =============================================
+                                                ENGINEER
+                                            ============================================= */}
+
+                                            <div>
+
+                                                <div className="leaderboard-name">
+
+                                                    {engineer.name}
+
+                                                </div>
+
+
+                                                {/* =============================================
+                                                    LOCATION
+
+                                                    Hanya tampil pada ALL Performance.
+                                                ============================================= */}
+
+                                                {showEngineerLocation && (
+
+                                                    <div className="leaderboard-team">
+
+                                                        {engineer.location && (
+
+                                                            <>
+
+                                                                <MapPin
+                                                                    size={12}
+                                                                    strokeWidth={2}
+                                                                />
+
+                                                                <span>
+
+                                                                    {
+                                                                        getLocationLabel(
+                                                                            engineer.location
+                                                                        )
+                                                                    }
+
+                                                                </span>
+
+                                                            </>
+
+                                                        )}
+
+                                                    </div>
+
+                                                )}
+
+
+                                                {/* =============================================
+                                                    LOCATION MODE
+
+                                                    Jangan tampilkan Team A / Team B.
+
+                                                    Cukup beri label engineer.
+                                                ============================================= */}
+
+                                                {!showEngineerLocation && (
+
+                                                    <div className="leaderboard-team">
+
+                                                        Engineer
+
+                                                    </div>
+
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+
+                                        {/* =============================================
+                                            SCORE
+                                        ============================================= */}
+
+                                        <div className="leaderboard-score">
+
+                                            <strong>
+
+                                                {engineer.score || 0}
+
+                                            </strong>
+
+                                            <span>
+
+                                                Score
+
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    {/* =================================================
+                                        CONTRIBUTION
+                                    ================================================= */}
+
+                                    <div className="leaderboard-progress">
+
+                                        <div
+                                            className="leaderboard-progress-fill"
+                                            style={{
+                                                width:
+                                                    `${Math.min(
+                                                        Number(
+                                                            engineer.contribution
+                                                        ) || 0,
+                                                        100
+                                                    )}%`
+                                            }}
+                                        />
+
+                                    </div>
+
+
+                                    {/* =================================================
+                                        FOOTER
+                                    ================================================= */}
+
+                                    <div className="leaderboard-footer">
+
+
+                                        {/* =============================================
+                                            COMPLETED
+                                        ============================================= */}
+
+                                        <div className="leaderboard-metric">
+
+                                            <span>
+                                                Completed
+                                            </span>
+
+                                            <strong>
+
+                                                {engineer.completed || 0}
+
+                                            </strong>
+
+                                            <small>
+                                                Ticket
+                                            </small>
+
+                                        </div>
+
+
+                                        {/* =============================================
+                                            CAPACITY
+                                        ============================================= */}
+
+                                        <div
+                                            className={
+                                                `leaderboard-capacity ${
+                                                    getCapacityClass(
+                                                        engineer.capacity?.level
+                                                    )
+                                                }`
+                                            }
+                                        >
+
+                                            <span className="capacity-dot"></span>
+
+                                            <span>
+
+                                                {getCapacityLabel(
+                                                    engineer.capacity?.level
+                                                )}
+
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+
+                            )
+                        )
+
+                    )}
 
                 </div>
 
             </div>
 
+
+            {/* =================================================
+                DETAIL DIALOG
+            ================================================= */}
+
             <EngineerDetailDialog
-                engineer={selectedEngineer}
-                onClose={() => setSelectedEngineer(null)}
+
+                engineer={
+                    selectedEngineer
+                }
+
+                onClose={() =>
+                    setSelectedEngineer(null)
+                }
+
             />
 
         </div>

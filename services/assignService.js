@@ -1,11 +1,12 @@
 const repository =
     require("../repositories/ticketRepository");
 
-const daftarPIC =
-    require("../config/pic");
+const engineerService =
+    require("./engineerService");
 
-const engineers =
-    require("../config/engineers");
+/* ==========================================================
+   Assign By Nomor
+========================================================== */
 
 function assignByNomor(nomor, kodePIC) {
 
@@ -15,14 +16,8 @@ function assignByNomor(nomor, kodePIC) {
     if (!ticket)
         return null;
 
-    const pic =
-        daftarPIC[kodePIC];
-
-    if (!pic)
-        return null;
-
     const engineer =
-        engineers[kodePIC];
+        engineerService.getByCode(kodePIC);
 
     if (!engineer)
         return null;
@@ -31,7 +26,7 @@ function assignByNomor(nomor, kodePIC) {
 
         ticket.id,
 
-        pic,
+        engineer.name,
 
         engineer.team
 
@@ -41,7 +36,7 @@ function assignByNomor(nomor, kodePIC) {
 
         ticket,
 
-        pic,
+        pic: engineer.name,
 
         engineer
 
@@ -49,16 +44,14 @@ function assignByNomor(nomor, kodePIC) {
 
 }
 
+/* ==========================================================
+   Assign By Ticket
+========================================================== */
+
 function assign(ticketId, kodePIC) {
 
-    const pic =
-        daftarPIC[kodePIC];
-
-    if (!pic)
-        return null;
-
     const engineer =
-        engineers[kodePIC];
+        engineerService.getByCode(kodePIC);
 
     if (!engineer)
         return null;
@@ -67,7 +60,7 @@ function assign(ticketId, kodePIC) {
 
         ticketId,
 
-        pic,
+        engineer.name,
 
         engineer.team
 
@@ -75,13 +68,17 @@ function assign(ticketId, kodePIC) {
 
     return {
 
-        pic,
+        pic: engineer.name,
 
         engineer
 
     };
 
 }
+
+/* ==========================================================
+   Export
+========================================================== */
 
 module.exports = {
 

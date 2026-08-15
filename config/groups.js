@@ -18,7 +18,7 @@ module.exports = {
     AMANTHA:
     "120363422562446752@g.us",
 
-    //PRIVATE:
-    //"120363402182254408@g.us"
+    PRIVATE:
+    "120363402182254408@g.us"
 
 };

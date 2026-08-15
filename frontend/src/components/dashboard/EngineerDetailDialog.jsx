@@ -1,10 +1,16 @@
 import Modal from "../ui/Modal";
+
 import {
     User,
     CheckCircle2,
     Loader2,
-    Activity
+    Activity,
+    MapPin
 } from "lucide-react";
+
+// =====================================================
+// CAPACITY CLASS
+// =====================================================
 
 function getCapacityClass(level) {
 
@@ -29,6 +35,10 @@ function getCapacityClass(level) {
 
 }
 
+// =====================================================
+// CAPACITY LABEL
+// =====================================================
+
 function getCapacityLabel(level) {
 
     switch (level) {
@@ -46,11 +56,15 @@ function getCapacityLabel(level) {
             return "Full Capacity";
 
         default:
-            return level;
+            return level || "-";
 
     }
 
 }
+
+// =====================================================
+// CAPACITY DESCRIPTION
+// =====================================================
 
 function getCapacityDescription(level) {
 
@@ -75,6 +89,31 @@ function getCapacityDescription(level) {
 
 }
 
+// =====================================================
+// LOCATION LABEL
+// =====================================================
+
+function getLocationLabel(location) {
+
+    switch (location) {
+
+        case "AKR":
+            return "HO - AKR Tower";
+
+        case "HO":
+            return "Head Office";
+
+        default:
+            return location || "-";
+
+    }
+
+}
+
+// =====================================================
+// COMPONENT
+// =====================================================
+
 export default function EngineerDetailDialog({
 
     engineer,
@@ -83,9 +122,18 @@ export default function EngineerDetailDialog({
 
 }) {
 
-    console.count("EngineerDetailDialog Render");
+    if (!engineer) {
 
-    if (!engineer) return null;
+        return null;
+
+    }
+
+
+    const locationLabel =
+        getLocationLabel(
+            engineer.location
+        );
+
 
     return (
 
@@ -97,6 +145,11 @@ export default function EngineerDetailDialog({
 
             <div className="engineer-dialog">
 
+
+                {/* =================================================
+                    PROFILE
+                ================================================= */}
+
                 <div className="engineer-profile">
 
                     <div className="engineer-profile-left">
@@ -107,6 +160,7 @@ export default function EngineerDetailDialog({
 
                         </div>
 
+
                         <div>
 
                             <h2>
@@ -115,15 +169,30 @@ export default function EngineerDetailDialog({
 
                             </h2>
 
-                            <p>
 
-                                Team {engineer.team}
+                            {/* LOCATION */}
+
+                            <p className="engineer-location">
+
+                                <MapPin
+                                    size={14}
+                                    strokeWidth={2}
+                                />
+
+                                <span>
+
+                                    {locationLabel}
+
+                                </span>
 
                             </p>
 
                         </div>
 
                     </div>
+
+
+                    {/* SCORE */}
 
                     <div className="engineer-score">
 
@@ -133,9 +202,10 @@ export default function EngineerDetailDialog({
 
                         </span>
 
+
                         <strong>
 
-                            {engineer.score}
+                            {engineer.score ?? 0}
 
                         </strong>
 
@@ -143,7 +213,15 @@ export default function EngineerDetailDialog({
 
                 </div>
 
+
+                {/* =================================================
+                    METRICS
+                ================================================= */}
+
                 <div className="engineer-metrics">
+
+
+                    {/* ASSIGNED */}
 
                     <div className="metric-row">
 
@@ -159,6 +237,7 @@ export default function EngineerDetailDialog({
 
                         </div>
 
+
                         <strong
                             className={
                                 engineer.assigned === 0
@@ -167,11 +246,14 @@ export default function EngineerDetailDialog({
                             }
                         >
 
-                            {engineer.assigned} Ticket
+                            {engineer.assigned ?? 0} Ticket
 
                         </strong>
 
                     </div>
+
+
+                    {/* COMPLETED */}
 
                     <div className="metric-row">
 
@@ -187,13 +269,17 @@ export default function EngineerDetailDialog({
 
                         </div>
 
+
                         <strong>
 
-                            {engineer.completed} Ticket
+                            {engineer.completed ?? 0} Ticket
 
                         </strong>
 
                     </div>
+
+
+                    {/* PROCESS */}
 
                     <div className="metric-row">
 
@@ -209,6 +295,7 @@ export default function EngineerDetailDialog({
 
                         </div>
 
+
                         <strong
                             className={
                                 engineer.process === 0
@@ -217,11 +304,14 @@ export default function EngineerDetailDialog({
                             }
                         >
 
-                            {engineer.process} Ticket
+                            {engineer.process ?? 0} Ticket
 
                         </strong>
 
                     </div>
+
+
+                    {/* CONTRIBUTION */}
 
                     <div className="metric-row">
 
@@ -237,15 +327,21 @@ export default function EngineerDetailDialog({
 
                         </div>
 
+
                         <strong>
 
-                            {engineer.contribution}%
+                            {engineer.contribution ?? 0}%
 
                         </strong>
 
                     </div>
 
                 </div>
+
+
+                {/* =================================================
+                    CAPACITY
+                ================================================= */}
 
                 <div className="capacity-section">
 
@@ -255,26 +351,31 @@ export default function EngineerDetailDialog({
 
                     </div>
 
+
                     <div
                         className={`leaderboard-capacity ${getCapacityClass(
-                            engineer.capacity.level
+                            engineer.capacity?.level
                         )}`}
                     >
 
                         <span className="capacity-dot"></span>
 
+
                         <span>
 
-                            {getCapacityLabel(engineer.capacity.level)}
+                            {getCapacityLabel(
+                                engineer.capacity?.level
+                            )}
 
                         </span>
 
                     </div>
 
+
                     <p className="capacity-description">
 
                         {getCapacityDescription(
-                            engineer.capacity.level
+                            engineer.capacity?.level
                         )}
 
                     </p>

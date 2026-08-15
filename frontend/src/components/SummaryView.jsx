@@ -5,7 +5,8 @@ import TrendPage from "./dashboard/trend/TrendPage";
 export default function SummaryView({
     data,
     team = "ALL",
-    page = "overview"
+    location = "",
+    page
 }) {
 
     switch (page) {
@@ -15,6 +16,7 @@ export default function SummaryView({
                 <AnalyticsPage
                     data={data}
                     team={team}
+                    location={location}
                 />
             );
 
@@ -23,6 +25,7 @@ export default function SummaryView({
                 <TrendPage
                     data={data}
                     team={team}
+                    location={location}
                 />
             );
 
@@ -30,6 +33,7 @@ export default function SummaryView({
             return (
                 <OverviewPage
                     data={data}
+                    location={location}
                 />
             );
 

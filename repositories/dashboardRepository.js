@@ -1,98 +1,384 @@
-const db = require("../config/database"); // SESUAIKAN DENGAN PROJECT KAMU
+const db =
+    require("../database/database");
 
-function getAllTickets() {
+/* ==========================================================
+   Helper
+   ========================================================== */
 
-    return db.prepare(`
+function buildInClause(values) {
+
+    if (!Array.isArray(values) || values.length === 0) {
+
+        return {
+            clause: "1 = 0",
+            params: []
+        };
+
+    }
+
+    return {
+        clause: values
+            .map(() => "?")
+            .join(", "),
+        params: values
+    };
+
+}
+
+/* ==========================================================
+   Dashboard Location - PROCESS
+   ========================================================== */
+
+function countProcessByEngineers(
+    engineerNames = [],
+    start = null,
+    end = null
+) {
+
+    const inClause =
+        buildInClause(engineerNames);
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE status = 'PROCESS'
+        AND pic IN (${inClause.clause})
+    `;
+
+    const params = [
+        ...inClause.params
+    ];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
+
+}
+
+/* ==========================================================
+   Dashboard Location - CLOSED
+   ========================================================== */
+
+function countClosedByEngineers(
+    engineerNames = [],
+    start = null,
+    end = null
+) {
+
+    const inClause =
+        buildInClause(engineerNames);
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE status = 'CLOSED'
+        AND pic IN (${inClause.clause})
+    `;
+
+    const params = [
+        ...inClause.params
+    ];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(selesai)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
+
+}
+
+/* ==========================================================
+   Dashboard Location - TOTAL HANDLED
+   PROCESS + CLOSED
+   ========================================================== */
+
+function countTotalByEngineers(
+    engineerNames = [],
+    start = null,
+    end = null
+) {
+
+    return (
+        countProcessByEngineers(
+            engineerNames,
+            start,
+            end
+        ) +
+
+        countClosedByEngineers(
+            engineerNames,
+            start,
+            end
+        )
+    );
+
+}
+
+/* ==========================================================
+   Dashboard Location - TICKET LIST
+   ========================================================== */
+
+function findTicketsByEngineers(
+    engineerNames = [],
+    start = null,
+    end = null
+) {
+
+    const inClause =
+        buildInClause(engineerNames);
+
+    let sql = `
         SELECT *
         FROM tickets
+        WHERE pic IN (${inClause.clause})
+    `;
+
+    const params = [
+        ...inClause.params
+    ];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    sql += `
         ORDER BY waktu DESC
-    `).all();
+    `;
+
+    return db
+        .prepare(sql)
+        .all(...params);
 
 }
 
-function getOpenCount() {
+/* ==========================================================
+   Top PIC PROCESS
+   ========================================================== */
 
-    return db.prepare(`
-        SELECT COUNT(*) total
-        FROM tickets
-        WHERE status='OPEN'
-    `).get().total;
+function topPICByEngineers(
+    engineerNames = [],
+    start = null,
+    end = null,
+    limit = 6
+) {
 
-}
+    const inClause =
+        buildInClause(engineerNames);
 
-function getProcessCount() {
-
-    return db.prepare(`
-        SELECT COUNT(*) total
-        FROM tickets
-        WHERE status='PROCESS'
-    `).get().total;
-
-}
-
-function getClosedCount() {
-
-    return db.prepare(`
-        SELECT COUNT(*) total
-        FROM tickets
-        WHERE status='CLOSED'
-    `).get().total;
-
-}
-
-function getTodayCount() {
-
-    return db.prepare(`
-        SELECT COUNT(*) total
-        FROM tickets
-        WHERE DATE(waktu)=DATE('now','localtime')
-    `).get().total;
-
-}
-
-function getTopCabang(limit = 5) {
-
-    return db.prepare(`
-        SELECT
-            cabang,
-            COUNT(*) total
-        FROM tickets
-        GROUP BY cabang
-        ORDER BY total DESC
-        LIMIT ?
-    `).all(limit);
-
-}
-
-function getTopPIC(limit = 5) {
-
-    return db.prepare(`
+    let sql = `
         SELECT
             pic,
             COUNT(*) total
         FROM tickets
-        WHERE pic IS NOT NULL
+        WHERE status = 'PROCESS'
+        AND pic IN (${inClause.clause})
+    `;
+
+    const params = [
+        ...inClause.params
+    ];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    sql += `
         GROUP BY pic
-        ORDER BY total DESC
+        ORDER BY total DESC, pic ASC
         LIMIT ?
-    `).all(limit);
+    `;
+
+    params.push(limit);
+
+    return db
+        .prepare(sql)
+        .all(...params);
 
 }
 
+/* ==========================================================
+   Top PIC CLOSED
+   ========================================================== */
+
+function topPICSelesaiByEngineers(
+    engineerNames = [],
+    start = null,
+    end = null,
+    limit = 6
+) {
+
+    const inClause =
+        buildInClause(engineerNames);
+
+    let sql = `
+        SELECT
+            pic_selesai,
+            COUNT(*) total
+        FROM tickets
+        WHERE status = 'CLOSED'
+        AND pic IN (${inClause.clause})
+    `;
+
+    const params = [
+        ...inClause.params
+    ];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(selesai)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    sql += `
+        GROUP BY pic_selesai
+        ORDER BY total DESC, pic_selesai ASC
+        LIMIT ?
+    `;
+
+    params.push(limit);
+
+    return db
+        .prepare(sql)
+        .all(...params);
+
+}
+
+/* ==========================================================
+   Top Cabang
+   ========================================================== */
+
+function topCabangByEngineers(
+    engineerNames = [],
+    start = null,
+    end = null,
+    limit = 10
+) {
+
+    const inClause =
+        buildInClause(engineerNames);
+
+    let sql = `
+        SELECT
+            cabang AS name,
+            COUNT(*) total
+        FROM tickets
+        WHERE pic IN (${inClause.clause})
+        AND cabang IS NOT NULL
+        AND cabang <> ''
+    `;
+
+    const params = [
+        ...inClause.params
+    ];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+    sql += `
+        GROUP BY cabang
+        ORDER BY total DESC, cabang ASC
+        LIMIT ?
+    `;
+
+    params.push(limit);
+
+    return db
+        .prepare(sql)
+        .all(...params);
+
+}
+
+/* ==========================================================
+   Export
+   ========================================================== */
+
 module.exports = {
 
-    getAllTickets,
+    countProcessByEngineers,
 
-    getOpenCount,
+    countClosedByEngineers,
 
-    getProcessCount,
+    countTotalByEngineers,
 
-    getClosedCount,
+    findTicketsByEngineers,
 
-    getTodayCount,
+    topPICByEngineers,
 
-    getTopCabang,
+    topPICSelesaiByEngineers,
 
-    getTopPIC
+    topCabangByEngineers
 
 };

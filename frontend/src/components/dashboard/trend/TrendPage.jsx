@@ -14,7 +14,8 @@ const RANGE_OPTIONS = [
 
 export default function TrendPage({
     data,
-    team = "ALL"
+    team = "ALL",
+    location = ""
 }) {
 
     const [range, setRange] = useState(30);
@@ -45,7 +46,7 @@ export default function TrendPage({
 
                 const result = await getDailyTrend({
                     days: range === "ALL" ? null : range,
-                    team
+                    location
                 });
 
                 setTrendData({
@@ -76,7 +77,7 @@ export default function TrendPage({
 
         loadTrend();
 
-    }, [range, team]);
+    }, [range, location]);
 
     return (
 
@@ -143,6 +144,7 @@ export default function TrendPage({
 
             <DailyTrendCard
                 trend={trendData.trend}
+                range={range}
             />
 
         </>

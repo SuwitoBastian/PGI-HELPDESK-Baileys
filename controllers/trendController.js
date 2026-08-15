@@ -1,4 +1,6 @@
-const trendAnalytics = require("../services/analytics/trendAnalytics");
+const trendAnalytics =
+    require("../services/analytics/trendAnalytics");
+
 
 function getDailyTrend(req, res) {
 
@@ -7,36 +9,57 @@ function getDailyTrend(req, res) {
         const {
 
             startDate,
+
             endDate,
+
             days,
-            team
+
+            location
 
         } = req.query;
 
-        const data = trendAnalytics.getDailyTrend({
 
-            startDate,
-            endDate,
-            days: days ? Number(days) : null,
-            team
+        const data =
+            trendAnalytics.getDailyTrend({
 
-        });
+                startDate,
+
+                endDate,
+
+                days:
+                    days
+                        ? Number(days)
+                        : null,
+
+                location
+
+            });
+
 
         res.json(data);
 
-    } catch (err) {
+    }
+
+    catch (err) {
 
         console.error(err);
 
         res.status(500).json({
+
             success: false,
-            message: err.message
+
+            message:
+                err.message
+
         });
 
     }
 
 }
 
+
 module.exports = {
+
     getDailyTrend
+
 };

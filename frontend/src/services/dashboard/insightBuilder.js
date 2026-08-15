@@ -6,22 +6,58 @@ export default function buildInsights({
 
     const insights = [];
 
+
+    // ==========================================================
+    // TOP ENGINEER
+    // ==========================================================
+
     const topEngineer =
         engineers[0] || null;
 
+
+    // ==========================================================
+    // TOP ASSIGNMENT
+    // ==========================================================
+
     const topAssignment =
         [...engineers]
-            .sort((a, b) => b.assigned - a.assigned)[0];
+            .sort(
+                (a, b) =>
+                    (b.assigned || 0) -
+                    (a.assigned || 0)
+            )[0];
 
-    const bestTeam =
+
+    // ==========================================================
+    // TOP LOCATION
+    // ==========================================================
+    //
+    // `teams` sekarang sebenarnya berisi
+    // location groups dari teamAnalytics.
+    //
+    // AKR -> HO - AKR Tower
+    // HO  -> Head Office
+    //
+    // ID "team" tetap dipertahankan untuk compatibility
+    // dengan InsightCard.jsx.
+    // ==========================================================
+
+    const topLocation =
         [...teams]
-            .sort((a, b) => b.completed - a.completed)[0];
+            .sort(
+                (a, b) =>
+                    (b.completed || 0) -
+                    (a.completed || 0)
+            )[0];
+
 
     // ==========================================================
-    // System Healthy
+    // SYSTEM HEALTHY
     // ==========================================================
 
-    if (overview?.sla?.expiredSLA === 0) {
+    if (
+        (overview?.sla?.expiredSLA || 0) === 0
+    ) {
 
         insights.push({
 
@@ -31,7 +67,8 @@ export default function buildInsights({
 
             value: "SLA Aman",
 
-            subtitle: "Seluruh ticket memenuhi SLA.",
+            subtitle:
+                "Seluruh ticket memenuhi SLA.",
 
             tone: "success",
 
@@ -47,9 +84,11 @@ export default function buildInsights({
 
             title: "SLA WARNING",
 
-            value: `${overview.sla.expiredSLA} Ticket`,
+            value:
+                `${overview.sla.expiredSLA} Ticket`,
 
-            subtitle: "Ticket telah melewati batas SLA.",
+            subtitle:
+                "Ticket telah melewati batas SLA.",
 
             tone: "danger",
 
@@ -59,11 +98,15 @@ export default function buildInsights({
 
     }
 
+
     // ==========================================================
-    // Top Performer
+    // TOP PERFORMER
     // ==========================================================
 
-    if (topEngineer && topEngineer.completed > 0) {
+    if (
+        topEngineer &&
+        topEngineer.completed > 0
+    ) {
 
         insights.push({
 
@@ -71,9 +114,11 @@ export default function buildInsights({
 
             title: "TOP PERFORMER",
 
-            value: topEngineer.name,
+            value:
+                topEngineer.name,
 
-            subtitle: `${topEngineer.completed} ticket selesai`,
+            subtitle:
+                `${topEngineer.completed} ticket selesai`,
 
             tone: "warning",
 
@@ -83,11 +128,15 @@ export default function buildInsights({
 
     }
 
+
     // ==========================================================
-    // Top Assignment
+    // TOP ASSIGNMENT
     // ==========================================================
 
-    if (topAssignment && topAssignment.assigned > 0) {
+    if (
+        topAssignment &&
+        topAssignment.assigned > 0
+    ) {
 
         insights.push({
 
@@ -95,9 +144,11 @@ export default function buildInsights({
 
             title: "TOP ASSIGNMENT",
 
-            value: topAssignment.name,
+            value:
+                topAssignment.name,
 
-            subtitle: `${topAssignment.assigned} ticket diterima`,
+            subtitle:
+                `${topAssignment.assigned} ticket diterima`,
 
             tone: "info",
 
@@ -107,21 +158,35 @@ export default function buildInsights({
 
     }
 
+
     // ==========================================================
-    // Best Team
+    // TOP LOCATION
     // ==========================================================
 
-    if (bestTeam && bestTeam.completed > 0) {
+    if (
+        topLocation &&
+        topLocation.completed > 0
+    ) {
 
         insights.push({
 
+            /*
+            ------------------------------------------------------
+            Tetap "team" untuk compatibility dengan:
+                InsightCard.jsx
+                cardIcons.team
+            ------------------------------------------------------
+            */
+
             id: "team",
 
-            title: "BEST TEAM",
+            title: "TOP LOCATION",
 
-            value: bestTeam.name,
+            value:
+                topLocation.name,
 
-            subtitle: `${bestTeam.completed} ticket selesai`,
+            subtitle:
+                `${topLocation.completed} ticket selesai`,
 
             tone: "purple",
 
@@ -131,11 +196,14 @@ export default function buildInsights({
 
     }
 
+
     // ==========================================================
-    // Operational Banner
+    // OPERATIONAL BANNER
     // ==========================================================
 
-    if (overview?.process === 0) {
+    if (
+        (overview?.process || 0) === 0
+    ) {
 
         insights.push({
 
@@ -143,9 +211,11 @@ export default function buildInsights({
 
             title: "OPERATIONAL",
 
-            value: "Semua pekerjaan selesai",
+            value:
+                "Semua pekerjaan selesai",
 
-            subtitle: "Tidak ada ticket PROCESS saat ini.",
+            subtitle:
+                "Tidak ada ticket PROCESS saat ini.",
 
             tone: "success",
 
@@ -161,9 +231,11 @@ export default function buildInsights({
 
             title: "OPERATIONAL",
 
-            value: `${overview.process} Ticket Process`,
+            value:
+                `${overview.process} Ticket Process`,
 
-            subtitle: "Masih membutuhkan monitoring.",
+            subtitle:
+                "Masih membutuhkan monitoring.",
 
             tone: "warning",
 
@@ -172,6 +244,11 @@ export default function buildInsights({
         });
 
     }
+
+
+    // ==========================================================
+    // RETURN
+    // ==========================================================
 
     return insights;
 

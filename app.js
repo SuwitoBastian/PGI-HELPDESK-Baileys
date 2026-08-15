@@ -55,6 +55,12 @@ const analyticsRoutes =
 const feedbackRoutes =
     require("./routes/feedbackRoutes");
 
+const engineerRoutes =
+    require("./routes/engineerRoutes");
+
+const operationalAssignmentRoutes =
+    require("./routes/operationalAssignmentRoutes");
+
 /* ==========================================================
    Express
 ========================================================== */
@@ -101,6 +107,16 @@ app.use(
 app.use(
     "/api/feedback",
     feedbackRoutes
+);
+
+app.use(
+    "/api/engineers",
+    engineerRoutes
+);
+
+app.use(
+    "/api/operational-assignment",
+    operationalAssignmentRoutes
 );
 
 /* ==========================================================

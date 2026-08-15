@@ -583,7 +583,7 @@ summarySheet.getRow(8).height = 22;
 [
     ["I9", "RANK"],
     ["J9", "ENGINEER"],
-    ["K9", "TEAM"],
+    ["K9", "LOCATION"],
     ["L9", "ASSIGNED"],
     ["M9", "CLOSED"],
     ["N9", "SCORE"]
@@ -637,11 +637,11 @@ engineerLeaderboards
         summarySheet.getCell(`I${row}`).value = index + 1;
         summarySheet.getCell(`J${row}`).value = engineer.name;
         summarySheet.getCell(`K${row}`).value =
-                engineer.team === "TEAM_A"
-                ? "Team A"
-                : engineer.team === "TEAM_B"
-                ? "Team B"
-                : engineer.team;
+            engineer.location === "AKR"
+                ? "HO - AKR Tower"
+                : engineer.location === "HO"
+                    ? "Head Office"
+                    : engineer.location || "-";
         summarySheet.getCell(`L${row}`).value = engineer.assigned;
         summarySheet.getCell(`M${row}`).value = engineer.completed;
         summarySheet.getCell(`N${row}`).value = engineer.score;

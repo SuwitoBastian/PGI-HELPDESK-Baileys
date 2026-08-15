@@ -1,12 +1,18 @@
 const operationalRotationRepository =
     require("../repositories/operationalRotationRepository");
 
+/* ==========================================================
+   Mapper
+========================================================== */
+
 function mapRotation(rotation) {
 
     if (!rotation)
         return null;
 
     return {
+
+        id: rotation.id,
 
         year: rotation.year,
 
@@ -19,6 +25,10 @@ function mapRotation(rotation) {
     };
 
 }
+
+/* ==========================================================
+   Rotation
+========================================================== */
 
 function getCurrentRotation() {
 
@@ -35,8 +45,11 @@ function getRotation(year, month) {
     return mapRotation(
 
         operationalRotationRepository.getByPeriod(
+
             year,
+
             month
+
         )
 
     );
@@ -70,17 +83,25 @@ function getPreviousRotation() {
 }
 
 function updateRotation(
+
     year,
+
     month,
+
     primaryTeam,
+
     backupTeam,
+
     updatedBy
+
 ) {
 
     if (primaryTeam === backupTeam) {
 
         throw new Error(
+
             "Primary Team dan Backup Team tidak boleh sama."
+
         );
 
     }
@@ -103,9 +124,14 @@ function updateRotation(
 
 }
 
+/* ==========================================================
+   Team Helper
+========================================================== */
+
 function getPrimaryTeam() {
 
-    const rotation = getCurrentRotation();
+    const rotation =
+        getCurrentRotation();
 
     return rotation
         ? rotation.primaryTeam
@@ -115,7 +141,8 @@ function getPrimaryTeam() {
 
 function getBackupTeam() {
 
-    const rotation = getCurrentRotation();
+    const rotation =
+        getCurrentRotation();
 
     return rotation
         ? rotation.backupTeam
@@ -128,6 +155,10 @@ function isPrimaryTeam(team) {
     return getPrimaryTeam() === team;
 
 }
+
+/* ==========================================================
+   Export
+========================================================== */
 
 module.exports = {
 

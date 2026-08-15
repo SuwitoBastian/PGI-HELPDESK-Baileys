@@ -17,35 +17,91 @@ export default function Sidebar({
   collapsed
 }) {
 
+  // =====================================================
+  // DEFAULT EXPANDED GROUP
+  // =====================================================
+
   const getDefaultGroup = (currentView) => {
-    if (currentView.startsWith("dashboard")) return "dashboard";
-    if (currentView.startsWith("team-a")) return "team-a";
-    if (currentView.startsWith("team-b")) return "team-b";
+
+    if (
+      currentView.startsWith("dashboard")
+    ) {
+      return "dashboard";
+    }
+
+    if (
+      currentView.startsWith("akr-")
+    ) {
+      return "akr";
+    }
+
+    if (
+      currentView.startsWith("ho-")
+    ) {
+      return "ho";
+    }
+
     return null;
+
   };
 
-  const [expandedGroup, setExpandedGroup] = useState(
+
+  const [
+    expandedGroup,
+    setExpandedGroup
+  ] = useState(
     getDefaultGroup(view)
   );
 
+
+  // =====================================================
+  // SYNC GROUP WITH CURRENT VIEW
+  // =====================================================
+
   useEffect(() => {
-    const group = getDefaultGroup(view);
+
+    const group =
+      getDefaultGroup(view);
 
     if (group) {
+
       setExpandedGroup(group);
+
     }
+
   }, [view]);
 
+
+  // =====================================================
+  // TOGGLE GROUP
+  // =====================================================
+
   const toggleGroup = (group) => {
+
     setExpandedGroup((prev) =>
-      prev === group ? null : group
+      prev === group
+        ? null
+        : group
     );
+
   };
 
-  return (
-    <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
 
-      {/* Brand */}
+  return (
+
+    <aside
+      className={`sidebar ${
+        collapsed
+          ? "collapsed"
+          : ""
+      }`}
+    >
+
+
+      {/* =================================================
+          BRAND
+      ================================================= */}
+
       <div className="brand">
 
         <img
@@ -53,6 +109,7 @@ export default function Sidebar({
           alt="PGI Helpdesk"
           className="brand-logo"
         />
+
 
         {!collapsed && (
 
@@ -72,209 +129,407 @@ export default function Sidebar({
 
       </div>
 
-      {/* Menu */}
+
+      {/* =================================================
+          MENU
+      ================================================= */}
+
       <div className="sidebar-content">
+
         <nav className="sidebar-menu">
 
+
           {!collapsed && (
+
             <div className="nav-label">
               MENU
             </div>
+
           )}
 
+
           {!collapsed && (
+
             <>
 
-              {/* ALL PERFORMANCE */}
+
+              {/* =================================================
+                  ALL PERFORMANCE
+              ================================================= */}
+
               <div className="nav-group">
 
                 <button
                   type="button"
                   className="nav-group-title nav-group-toggle"
-                  onClick={() => toggleGroup("dashboard")}
+                  onClick={() =>
+                    toggleGroup(
+                      "dashboard"
+                    )
+                  }
                 >
+
                   <div className="nav-group-left">
-                    <BarChart3 size={14} strokeWidth={2.5} />
-                    <span>ALL PERFORMANCE</span>
+
+                    <BarChart3
+                      size={14}
+                      strokeWidth={2.5}
+                    />
+
+                    <span>
+                      ALL PERFORMANCE
+                    </span>
+
                   </div>
+
 
                   <ChevronRight
                     size={16}
                     className={
-                      expandedGroup === "dashboard"
+                      expandedGroup ===
+                      "dashboard"
+
                         ? "accordion-arrow open"
+
                         : "accordion-arrow"
                     }
                   />
 
                 </button>
 
-                {expandedGroup === "dashboard" && (
+
+                {expandedGroup ===
+                  "dashboard" && (
+
                   <>
 
                     <button
                       className={`nav-link ${
-                        view === "dashboard-overview" ? "active" : ""
+                        view ===
+                        "dashboard-overview"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("dashboard-overview")}
+                      onClick={() =>
+                        onNavigate(
+                          "dashboard-overview"
+                        )
+                      }
                     >
                       Overview
                     </button>
 
+
                     <button
                       className={`nav-link ${
-                        view === "dashboard-analytics" ? "active" : ""
+                        view ===
+                        "dashboard-analytics"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("dashboard-analytics")}
+                      onClick={() =>
+                        onNavigate(
+                          "dashboard-analytics"
+                        )
+                      }
                     >
                       Analytics
                     </button>
 
+
                     <button
                       className={`nav-link ${
-                        view === "dashboard-trend" ? "active" : ""
+                        view ===
+                        "dashboard-trend"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("dashboard-trend")}
+                      onClick={() =>
+                        onNavigate(
+                          "dashboard-trend"
+                        )
+                      }
                     >
                       Trend
                     </button>
 
                   </>
+
                 )}
 
               </div>
 
-              {/* TEAM A */}
+
+              {/* =================================================
+                  HO - AKR TOWER
+              ================================================= */}
+
               <div className="nav-group">
 
                 <button
                   type="button"
                   className="nav-group-title nav-group-toggle"
-                  onClick={() => toggleGroup("team-a")}
+                  onClick={() =>
+                    toggleGroup("akr")
+                  }
                 >
+
                   <div className="nav-group-left">
-                    <Users size={15} strokeWidth={2.5} />
-                    <span>TEAM A</span>
+
+                    <Users
+                      size={15}
+                      strokeWidth={2.5}
+                    />
+
+                    <span>
+                      HO - AKR Tower
+                    </span>
+
                   </div>
 
-                  {expandedGroup === "team-a"
-                    ? <ChevronDown size={16} />
-                    : <ChevronRight size={16} />
+
+                  {expandedGroup === "akr"
+
+                    ? (
+                      <ChevronDown
+                        size={16}
+                      />
+                    )
+
+                    : (
+                      <ChevronRight
+                        size={16}
+                      />
+                    )
+
                   }
+
                 </button>
 
-                {expandedGroup === "team-a" && (
+
+                {expandedGroup === "akr" && (
+
                   <>
 
                     <button
                       className={`nav-link ${
-                        view === "team-a-overview" ? "active" : ""
+                        view ===
+                        "akr-overview"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("team-a-overview")}
+                      onClick={() =>
+                        onNavigate(
+                          "akr-overview"
+                        )
+                      }
                     >
                       Overview
                     </button>
 
+
                     <button
                       className={`nav-link ${
-                        view === "team-a-analytics" ? "active" : ""
+                        view ===
+                        "akr-analytics"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("team-a-analytics")}
+                      onClick={() =>
+                        onNavigate(
+                          "akr-analytics"
+                        )
+                      }
                     >
                       Analytics
                     </button>
 
+
                     <button
                       className={`nav-link ${
-                        view === "team-a-trend" ? "active" : ""
+                        view ===
+                        "akr-trend"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("team-a-trend")}
+                      onClick={() =>
+                        onNavigate(
+                          "akr-trend"
+                        )
+                      }
                     >
                       Trend
                     </button>
 
                   </>
+
                 )}
 
               </div>
 
-              {/* TEAM B */}
+
+              {/* =================================================
+                  HEAD OFFICE
+              ================================================= */}
+
               <div className="nav-group">
 
                 <button
                   type="button"
                   className="nav-group-title nav-group-toggle"
-                  onClick={() => toggleGroup("team-b")}
+                  onClick={() =>
+                    toggleGroup("ho")
+                  }
                 >
+
                   <div className="nav-group-left">
-                    <UsersRound size={15} strokeWidth={2.5} />
-                    <span>TEAM B</span>
+
+                    <UsersRound
+                      size={15}
+                      strokeWidth={2.5}
+                    />
+
+                    <span>
+                      Head Office
+                    </span>
+
                   </div>
 
-                  {expandedGroup === "team-b"
-                    ? <ChevronDown size={16} />
-                    : <ChevronRight size={16} />
+
+                  {expandedGroup === "ho"
+
+                    ? (
+                      <ChevronDown
+                        size={16}
+                      />
+                    )
+
+                    : (
+                      <ChevronRight
+                        size={16}
+                      />
+                    )
+
                   }
+
                 </button>
 
-                {expandedGroup === "team-b" && (
+
+                {expandedGroup === "ho" && (
+
                   <>
 
                     <button
                       className={`nav-link ${
-                        view === "team-b-overview" ? "active" : ""
+                        view ===
+                        "ho-overview"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("team-b-overview")}
+                      onClick={() =>
+                        onNavigate(
+                          "ho-overview"
+                        )
+                      }
                     >
                       Overview
                     </button>
 
+
                     <button
                       className={`nav-link ${
-                        view === "team-b-analytics" ? "active" : ""
+                        view ===
+                        "ho-analytics"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("team-b-analytics")}
+                      onClick={() =>
+                        onNavigate(
+                          "ho-analytics"
+                        )
+                      }
                     >
                       Analytics
                     </button>
 
+
                     <button
                       className={`nav-link ${
-                        view === "team-b-trend" ? "active" : ""
+                        view ===
+                        "ho-trend"
+                          ? "active"
+                          : ""
                       }`}
-                      onClick={() => onNavigate("team-b-trend")}
+                      onClick={() =>
+                        onNavigate(
+                          "ho-trend"
+                        )
+                      }
                     >
                       Trend
                     </button>
 
                   </>
+
                 )}
 
               </div>
+
+
+              {/* =================================================
+                  DIVIDER
+              ================================================= */}
 
               <div className="nav-divider" />
 
             </>
+
           )}
 
-          {/* Helpdesk */}
+
+          {/* =================================================
+              HELPDESK
+          ================================================= */}
+
           <button
             type="button"
-            className={`nav-item nav-main ${view === "helpdesk" ? "active" : ""}`}
-            onClick={() => onNavigate("helpdesk")}
+            className={`nav-item nav-main ${
+              view === "helpdesk"
+                ? "active"
+                : ""
+            }`}
+            onClick={() =>
+              onNavigate("helpdesk")
+            }
           >
-            <MessagesSquare size={15} strokeWidth={2.5} />
+
+            <MessagesSquare
+              size={15}
+              strokeWidth={2.5}
+            />
+
 
             {!collapsed && (
+
               <span className="nav-text nav-main-title">
                 HELPDESK
               </span>
+
             )}
+
           </button>
 
+
+          {/* =================================================
+              OPERATIONAL SETTINGS
+          ================================================= */}
+
           {!collapsed && (
+
             <>
+
               <div className="nav-divider" />
+
 
               <div className="nav-group">
 
@@ -282,33 +537,62 @@ export default function Sidebar({
                   type="button"
                   className="nav-group-title nav-group-toggle"
                 >
+
                   <div className="nav-group-left">
-                    <Settings2 size={14} strokeWidth={2.5} />
-                    <span>OPERATIONAL SETTINGS</span>
+
+                    <Settings2
+                      size={14}
+                      strokeWidth={2.5}
+                    />
+
+                    <span>
+                      OPERATIONAL SETTINGS
+                    </span>
+
                   </div>
+
                 </button>
+
 
                 <button
                   type="button"
                   className={`nav-link ${
-                    view === "team-rotation" ? "active" : ""
+                    view ===
+                    "team-rotation"
+                      ? "active"
+                      : ""
                   }`}
-                  onClick={() => onNavigate("team-rotation")}
+                  onClick={() =>
+                    onNavigate(
+                      "team-rotation"
+                    )
+                  }
                 >
-                  <RefreshCw size={14} />
+
+                  <RefreshCw
+                    size={14}
+                  />
+
                   <span className="nav-text">
                     Team Rotation
                   </span>
+
                 </button>
 
               </div>
 
             </>
+
           )}
 
         </nav>
 
       </div>
+
+
+      {/* =================================================
+          FOOTER
+      ================================================= */}
 
       <div className="sidebar-foot">
 
@@ -321,7 +605,9 @@ export default function Sidebar({
         </small>
 
       </div>
-      
+
     </aside>
+
   );
+
 }

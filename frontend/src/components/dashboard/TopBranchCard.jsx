@@ -1,153 +1,262 @@
-import { useState } from "react";
-import {
-    Building2,
-    ChevronDown,
-    ChevronUp
-} from "lucide-react";
+import { Building2 } from "lucide-react";
+
+
+// =====================================================
+// LOCATION LABEL
+// =====================================================
+
+function getLocationLabel(location) {
+
+    switch (location) {
+
+        case "AKR":
+            return "HO - AKR Tower";
+
+        case "HO":
+            return "Head Office";
+
+        case "HO-AKR":
+            return "HO - AKR Tower";
+
+        case "HO_AKR":
+            return "HO - AKR Tower";
+
+        case "HEAD_OFFICE":
+            return "Head Office";
+
+        default:
+            return location || "-";
+
+    }
+
+}
+
+
+// =====================================================
+// RANK LIST
+// =====================================================
 
 function RankList({
-    title,
-    rows,
-    emptyLabel,
-    expanded,
-    totalRows,
-    onToggle
+
+    rows = []
+
 }) {
 
-    const max = Math.max(...rows.map(r => r.total), 1);
+    const max =
+        Math.max(
+            ...rows.map(
+                row => Number(row.total) || 0
+            ),
+            1
+        );
+
 
     return (
+
         <div className="card top-branch-card">
+
+
+            {/* =================================================
+                HEADER
+            ================================================= */}
 
             <div className="card-header">
 
                 <div className="card-title">
-                    <Building2 size={20} />
-                    <span>{title}</span>
+
+                    <Building2
+                        size={20}
+                        strokeWidth={2}
+                    />
+
+                    <span>
+                        Top Location
+                    </span>
+
                 </div>
 
+
                 <p className="card-description">
-                    Cabang dengan ticket terbanyak pada periode terpilih.
+
+                    Lokasi dengan jumlah ticket terbanyak
+                    pada periode terpilih.
+
                 </p>
 
             </div>
 
+
+            {/* =================================================
+                CONTENT
+            ================================================= */}
+
             <div className="card-content">
+
 
                 {rows.length === 0 ? (
 
                     <div className="state">
-                        {emptyLabel}
+
+                        Belum ada data lokasi.
+
                     </div>
 
                 ) : (
 
-                    <>
+                    <div className="rank-list">
 
-                        <div className="rank-list">
+                        {rows.map(
+                            (row, index) => {
 
-                            {rows.map((r, index) => (
+                                const total =
+                                    Number(
+                                        row.total
+                                    ) || 0;
 
-                                <div
-                                    key={r.name}
-                                    className="rank-row"
-                                >
+
+                                const location =
+                                    getLocationLabel(
+                                        row.name
+                                    );
+
+
+                                return (
 
                                     <div
-                                        className={`rank-medal medal-${
-                                            index < 3
-                                                ? index + 1
-                                                : "x"
-                                        }`}
+                                        key={
+                                            `${row.name}-${index}`
+                                        }
+                                        className="rank-row"
                                     >
-                                        {index + 1}
-                                    </div>
 
-                                    <div className="rank-main">
 
-                                        <div className="rank-name">
+                                        {/* =============================================
+                                            RANK
+                                        ============================================= */}
 
-                                            <span>{r.name}</span>
+                                        <div
+                                            className={
+                                                `rank-medal medal-${
+                                                    index < 3
+                                                        ? index + 1
+                                                        : "x"
+                                                }`
+                                            }
+                                        >
 
-                                            <span className="rank-count">
-                                                {r.total} {r.total === 1 ? "Ticket" : "Tickets"}
-                                            </span>
-
-                                        </div>
-
-                                        <div className="rank-bar">
-
-                                            <span
-                                                style={{
-                                                    width: `${(r.total / max) * 100}%`
-                                                }}
-                                            />
+                                            {index + 1}
 
                                         </div>
 
+
+                                        {/* =============================================
+                                            MAIN
+                                        ============================================= */}
+
+                                        <div className="rank-main">
+
+
+                                            <div className="rank-name">
+
+                                                <span>
+
+                                                    {location}
+
+                                                </span>
+
+
+                                                <span className="rank-count">
+
+                                                    {total}{" "}
+
+                                                    {total === 1
+                                                        ? "Ticket"
+                                                        : "Tickets"}
+
+                                                </span>
+
+                                            </div>
+
+
+                                            {/* =============================================
+                                                PROGRESS
+                                            ============================================= */}
+
+                                            <div className="rank-bar">
+
+                                                <span
+                                                    style={{
+                                                        width:
+                                                            `${(
+                                                                total /
+                                                                max
+                                                            ) * 100}%`
+                                                    }}
+                                                />
+
+                                            </div>
+
+                                        </div>
+
+
                                     </div>
 
-                                </div>
+                                );
 
-                            ))}
-
-                        </div>
-
-                        {totalRows > 5 && (
-
-                            <button
-                                type="button"
-                                className="show-more-btn"
-                                onClick={onToggle}
-                                aria-expanded={expanded}
-                            >
-
-                                {expanded ? (
-                                    <>
-                                        <ChevronUp size={16} />
-                                        <span>Show Less</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <ChevronDown size={16} />
-                                        <span>Show More</span>
-                                    </>
-                                )}
-
-                            </button>
-
+                            }
                         )}
 
-                    </>
+                    </div>
 
                 )}
 
             </div>
 
         </div>
+
     );
 
 }
 
+
+// =====================================================
+// COMPONENT
+// =====================================================
+
 export default function TopBranchCard({
+
     topCabang = []
+
 }) {
 
-    const [expanded, setExpanded] = useState(false);
+    /*
+    =====================================================
+    LOCATION DATA
 
-    const visibleRows = expanded
-        ? topCabang
-        : topCabang.slice(0, 5);
+    Backend saat ini masih menggunakan property
+    `topCabang`.
+
+    Tidak perlu mengubah API dulu.
+
+    Component hanya mengubah cara data tersebut
+    ditampilkan menjadi konsep Location.
+    =====================================================
+    */
+
+    const rows =
+        [...topCabang]
+            .sort(
+                (a, b) =>
+                    (Number(b.total) || 0) -
+                    (Number(a.total) || 0)
+            )
+            .slice(0, 5);
+
 
     return (
 
         <RankList
-            title={expanded ? "Top 10 Cabang" : "Top 5 Cabang"}
-            rows={visibleRows}
-            emptyLabel="Belum ada data cabang."
-            expanded={expanded}
-            totalRows={topCabang.length}
-            onToggle={() => setExpanded(prev => !prev)}
+            rows={rows}
         />
 
     );

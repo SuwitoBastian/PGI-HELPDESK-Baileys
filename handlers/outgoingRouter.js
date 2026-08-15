@@ -1,6 +1,9 @@
 const ticketEngine =
     require("../services/ticketEngine");
 
+const engineerService =
+    require("../services/engineerService");
+
 module.exports = async (msg) => {
 
     // Hanya proses pesan yang dikirim akun bot
@@ -24,18 +27,29 @@ module.exports = async (msg) => {
     const body =
         msg.body.trim().toLowerCase();
 
-    // Command yang diizinkan
+    // ======================
+    // Dynamic Engineer Commands
+    // ======================
+
+    const engineerCodes =
+        engineerService
+            .getAll()
+            .map(engineer =>
+                engineer.code.toLowerCase()
+            );
+
     const allowedCommands = [
+
         "done",
-        "gl",
-        "sw",
-        "rp",
-        "ka",
-        "iw",
-        "hl",
+
         "0",
+
         "1",
-        "9"
+
+        "9",
+
+        ...engineerCodes
+
     ];
 
     // Izinkan semua angka untuk pemilihan nomor ticket

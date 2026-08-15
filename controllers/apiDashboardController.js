@@ -1,6 +1,12 @@
 const ticketRepository =
     require("../repositories/ticketRepository");
 
+const dashboardRepository =
+    require("../repositories/dashboardRepository");
+
+const dashboardLocationService =
+    require("../services/dashboard/dashboardLocationService");
+
 const doneService =
     require("../services/doneService");
 
@@ -10,295 +16,887 @@ const slaService =
 const feedbackService =
     require("../services/feedbackService");
 
-const VALID_STATUS = ["OPEN", "PROCESS", "CLOSED"];
+const overviewAnalytics =
+    require("../services/analytics/overviewAnalytics");
 
-/**
- * Data dashboard JSON untuk React.
- */
+const engineerAnalytics =
+    require("../services/analytics/engineerAnalytics");
 
-function dashboard(req, res) {
+const teamAnalytics =
+    require("../services/analytics/teamAnalytics");
 
-    const {
-        start,
-        end,
-        team
-    } = req.query;
 
-    const engineerTeam = team || null;
+const VALID_STATUS = [
+    "OPEN",
+    "PROCESS",
+    "CLOSED"
+];
 
-    const useFilter =
-        start && end;
 
-    const open = useFilter
-        ? ticketRepository.countOpenByDate(
-            start,
-            end,
-            engineerTeam
-        )
-        : ticketRepository.countOpen(
-            engineerTeam
-        );
+/* ==========================================================
+HELPER
+========================================================== */
 
-    const process = useFilter
-        ? ticketRepository.countProcessByDate(
-            start,
-            end,
-            engineerTeam
-        )
-        : ticketRepository.countProcess(
-            engineerTeam
-        );
+function getTodayDate() {
 
-    const closed = useFilter
-        ? ticketRepository.countClosedByDate(
-            start,
-            end,
-            engineerTeam
-        )
-        : ticketRepository.countClosed(
-            engineerTeam
-        );
+    const now =
+        new Date();
 
-    const hariIni =
-        ticketRepository.countToday(
-            engineerTeam
-        );
+    const year =
+        now.getFullYear();
 
-    const total = useFilter
-        ? ticketRepository.countTotalByDate(
-            start,
-            end,
-            engineerTeam
-        )
-        : ticketRepository.countTotal(
-            engineerTeam
-        );
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(2, "0");
 
-    const tickets = useFilter
-        ? ticketRepository.findAllByDate(
-            start,
-            end,
-            engineerTeam
-        )
-        : ticketRepository.findAll(
-            engineerTeam
-        );
+    const day =
+        String(
+            now.getDate()
+        ).padStart(2, "0");
 
-    const topCabang = useFilter
-        ? ticketRepository.topCabangByDate(
-            start,
-            end,
-            10,
-            engineerTeam
-        )
-        : ticketRepository.topCabang(
-            10,
-            engineerTeam
-        );
-
-    const topPIC = useFilter
-        ? ticketRepository.topPICByDate(
-            start,
-            end,
-            6,
-            engineerTeam
-        )
-        : ticketRepository.topPIC(
-            6,
-            engineerTeam
-        );
-
-    const picList =
-        ticketRepository.listPICs();
-
-    const sla =
-        slaService.getSLAMetrics(
-            start,
-            end,
-            engineerTeam
-        );
-
-    // =====================================================
-    // Customer Feedback
-    // =====================================================
-
-    const feedback =
-        feedbackService.getLatestFeedback(5);
-
-    const feedbackStatistics =
-        feedbackService.getStatistics({
-
-            startDate: start || null,
-
-            endDate: end || null,
-
-            team: engineerTeam || "ALL",
-
-            keyword: ""
-
-        });
-
-    res.json({
-
-        open,
-
-        process,
-
-        closed,
-
-        hariIni,
-
-        total,
-
-        tickets,
-
-        topCabang,
-
-        topPIC,
-
-        picList,
-
-        sla,
-
-        feedback,
-
-        feedbackStatistics
-
-    });
+    return `${year}-${month}-${day}`;
 
 }
 
-/**
- * Tutup tiket dari dashboard.
- */
+
+/* ==========================================================
+ANALYTICS HELPER
+========================================================== */
+
+async function getDashboardAnalytics(
+    start,
+    end,
+    team,
+    location
+) {
+
+    const overview =
+        await overviewAnalytics.getOverview(
+            start,
+            end,
+            team,
+            location
+        );
+
+
+    const engineers =
+        engineerAnalytics.getEngineers(
+            start,
+            end,
+            team,
+            location
+        );
+
+
+    const teams =
+        teamAnalytics.getTeams(
+            start,
+            end,
+            team,
+            location
+        );
+
+
+    return {
+
+        overview,
+
+        engineers,
+
+        teams
+
+    };
+
+}
+
+
+/* ==========================================================
+DASHBOARD
+========================================================== */
+
+async function dashboard(req, res) {
+
+    try {
+
+        const {
+            start,
+            end,
+            team,
+            location
+        } = req.query;
+
+
+        const engineerTeam =
+            team || null;
+
+        const dashboardLocation =
+            location || null;
+
+
+        const useFilter =
+            !!(
+                start &&
+                end
+            );
+
+
+        /* ======================================================
+        LOCATION MODE
+        ====================================================== */
+
+        if (dashboardLocation) {
+
+            const engineerNames =
+                dashboardLocationService
+                    .getCurrentLocationNames(
+                        dashboardLocation
+                    );
+
+
+            /*
+            ------------------------------------------------------
+            ANALYTICS
+            ------------------------------------------------------
+            */
+
+            const analytics =
+                await getDashboardAnalytics(
+                    start,
+                    end,
+                    engineerTeam,
+                    dashboardLocation
+                );
+
+
+            /*
+            ------------------------------------------------------
+            PERIODE
+            ------------------------------------------------------
+            */
+
+            const dateStart =
+                useFilter
+                    ? start
+                    : null;
+
+            const dateEnd =
+                useFilter
+                    ? end
+                    : null;
+
+
+            /*
+            ------------------------------------------------------
+            TICKETS
+            ------------------------------------------------------
+            */
+
+            const tickets =
+                dashboardRepository
+                    .findTicketsByEngineers(
+                        engineerNames,
+                        dateStart,
+                        dateEnd
+                    );
+
+
+            /*
+            ------------------------------------------------------
+            STATUS
+            ------------------------------------------------------
+            */
+
+            const open =
+                tickets.filter(
+                    ticket =>
+                        ticket.status === "OPEN"
+                ).length;
+
+
+            const process =
+                tickets.filter(
+                    ticket =>
+                        ticket.status === "PROCESS"
+                ).length;
+
+
+            const closed =
+                tickets.filter(
+                    ticket =>
+                        ticket.status === "CLOSED"
+                ).length;
+
+
+            const total =
+                tickets.length;
+
+
+            /*
+            ------------------------------------------------------
+            HARI INI
+            ------------------------------------------------------
+            */
+
+            const todayDate =
+                getTodayDate();
+
+
+            const todayTickets =
+                dashboardRepository
+                    .findTicketsByEngineers(
+                        engineerNames,
+                        todayDate,
+                        todayDate
+                    );
+
+
+            const hariIni =
+                todayTickets.length;
+
+
+            /*
+            ------------------------------------------------------
+            TOP CABANG
+            ------------------------------------------------------
+            */
+
+            const topCabang =
+                dashboardRepository
+                    .topCabangByEngineers(
+                        engineerNames,
+                        dateStart,
+                        dateEnd,
+                        10
+                    );
+
+
+            /*
+            ------------------------------------------------------
+            TOP PIC PROCESS
+            ------------------------------------------------------
+            */
+
+            const topPIC =
+                dashboardRepository
+                    .topPICByEngineers(
+                        engineerNames,
+                        dateStart,
+                        dateEnd,
+                        6
+                    );
+
+
+            /*
+            ------------------------------------------------------
+            PIC LIST
+            ------------------------------------------------------
+            */
+
+            const picList =
+                ticketRepository.listPICs();
+
+
+            /*
+            ------------------------------------------------------
+            SLA
+            ------------------------------------------------------
+            */
+
+            const sla =
+                slaService.getSLAMetrics(
+                    start,
+                    end,
+                    engineerTeam,
+                    dashboardLocation
+                );
+
+
+            /*
+            ------------------------------------------------------
+            CUSTOMER FEEDBACK
+            ------------------------------------------------------
+            */
+
+            const feedback =
+                feedbackService.getLatestFeedback(
+                    5,
+                    dashboardLocation
+                );
+
+
+            const feedbackStatistics =
+                feedbackService.getStatistics({
+
+                    startDate:
+                        start || null,
+
+                    endDate:
+                        end || null,
+
+                    team:
+                        engineerTeam || "ALL",
+
+                    keyword:
+                        ""
+
+                });
+
+
+            /*
+            ------------------------------------------------------
+            RESPONSE
+            ------------------------------------------------------
+            */
+
+            return res.json({
+
+                open,
+
+                process,
+
+                closed,
+
+                hariIni,
+
+                total,
+
+                tickets,
+
+                topCabang,
+
+                topPIC,
+
+                picList,
+
+                sla,
+
+                feedback,
+
+                feedbackStatistics,
+
+                analytics
+
+            });
+
+        }
+
+
+        /* ======================================================
+        LEGACY TEAM MODE
+        ====================================================== */
+
+        const useDateFilter =
+            !!(
+                start &&
+                end
+            );
+
+
+        /*
+        ------------------------------------------------------
+        ANALYTICS
+        ------------------------------------------------------
+        */
+
+        const analytics =
+            await getDashboardAnalytics(
+                start,
+                end,
+                engineerTeam,
+                null
+            );
+
+
+        /*
+        ------------------------------------------------------
+        OPEN
+        ------------------------------------------------------
+        */
+
+        const open =
+            useDateFilter
+
+                ? ticketRepository.countOpenByDate(
+                    start,
+                    end,
+                    engineerTeam
+                )
+
+                : ticketRepository.countOpen(
+                    engineerTeam
+                );
+
+
+        /*
+        ------------------------------------------------------
+        PROCESS
+        ------------------------------------------------------
+        */
+
+        const process =
+            useDateFilter
+
+                ? ticketRepository.countProcessByDate(
+                    start,
+                    end,
+                    engineerTeam
+                )
+
+                : ticketRepository.countProcess(
+                    engineerTeam
+                );
+
+
+        /*
+        ------------------------------------------------------
+        CLOSED
+        ------------------------------------------------------
+        */
+
+        const closed =
+            useDateFilter
+
+                ? ticketRepository.countClosedByDate(
+                    start,
+                    end,
+                    engineerTeam
+                )
+
+                : ticketRepository.countClosed(
+                    engineerTeam
+                );
+
+
+        /*
+        ------------------------------------------------------
+        HARI INI
+        ------------------------------------------------------
+        */
+
+        const hariIni =
+            ticketRepository.countToday(
+                engineerTeam
+            );
+
+
+        /*
+        ------------------------------------------------------
+        TOTAL
+        ------------------------------------------------------
+        */
+
+        const total =
+            useDateFilter
+
+                ? ticketRepository.countTotalByDate(
+                    start,
+                    end,
+                    engineerTeam
+                )
+
+                : ticketRepository.countTotal(
+                    engineerTeam
+                );
+
+
+        /*
+        ------------------------------------------------------
+        TICKETS
+        ------------------------------------------------------
+        */
+
+        const tickets =
+            useDateFilter
+
+                ? ticketRepository.findAllByDate(
+                    start,
+                    end,
+                    engineerTeam
+                )
+
+                : ticketRepository.findAll(
+                    engineerTeam
+                );
+
+
+        /*
+        ------------------------------------------------------
+        TOP CABANG
+        ------------------------------------------------------
+        */
+
+        const topCabang =
+            useDateFilter
+
+                ? ticketRepository.topCabangByDate(
+                    start,
+                    end,
+                    10,
+                    engineerTeam
+                )
+
+                : ticketRepository.topCabang(
+                    10,
+                    engineerTeam
+                );
+
+
+        /*
+        ------------------------------------------------------
+        TOP PIC
+        ------------------------------------------------------
+        */
+
+        const topPIC =
+            useDateFilter
+
+                ? ticketRepository.topPICByDate(
+                    start,
+                    end,
+                    6,
+                    engineerTeam
+                )
+
+                : ticketRepository.topPIC(
+                    6,
+                    engineerTeam
+                );
+
+
+        /*
+        ------------------------------------------------------
+        PIC LIST
+        ------------------------------------------------------
+        */
+
+        const picList =
+            ticketRepository.listPICs();
+
+
+        /*
+        ------------------------------------------------------
+        SLA
+        ------------------------------------------------------
+        */
+
+        const sla =
+            slaService.getSLAMetrics(
+                start,
+                end,
+                engineerTeam
+            );
+
+
+        /*
+        ------------------------------------------------------
+        CUSTOMER FEEDBACK
+        ------------------------------------------------------
+        */
+
+        const feedback =
+            feedbackService.getLatestFeedback(
+                5
+            );
+
+
+        const feedbackStatistics =
+            feedbackService.getStatistics({
+
+                startDate:
+                    start || null,
+
+                endDate:
+                    end || null,
+
+                team:
+                    engineerTeam || "ALL",
+
+                keyword:
+                    ""
+
+            });
+
+
+        /*
+        ------------------------------------------------------
+        RESPONSE
+        ------------------------------------------------------
+        */
+
+        return res.json({
+
+            open,
+
+            process,
+
+            closed,
+
+            hariIni,
+
+            total,
+
+            tickets,
+
+            topCabang,
+
+            topPIC,
+
+            picList,
+
+            sla,
+
+            feedback,
+
+            feedbackStatistics,
+
+            analytics
+
+        });
+
+    }
+
+    catch (err) {
+
+        console.error(
+            "Dashboard API Error:",
+            err
+        );
+
+
+        return res.status(500).json({
+
+            error:
+                err.message ||
+                "Gagal memuat dashboard"
+
+        });
+
+    }
+
+}
+
+
+/* ==========================================================
+TUTUP TIKET
+========================================================== */
+
 function closeTicket(req, res) {
 
     const ticket =
-        ticketRepository.findById(req.params.id);
+        ticketRepository.findById(
+            req.params.id
+        );
+
 
     if (!ticket) {
+
         return res.status(404).json({
-            error: "Tiket tidak ditemukan"
+
+            error:
+                "Tiket tidak ditemukan"
+
         });
+
     }
+
 
     doneService.close(
         ticket,
         ticket.pic
     );
 
+
     res.json({
+
         ok: true
+
     });
 
 }
 
-/**
- * Buka kembali tiket.
- */
+
+/* ==========================================================
+BUKA KEMBALI TIKET
+========================================================== */
+
 function reopenTicket(req, res) {
 
     const ticket =
-        ticketRepository.findById(req.params.id);
+        ticketRepository.findById(
+            req.params.id
+        );
+
 
     if (!ticket) {
+
         return res.status(404).json({
-            error: "Tiket tidak ditemukan"
+
+            error:
+                "Tiket tidak ditemukan"
+
         });
+
     }
+
 
     ticketRepository.reopen(
         req.params.id
     );
 
+
     res.json({
+
         ok: true
+
     });
 
 }
 
-/**
- * Assign PIC.
- */
+
+/* ==========================================================
+ASSIGN PIC
+========================================================== */
+
 function assignPIC(req, res) {
 
     const ticket =
-        ticketRepository.findById(req.params.id);
+        ticketRepository.findById(
+            req.params.id
+        );
+
 
     if (!ticket) {
+
         return res.status(404).json({
-            error: "Tiket tidak ditemukan"
+
+            error:
+                "Tiket tidak ditemukan"
+
         });
+
     }
+
 
     const pic = (
+
         req.body &&
         req.body.pic
-            ? String(req.body.pic)
+
+            ? String(
+                req.body.pic
+            )
+
             : ""
+
     ).trim();
 
+
     if (!pic) {
+
         return res.status(400).json({
-            error: "PIC wajib diisi"
+
+            error:
+                "PIC wajib diisi"
+
         });
+
     }
+
 
     ticketRepository.assignPIC(
         req.params.id,
         pic
     );
 
+
     res.json({
+
         ok: true
+
     });
 
 }
 
-/**
- * Ubah status tiket.
- */
+
+/* ==========================================================
+UBAH STATUS
+========================================================== */
+
 function changeStatus(req, res) {
 
     const ticket =
-        ticketRepository.findById(req.params.id);
+        ticketRepository.findById(
+            req.params.id
+        );
+
 
     if (!ticket) {
+
         return res.status(404).json({
-            error: "Tiket tidak ditemukan"
+
+            error:
+                "Tiket tidak ditemukan"
+
         });
+
     }
 
+
     const status = (
+
         req.body &&
         req.body.status
-            ? String(req.body.status)
+
+            ? String(
+                req.body.status
+            )
+
             : ""
+
     )
         .trim()
         .toUpperCase();
 
-    if (!VALID_STATUS.includes(status)) {
+
+    if (
+        !VALID_STATUS.includes(
+            status
+        )
+    ) {
+
         return res.status(400).json({
+
             error:
                 `Status tidak valid. Pilih salah satu: ${VALID_STATUS.join(", ")}`
+
         });
+
     }
 
-    if (status === "CLOSED") {
+
+    if (
+        status === "CLOSED"
+    ) {
 
         doneService.close(
             ticket,
             ticket.pic
         );
 
-    } else if (status === "OPEN") {
+    }
+
+    else if (
+        status === "OPEN"
+    ) {
 
         ticketRepository.reopen(
             req.params.id
         );
 
-    } else {
+    }
+
+    else {
 
         ticketRepository.updateState(
             req.params.id,
@@ -307,16 +905,30 @@ function changeStatus(req, res) {
 
     }
 
+
     res.json({
+
         ok: true
+
     });
 
 }
 
+
+/* ==========================================================
+EXPORT
+========================================================== */
+
 module.exports = {
+
     dashboard,
+
     closeTicket,
+
     reopenTicket,
+
     assignPIC,
+
     changeStatus
+
 };

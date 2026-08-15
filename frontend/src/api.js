@@ -1,5 +1,8 @@
-// Relatif '/api' -> di dev diproxy Vite ke :3000, di produksi same-origin.
+// Relatif '/api' -> di dev diproxy Vite ke :3000,
+// di produksi same-origin.
+
 const BASE = "/api";
+
 
 /* ==========================================================
    Helper
@@ -7,47 +10,60 @@ const BASE = "/api";
 
 async function post(path, body) {
 
-    const res = await fetch(`${BASE}${path}`, {
+    const res =
+        await fetch(
+            `${BASE}${path}`,
+            {
+                method: "POST",
 
-        method: "POST",
+                headers: body
+                    ? {
+                        "Content-Type": "application/json"
+                    }
+                    : undefined,
 
-        headers: body
-            ? {
-                  "Content-Type": "application/json"
-              }
-            : undefined,
+                body: body
+                    ? JSON.stringify(body)
+                    : undefined
+            }
+        );
 
-        body: body
-            ? JSON.stringify(body)
-            : undefined
-
-    });
 
     if (!res.ok) {
 
-        let msg = `Gagal (${res.status})`;
+        let msg =
+            `Gagal (${res.status})`;
 
         try {
 
-            const json = await res.json();
+            const json =
+                await res.json();
 
             if (json.error) {
-                msg = json.error;
+
+                msg =
+                    json.error;
+
             }
 
-        } catch {
+        }
+
+        catch {
 
             // Ignore
 
         }
 
+
         throw new Error(msg);
 
     }
 
+
     return res.json();
 
 }
+
 
 /* ==========================================================
    Dashboard
@@ -57,32 +73,50 @@ export async function getDashboard(
 
     start = "",
     end = "",
-    team = ""
+    location = ""
 
 ) {
 
-    const params = new URLSearchParams();
+    const params =
+        new URLSearchParams();
+
 
     if (start && end) {
 
-        params.append("start", start);
-        params.append("end", end);
+        params.append(
+            "start",
+            start
+        );
+
+        params.append(
+            "end",
+            end
+        );
 
     }
 
-    if (team) {
 
-        params.append("team", team);
+    if (location) {
+
+        params.append(
+            "location",
+            location
+        );
 
     }
 
-    const url = params.toString()
 
-        ? `${BASE}/dashboard?${params.toString()}`
+    const url =
+        params.toString()
 
-        : `${BASE}/dashboard`;
+            ? `${BASE}/dashboard?${params.toString()}`
 
-    const res = await fetch(url);
+            : `${BASE}/dashboard`;
+
+
+    const res =
+        await fetch(url);
+
 
     if (!res.ok) {
 
@@ -92,9 +126,11 @@ export async function getDashboard(
 
     }
 
+
     return res.json();
 
 }
+
 
 /* ==========================================================
    Analytics
@@ -104,32 +140,50 @@ export async function getAnalytics(
 
     start = "",
     end = "",
-    team = ""
+    location = ""
 
 ) {
 
-    const params = new URLSearchParams();
+    const params =
+        new URLSearchParams();
+
 
     if (start && end) {
 
-        params.append("start", start);
-        params.append("end", end);
+        params.append(
+            "start",
+            start
+        );
+
+        params.append(
+            "end",
+            end
+        );
 
     }
 
-    if (team) {
 
-        params.append("team", team);
+    if (location) {
+
+        params.append(
+            "location",
+            location
+        );
 
     }
 
-    const url = params.toString()
 
-        ? `${BASE}/analytics?${params.toString()}`
+    const url =
+        params.toString()
 
-        : `${BASE}/analytics`;
+            ? `${BASE}/analytics?${params.toString()}`
 
-    const res = await fetch(url);
+            : `${BASE}/analytics`;
+
+
+    const res =
+        await fetch(url);
+
 
     if (!res.ok) {
 
@@ -139,17 +193,23 @@ export async function getAnalytics(
 
     }
 
+
     return res.json();
 
 }
+
 
 /* ==========================================================
    Customer Feedback
 ========================================================== */
 
-export async function getFeedback(filters = {}) {
+export async function getFeedback(
+    filters = {}
+) {
 
-    const params = new URLSearchParams();
+    const params =
+        new URLSearchParams();
+
 
     if (filters.startDate) {
 
@@ -160,6 +220,7 @@ export async function getFeedback(filters = {}) {
 
     }
 
+
     if (filters.endDate) {
 
         params.append(
@@ -169,7 +230,39 @@ export async function getFeedback(filters = {}) {
 
     }
 
+
+    /*
+    ==========================================================
+    LOCATION
+    ==========================================================
+    */
+
     if (
+        filters.location &&
+        filters.location !== "ALL"
+    ) {
+
+        params.append(
+            "location",
+            filters.location
+        );
+
+    }
+
+
+    /*
+    ==========================================================
+    LEGACY TEAM
+    ==========================================================
+
+    Tetap support caller lama.
+
+    Kalau location ada,
+    team tidak dikirim.
+    ==========================================================
+    */
+
+    else if (
         filters.team &&
         filters.team !== "ALL"
     ) {
@@ -180,6 +273,7 @@ export async function getFeedback(filters = {}) {
         );
 
     }
+
 
     if (
         filters.keyword &&
@@ -193,33 +287,44 @@ export async function getFeedback(filters = {}) {
 
     }
 
-    const url = params.toString()
 
-        ? `${BASE}/feedback?${params.toString()}`
+    const url =
+        params.toString()
 
-        : `${BASE}/feedback`;
+            ? `${BASE}/feedback?${params.toString()}`
 
-    const res = await fetch(url);
+            : `${BASE}/feedback`;
 
-    if (!res.ok) {
+
+    const response =
+        await fetch(url);
+
+
+    if (!response.ok) {
 
         throw new Error(
-            `Gagal memuat customer feedback (${res.status})`
+            "Gagal mengambil data customer feedback"
         );
 
     }
 
-    return res.json();
+
+    return response.json();
 
 }
+
 
 /* ==========================================================
    Export Customer Feedback Excel
 ========================================================== */
 
-export function exportFeedbackExcel(filters = {}) {
+export function exportFeedbackExcel(
+    filters = {}
+) {
 
-    const params = new URLSearchParams();
+    const params =
+        new URLSearchParams();
+
 
     if (filters.startDate) {
 
@@ -230,6 +335,7 @@ export function exportFeedbackExcel(filters = {}) {
 
     }
 
+
     if (filters.endDate) {
 
         params.append(
@@ -239,7 +345,39 @@ export function exportFeedbackExcel(filters = {}) {
 
     }
 
+
+    /*
+    ==========================================================
+    LOCATION
+    ==========================================================
+    */
+
     if (
+        filters.location &&
+        filters.location !== "ALL"
+    ) {
+
+        params.append(
+            "location",
+            filters.location
+        );
+
+    }
+
+
+    /*
+    ==========================================================
+    LEGACY TEAM
+    ==========================================================
+
+    Kalau masih ada caller lama yang mengirim team,
+    tetap kita dukung.
+
+    Jika location ada, team tidak ikut dikirim.
+    ==========================================================
+    */
+
+    else if (
         filters.team &&
         filters.team !== "ALL"
     ) {
@@ -250,6 +388,7 @@ export function exportFeedbackExcel(filters = {}) {
         );
 
     }
+
 
     if (
         filters.keyword &&
@@ -263,14 +402,22 @@ export function exportFeedbackExcel(filters = {}) {
 
     }
 
-    const url = params.toString()
 
-        ? `${BASE}/feedback/export?${params.toString()}`
-        : `${BASE}/feedback/export`;
+    const url =
+        params.toString()
 
-    window.open(url, "_blank");
+            ? `${BASE}/feedback/export?${params.toString()}`
+
+            : `${BASE}/feedback/export`;
+
+
+    window.open(
+        url,
+        "_blank"
+    );
 
 }
+
 
 /* ==========================================================
    Operational Rotation
@@ -278,9 +425,11 @@ export function exportFeedbackExcel(filters = {}) {
 
 export async function getOperationalRotation() {
 
-    const res = await fetch(
-        `${BASE}/operational-rotation`
-    );
+    const res =
+        await fetch(
+            `${BASE}/operational-rotation`
+        );
+
 
     if (!res.ok) {
 
@@ -290,32 +439,51 @@ export async function getOperationalRotation() {
 
     }
 
+
     return res.json();
 
 }
+
 
 /* ==========================================================
    Ticket Actions
 ========================================================== */
 
 export const closeTicket = (id) =>
+
     post(
         `/tickets/${encodeURIComponent(id)}/close`
     );
 
+
 export const openTicket = (id) =>
+
     post(
         `/tickets/${encodeURIComponent(id)}/open`
     );
 
-export const assignPIC = (id, pic) =>
+
+export const assignPIC = (
+    id,
+    pic
+) =>
+
     post(
         `/tickets/${encodeURIComponent(id)}/assign`,
-        { pic }
+        {
+            pic
+        }
     );
 
-export const changeStatus = (id, status) =>
+
+export const changeStatus = (
+    id,
+    status
+) =>
+
     post(
         `/tickets/${encodeURIComponent(id)}/status`,
-        { status }
+        {
+            status
+        }
     );

@@ -10,10 +10,21 @@ const notificationService =
 const ticketRepository =
     require('../repositories/ticketRepository');
 
-const daftarPIC =
-    require("../config/pic");
+const engineerService =
+    require("./engineerService");
 
-async function start(msg){
+function getPIC(kode) {
+
+    const engineer =
+        engineerService.getByCode(kode);
+
+    return engineer
+        ? engineer.name
+        : null;
+
+}
+
+async function start(msg) {
 
     sessionService.setState(
         msg.from,
@@ -25,28 +36,12 @@ async function start(msg){
     console.log("STATE → WAITING_DONE_PIC");
     console.log("");
 
-await msg.reply(
-`🎫 *IT SUPPORT HELPDESK*
-
-*Pilih PIC Assignment*
-*_(yaitu PIC yang mengambil ticket tersebut)_*
-
-GL = Galih
-SW = Suwito
-RP = Rifaldo
-KA = Andi
-IW = Iwan
-HL = Hilmi
-
-*Balas dengan kode PIC*
-0 = Refresh daftar
-9 = Batal
-⚠️ *NOTE*
-*_Mohon cabang tidak perlu membalas._*
-*_Kode PIC hanya digunakan oleh tim IT Support_*`
-);
+    await notificationService.doneChoosePIC(
+        msg.from
+    );
 
 }
+
 async function showTicketList(msg, session) {
 
     let text =
@@ -176,23 +171,8 @@ Silakan pilih nomor yang tersedia.
         "STATE → WAITING_DONE_CLOSE_PIC"
     );
 
-    await msg.reply(
-`🎫 *IT SUPPORT HELPDESK*
-
-Pilih PIC yang menyelesaikan ticket ini.
-
-GL = Galih
-SW = Suwito
-RP = Rifaldo
-KA = Andi
-IW = Iwan
-HL = Hilmi
-
-0 = Kembali
-9 = Batal
-⚠️ *NOTE*
-*_Mohon cabang tidak perlu membalas._*
-*_Kode PIC hanya digunakan oleh tim IT Support_*`
+    await notificationService.doneChooseClosePIC(
+        msg.from
     );
 
     console.log(
@@ -234,24 +214,9 @@ if (jawaban === "0") {
         "WAITING_DONE_CLOSE_PIC"
     );
 
-    await msg.reply(
-`🎫 *IT SUPPORT HELPDESK*
-
-Pilih PIC yang menyelesaikan ticket ini.
-
-GL = Galih
-SW = Suwito
-RP = Rifaldo
-KA = Andi
-IW = Iwan
-HL = Hilmi
-
-0 = Kembali
-9 = Batal
-⚠️ *NOTE*
-*_Mohon cabang tidak perlu membalas._*
-*_Kode PIC hanya digunakan oleh tim IT Support_*
-`);
+await notificationService.doneChooseClosePIC(
+    msg.from
+);
 
     return true;
 
@@ -362,20 +327,17 @@ return true;
 }
 
     const picSelesai =
-        daftarPIC[kode];
+        getPIC(kode);
 
     if (!picSelesai) {
 
-        await msg.reply(
+await msg.reply(
 `❌ Kode PIC tidak ditemukan.
 
-GL
-SW
-RP
-KA
-IW
-HL`
-        );
+Gunakan salah satu kode berikut:
+
+${notificationService.getEngineerCodeList()}`
+);
 
         return true;
 
@@ -395,34 +357,16 @@ HL`
     const ticket =
         session.selectedTicket;
 
-await msg.reply(
+await notificationService.doneConfirm(
 
-`🎫 *IT SUPPORT HELPDESK*
+    msg.from,
 
-Apakah ticket berikut sudah selesai?
+    ticket,
 
-🎫 *Nomor Ticket*
-${ticket.id}
+    session.selectedPIC,
 
-🏢 *Cabang*
-${ticket.cabang}
+    picSelesai
 
-📝 *Kendala*
-${ticket.kendala}
-
-👨‍💻 *PIC Assignment*
-${session.selectedPIC}
-
-✅ *PIC Penyelesai*
-${picSelesai}
-
-Balas:
-
-1️⃣ Ya, tutup ticket
-
-0️⃣ Kembali
-
-9️⃣ Batal`
 );
 
     return true;
@@ -486,22 +430,16 @@ if (kode === "0") {
     
 
 const pic =
-    daftarPIC[kode];
-
+    getPIC(kode);
 
     if(!pic){
 
-    await msg.reply(
+await msg.reply(
 `❌ Kode PIC tidak ditemukan.
 
 Gunakan salah satu kode berikut:
 
-GL
-SW
-RP
-KA
-IW
-HL`
+${notificationService.getEngineerCodeList()}`
 );
 
     return true;
@@ -555,40 +493,13 @@ console.log("");
 console.log("====================");
 console.log("STATE → WAITING_DONE_TICKET");
 
-let text =
-`🎫 *IT SUPPORT HELPDESK*
+await notificationService.doneChooseTicket(
+    msg.from,
+    pic,
+    tickets
+);
 
-👨‍💻 *PIC Assignment*
-${pic}
-
-Silakan pilih ticket yang akan diselesaikan.
-
-`;
-
-tickets.forEach((t,index)=>{
-
-text +=
-`${index+1}.
-🎫 ${t.id}
-🏢 ${t.cabang}
-👨‍💻 Assignment : ${t.pic}
-📝 ${t.kendala}
-
-`;
-
-});
-
-text +=
-`Balas dengan nomor ticket.
-
-0 = Refresh daftar
-9 = Batal
-⚠️ *NOTE*
-*_Mohon cabang tidak perlu membalas._*
-*_Nomor ticket hanya digunakan oleh tim IT Support_*`;
-
-await msg.reply(text);
-    return true;
+return true;
 
 }
 

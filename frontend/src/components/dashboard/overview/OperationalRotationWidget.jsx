@@ -1,6 +1,8 @@
 import { ArrowRightLeft } from "lucide-react";
 
+
 const MONTHS = [
+    "",
     "January",
     "February",
     "March",
@@ -15,16 +17,27 @@ const MONTHS = [
     "December"
 ];
 
-export default function OperationalRotationWidget({ rotation }) {
 
-    if (!rotation?.current) return null;
+export default function OperationalRotationWidget({
+    rotation
+}) {
+
+    if (!rotation?.current) {
+        return null;
+    }
+
 
     const current = rotation.current;
     const next = rotation.next;
 
+
     return (
 
         <div className="rotation-widget">
+
+            {/* ==================================================
+                HEADER
+            ================================================== */}
 
             <div className="rotation-widget-header">
 
@@ -39,41 +52,79 @@ export default function OperationalRotationWidget({ rotation }) {
 
             </div>
 
+
+            {/* ==================================================
+                CURRENT LOCATIONS
+            ================================================== */}
+
             <div className="rotation-widget-teams">
 
                 <div className="rotation-widget-team team-a">
 
                     <strong>
-                        {current.primaryTeam.replace("_", " ")}
+                        HO - AKR Tower
                     </strong>
 
                     <small>
-                        Primary Team
+                        Operational Location
                     </small>
 
                 </div>
 
+
                 <div className="rotation-widget-team team-b">
 
                     <strong>
-                        {current.backupTeam.replace("_", " ")}
+                        Head Office
                     </strong>
 
                     <small>
-                        Backup Team
+                        Operational Location
                     </small>
 
                 </div>
 
             </div>
 
+
+            {/* ==================================================
+                PERIOD
+            ================================================== */}
+
             <div className="rotation-widget-footer">
 
-                Next Rotation
+                <span>
+                    Current Period
+                </span>
 
                 <strong>
-                    {MONTHS[next.month - 1]} {next.year}
+
+                    {MONTHS[current.month]}{" "}
+                    {current.year}
+
                 </strong>
+
+
+                {next && (
+
+                    <>
+
+                        <span style={{
+                            marginTop: "8px"
+                        }}>
+                            Next Rotation
+                        </span>
+
+                        <strong>
+
+                            {MONTHS[next.month]}{" "}
+                            {next.year}
+
+                        </strong>
+
+                    </>
+
+                )}
 
             </div>
 

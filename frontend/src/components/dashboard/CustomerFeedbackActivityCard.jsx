@@ -19,6 +19,23 @@ function formatTime(dateString) {
 
 }
 
+function getLocationLabel(branch) {
+
+    switch (branch) {
+
+        case "AKR":
+            return "HO - AKR Tower";
+
+        case "HO":
+            return "Head Office";
+
+        default:
+            return branch || "-";
+
+    }
+
+}
+
 function renderStars(response = 0, solution = 0) {
 
     const rating = Math.round(
@@ -205,7 +222,7 @@ export default function CustomerFeedbackActivityCard({
 
                                                     <div className="feedback-branch">
 
-                                                        {item.branch || "-"}
+                                                        {getLocationLabel(item.branch)}
 
                                                     </div>
 

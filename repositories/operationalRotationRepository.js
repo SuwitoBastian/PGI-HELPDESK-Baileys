@@ -1,17 +1,69 @@
 const db = require("../database/database");
 
+/* ==========================================================
+   Current Date Helper
+   ----------------------------------------------------------
+   Normal:
+   - menggunakan tanggal sistem
+
+   Testing:
+   - jika SIMULATE_DATE di .env tersedia,
+     sistem akan menggunakan tanggal tersebut
+========================================================== */
+
+function getNow() {
+
+    const simulatedDate =
+        process.env.SIMULATE_DATE;
+
+    if (simulatedDate) {
+
+        const date =
+            new Date(`${simulatedDate}T12:00:00`);
+
+        if (!Number.isNaN(date.getTime())) {
+
+            return date;
+
+        }
+
+        console.warn(
+            `SIMULATE_DATE tidak valid: ${simulatedDate}`
+        );
+
+    }
+
+    return new Date();
+
+}
+
+/* ==========================================================
+   Current Rotation
+========================================================== */
+
 function getCurrent() {
 
-    const now = new Date();
+    const now =
+        getNow();
 
     return getByPeriod(
+
         now.getFullYear(),
+
         now.getMonth() + 1
+
     );
 
 }
 
-function getByPeriod(year, month) {
+/* ==========================================================
+   Get By Period
+========================================================== */
+
+function getByPeriod(
+    year,
+    month
+) {
 
     return db.prepare(`
         SELECT *
@@ -19,11 +71,18 @@ function getByPeriod(year, month) {
         WHERE year = ?
         AND month = ?
     `).get(
+
         year,
+
         month
+
     );
 
 }
+
+/* ==========================================================
+   Get All
+========================================================== */
 
 function getAll() {
 
@@ -35,47 +94,75 @@ function getAll() {
 
 }
 
+/* ==========================================================
+   Next Rotation
+========================================================== */
+
 function getNext() {
 
-    const now = new Date();
+    const now =
+        getNow();
 
-    let year = now.getFullYear();
-    let month = now.getMonth() + 2;
+    let year =
+        now.getFullYear();
+
+    let month =
+        now.getMonth() + 2;
 
     if (month > 12) {
 
         month = 1;
+
         year++;
 
     }
 
     return getByPeriod(
+
         year,
+
         month
+
     );
 
 }
 
+/* ==========================================================
+   Previous Rotation
+========================================================== */
+
 function getPrevious() {
 
-    const now = new Date();
+    const now =
+        getNow();
 
-    let year = now.getFullYear();
-    let month = now.getMonth();
+    let year =
+        now.getFullYear();
+
+    let month =
+        now.getMonth();
 
     if (month === 0) {
 
         month = 12;
+
         year--;
 
     }
 
     return getByPeriod(
+
         year,
+
         month
+
     );
 
 }
+
+/* ==========================================================
+   Update Rotation
+========================================================== */
 
 function update(
     year,
@@ -121,6 +208,10 @@ function update(
     );
 
 }
+
+/* ==========================================================
+   Export
+========================================================== */
 
 module.exports = {
 

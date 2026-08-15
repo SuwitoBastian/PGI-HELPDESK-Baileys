@@ -1,6 +1,13 @@
 const operationalRotationService =
     require("../services/operationalRotationService");
 
+const engineerService =
+    require("../services/engineerService");
+
+/* ==========================================================
+   Index
+========================================================== */
+
 function index(req, res) {
 
     try {
@@ -11,20 +18,27 @@ function index(req, res) {
         const next =
             operationalRotationService.getNextRotation();
 
-const schedule =
-    operationalRotationService.getAllRotation();
+        const schedule =
+            operationalRotationService.getAllRotation();
 
-res.json({
+        const engineers =
+            engineerService.getAll();
 
-    current,
+        res.json({
 
-    next,
+            current,
 
-    schedule
+            next,
 
-});
+            schedule,
 
-    } catch (err) {
+            engineers
+
+        });
+
+    }
+
+    catch (err) {
 
         console.error(err);
 
@@ -33,6 +47,10 @@ res.json({
     }
 
 }
+
+/* ==========================================================
+   Update Rotation
+========================================================== */
 
 function update(req, res) {
 
@@ -66,25 +84,31 @@ function update(req, res) {
 
         res.json({
 
-    success: true
+            success: true
 
-});
+        });
 
-    } catch (err) {
+    }
+
+    catch (err) {
 
         console.error(err);
 
         res.status(400).json({
 
-    success: false,
+            success: false,
 
-    message: err.message
+            message: err.message
 
-});
+        });
 
     }
 
 }
+
+/* ==========================================================
+   Save Primary Team
+========================================================== */
 
 module.exports = {
 

@@ -13,6 +13,9 @@ const notificationService =
 const doneEngine =
     require('./doneEngine');
 
+const engineerService =
+    require("./engineerService");
+
 /*
 |--------------------------------------------------------------------------
 | INCOMING
@@ -48,16 +51,23 @@ async function handleOutgoing(msg) {
     // Command yang diizinkan
     // ======================
 
+    const engineerCodes =
+        engineerService
+            .getAll()
+            .map(engineer =>
+                engineer.code.toUpperCase()
+            );
+
     const allowedCommands = [
+
         "DONE",
-        "GL",
-        "SW",
-        "RP",
-        "KA",
-        "IW",
-        "HL",
+
         "0",
-        "9"
+
+        "9",
+
+        ...engineerCodes
+
     ];
 
     const isNumber =
@@ -188,15 +198,15 @@ async function handleWaitingAssign(msg) {
         msg.body
             .trim()
             .toUpperCase();
+    
+    console.log("KODE :", kodePIC);
 
-    const daftarKode = [
-        "GL",
-        "SW",
-        "RP",
-        "KA",
-        "IW",
-        "HL"
-    ];
+    const daftarKode =
+        engineerService
+            .getAll()
+            .map(engineer =>
+                engineer.code.toUpperCase()
+            );
 
     if (!daftarKode.includes(kodePIC)) {
         return;

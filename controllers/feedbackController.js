@@ -9,13 +9,16 @@ function submitFeedback(req, res) {
     try {
 
         const result =
-            feedbackService.submitFeedback(req.body);
+            feedbackService.submitFeedback(
+                req.body
+            );
 
         return res.status(201).json({
 
             success: true,
 
-            message: "Feedback berhasil dikirim.",
+            message:
+                "Feedback berhasil dikirim.",
 
             data: {
                 id: result.lastInsertRowid
@@ -37,6 +40,7 @@ function submitFeedback(req, res) {
 
 }
 
+
 /* ==========================================================
    Latest Feedback
 ========================================================== */
@@ -45,13 +49,18 @@ function getLatestFeedback(req, res) {
 
     try {
 
-        const limit = Math.max(
-            Number(req.query.limit) || 5,
-            1
-        );
+        const limit =
+            Math.max(
+                Number(req.query.limit) || 5,
+                1
+            );
+
 
         const feedback =
-            feedbackService.getLatestFeedback(limit);
+            feedbackService.getLatestFeedback(
+                limit
+            );
+
 
         return res.json({
 
@@ -75,6 +84,41 @@ function getLatestFeedback(req, res) {
 
 }
 
+
+/* ==========================================================
+   Build Filters
+========================================================== */
+
+function buildFilters(req) {
+
+    return {
+
+        startDate:
+            req.query.startDate || null,
+
+        endDate:
+            req.query.endDate || null,
+
+        location:
+            req.query.location || null,
+
+        /*
+         * Team tetap diterima untuk
+         * compatibility dengan frontend
+         * atau request lama.
+         */
+
+        team:
+            req.query.team || "ALL",
+
+        keyword:
+            req.query.keyword || ""
+
+    };
+
+}
+
+
 /* ==========================================================
    All Feedback
 ========================================================== */
@@ -83,23 +127,21 @@ function getAllFeedback(req, res) {
 
     try {
 
-        const filters = {
+        const filters =
+            buildFilters(req);
 
-            startDate: req.query.startDate || null,
-
-            endDate: req.query.endDate || null,
-
-            team: req.query.team || "ALL",
-
-            keyword: req.query.keyword || ""
-
-        };
 
         const feedback =
-            feedbackService.getAllFeedback(filters);
+            feedbackService.getAllFeedback(
+                filters
+            );
+
 
         const statistics =
-            feedbackService.getStatistics(filters);
+            feedbackService.getStatistics(
+                filters
+            );
+
 
         return res.json({
 
@@ -113,6 +155,12 @@ function getAllFeedback(req, res) {
 
     } catch (err) {
 
+        console.error(
+            "GET ALL FEEDBACK ERROR:",
+            err
+        );
+
+
         return res.status(500).json({
 
             success: false,
@@ -125,6 +173,7 @@ function getAllFeedback(req, res) {
 
 }
 
+
 /* ==========================================================
    Statistics
 ========================================================== */
@@ -133,20 +182,15 @@ function getStatistics(req, res) {
 
     try {
 
-        const filters = {
+        const filters =
+            buildFilters(req);
 
-            startDate: req.query.startDate || null,
-
-            endDate: req.query.endDate || null,
-
-            team: req.query.team || "ALL",
-
-            keyword: req.query.keyword || ""
-
-        };
 
         const statistics =
-            feedbackService.getStatistics(filters);
+            feedbackService.getStatistics(
+                filters
+            );
+
 
         return res.json({
 
@@ -158,6 +202,12 @@ function getStatistics(req, res) {
 
     } catch (err) {
 
+        console.error(
+            "GET FEEDBACK STATISTICS ERROR:",
+            err
+        );
+
+
         return res.status(500).json({
 
             success: false,
@@ -169,6 +219,7 @@ function getStatistics(req, res) {
     }
 
 }
+
 
 /* ==========================================================
    Export Excel
@@ -178,29 +229,22 @@ async function exportExcel(req, res) {
 
     try {
 
-        const filters = {
+        const filters =
+            buildFilters(req);
 
-            startDate: req.query.startDate || null,
-
-            endDate: req.query.endDate || null,
-
-            team: req.query.team || "ALL",
-
-            keyword: req.query.keyword || ""
-
-        };
 
         await feedbackService.exportExcel(
-
             filters,
-
             res
-
         );
 
     } catch (err) {
 
-        console.error(err);
+        console.error(
+            "EXPORT FEEDBACK ERROR:",
+            err
+        );
+
 
         return res.status(500).json({
 
@@ -213,6 +257,11 @@ async function exportExcel(req, res) {
     }
 
 }
+
+
+/* ==========================================================
+   Export
+========================================================== */
 
 module.exports = {
 

@@ -3,8 +3,21 @@ function build(
     repository,
     start = null,
     end = null,
-    team = null
+    team = null,
+    location = null
 ) {
+
+    if (location) {
+
+        return repository.countProcessByPICAndLocation(
+            engineer.name,
+            start,
+            end,
+            location
+        );
+
+    }
+
 
     return repository.countProcessByPIC(
         engineer.name,
@@ -14,6 +27,7 @@ function build(
     );
 
 }
+
 
 module.exports = {
 

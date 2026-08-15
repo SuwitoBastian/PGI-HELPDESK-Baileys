@@ -4,8 +4,8 @@ const repository =
 const { nowWIB } =
     require("../utils/dateTime");
 
-const engineers =
-    require("../config/engineers");
+const engineerService =
+    require("./engineerService");
 
 function getTicketsByPIC(pic){
 
@@ -48,7 +48,7 @@ function close(ticket, picSelesai, kodePIC) {
     const durasi = durasiMenit;
 
     const engineer =
-        engineers[kodePIC];
+        engineerService.getByCode(kodePIC);
 
     const picSelesaiTeam =
         engineer

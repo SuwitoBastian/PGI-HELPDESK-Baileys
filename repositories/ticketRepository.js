@@ -285,6 +285,159 @@ function countProcessByPIC(
 
 }
 
+function countAssignedByPICAndLocation(
+    pic,
+    start = null,
+    end = null,
+    location = null
+) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE pic = ?
+    `;
+
+    const params = [pic];
+
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang)) = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
+
+}
+
+
+function countCompletedByPICAndLocation(
+    pic,
+    start = null,
+    end = null,
+    location = null
+) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE pic_selesai = ?
+    `;
+
+    const params = [pic];
+
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(selesai)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang)) = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
+
+}
+
+
+function countProcessByPICAndLocation(
+    pic,
+    start = null,
+    end = null,
+    location = null
+) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE status = 'PROCESS'
+        AND pic = ?
+    `;
+
+    const params = [pic];
+
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
+
+    }
+
+
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang)) = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
+
+}
+
 function findProcessNormalSLA() {
 
     return db.prepare(`
@@ -336,7 +489,8 @@ function findClosedForSLA(
             waktu,
             assigned_at,
             selesai,
-            sla_status
+            sla_status,
+            pic_selesai
         FROM tickets
         WHERE status = 'CLOSED'
     `;
@@ -474,7 +628,26 @@ function findProcessByNomor(nomor){
 /**
  * Semua ticket
  */
-function findAll(engineerTeam = null) {
+function addLocationFilter(sql, params, location) {
+
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return sql;
+}
+
+function findAll(
+    engineerTeam = null,
+    location = null
+) {
 
     let sql = `
         SELECT *
@@ -483,13 +656,35 @@ function findAll(engineerTeam = null) {
 
     const params = [];
 
+    const conditions = [];
+
     if (engineerTeam) {
 
-        sql += `
-            WHERE pic_team = ?
-        `;
+        conditions.push(`
+            pic_team = ?
+        `);
 
         params.push(engineerTeam);
+
+    }
+
+    if (location) {
+
+        conditions.push(`
+            UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `);
+
+        params.push(location);
+
+    }
+
+    if (conditions.length) {
+
+        sql += `
+            WHERE
+                ${conditions.join(" AND ")}
+        `;
 
     }
 
@@ -497,22 +692,25 @@ function findAll(engineerTeam = null) {
         ORDER BY waktu DESC
     `;
 
-    return db.prepare(sql).all(...params);
+    return db
+        .prepare(sql)
+        .all(...params);
 
 }
 
 function findAllByDate(
     start,
     end,
-    engineerTeam = null
+    engineerTeam = null,
+    location = null
 ) {
 
     let sql = `
         SELECT *
         FROM tickets
         WHERE DATE(waktu)
-        BETWEEN DATE(?)
-        AND DATE(?)
+            BETWEEN DATE(?)
+            AND DATE(?)
     `;
 
     const params = [
@@ -530,18 +728,34 @@ function findAllByDate(
 
     }
 
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
     sql += `
         ORDER BY waktu DESC
     `;
 
-    return db.prepare(sql).all(...params);
+    return db
+        .prepare(sql)
+        .all(...params);
 
 }
 
 /**
  * Total Ticket
  */
-function countTotal(engineerTeam = null) {
+function countTotal(
+    engineerTeam = null,
+    location = null
+) {
 
     let sql = `
         SELECT COUNT(*) total
@@ -550,32 +764,58 @@ function countTotal(engineerTeam = null) {
 
     const params = [];
 
+    const conditions = [];
+
     if (engineerTeam) {
 
-        sql += `
-            WHERE pic_team = ?
-        `;
+        conditions.push(`
+            pic_team = ?
+        `);
 
         params.push(engineerTeam);
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        conditions.push(`
+            UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `);
+
+        params.push(location);
+
+    }
+
+    if (conditions.length) {
+
+        sql += `
+            WHERE
+                ${conditions.join(" AND ")}
+        `;
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
 function countTotalByDate(
     start,
     end,
-    engineerTeam = null
+    engineerTeam = null,
+    location = null
 ) {
 
     let sql = `
         SELECT COUNT(*) total
         FROM tickets
         WHERE DATE(waktu)
-        BETWEEN DATE(?)
-        AND DATE(?)
+            BETWEEN DATE(?)
+            AND DATE(?)
     `;
 
     const params = [
@@ -593,14 +833,31 @@ function countTotalByDate(
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
 /**
  * Jumlah OPEN
  */
-function countOpen(engineerTeam = null) {
+function countOpen(
+    engineerTeam = null,
+    location = null
+) {
 
     let sql = `
         SELECT COUNT(*) total
@@ -620,23 +877,38 @@ function countOpen(engineerTeam = null) {
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
 function countOpenByDate(
     start,
     end,
-    engineerTeam = null
+    engineerTeam = null,
+    location = null
 ) {
 
     let sql = `
         SELECT COUNT(*) total
         FROM tickets
-        WHERE status='OPEN'
+        WHERE status = 'OPEN'
         AND DATE(waktu)
-        BETWEEN DATE(?)
-        AND DATE(?)
+            BETWEEN DATE(?)
+            AND DATE(?)
     `;
 
     const params = [
@@ -654,14 +926,29 @@ function countOpenByDate(
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
 function countProcessByDate(
     start,
     end,
-    engineerTeam = null
+    engineerTeam = null,
+    location = null
 ) {
 
     let sql = `
@@ -669,8 +956,8 @@ function countProcessByDate(
         FROM tickets
         WHERE status = 'PROCESS'
         AND DATE(waktu)
-        BETWEEN DATE(?)
-        AND DATE(?)
+            BETWEEN DATE(?)
+            AND DATE(?)
     `;
 
     const params = [
@@ -688,24 +975,38 @@ function countProcessByDate(
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
 function countClosedByDate(
     start,
     end,
-    engineerTeam = null
+    engineerTeam = null,
+    location = null
 ) {
 
     let sql = `
         SELECT COUNT(*) total
         FROM tickets
-        WHERE
-            status = 'CLOSED'
-            AND DATE(selesai)
-                BETWEEN DATE(?)
-                AND DATE(?)
+        WHERE status = 'CLOSED'
+        AND DATE(selesai)
+            BETWEEN DATE(?)
+            AND DATE(?)
     `;
 
     const params = [
@@ -723,7 +1024,21 @@ function countClosedByDate(
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
@@ -774,7 +1089,8 @@ function topCabangByDate(
     start,
     end,
     limit = 10,
-    engineerTeam = null
+    engineerTeam = null,
+    location = null
 ) {
 
     let sql = `
@@ -785,8 +1101,8 @@ function topCabangByDate(
         WHERE DATE(waktu)
             BETWEEN DATE(?)
             AND DATE(?)
-            AND cabang IS NOT NULL
-            AND cabang <> ''
+        AND cabang IS NOT NULL
+        AND cabang <> ''
     `;
 
     const params = [
@@ -801,6 +1117,17 @@ function topCabangByDate(
         `;
 
         params.push(engineerTeam);
+
+    }
+
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
 
     }
 
@@ -812,7 +1139,9 @@ function topCabangByDate(
 
     params.push(limit);
 
-    return db.prepare(sql).all(...params);
+    return db
+        .prepare(sql)
+        .all(...params);
 
 }
 
@@ -820,7 +1149,8 @@ function topPICByDate(
     start,
     end,
     limit = 6,
-    engineerTeam = null
+    engineerTeam = null,
+    location = null
 ) {
 
     let sql = `
@@ -828,13 +1158,12 @@ function topPICByDate(
             pic,
             COUNT(*) total
         FROM tickets
-        WHERE
-            status = 'PROCESS'
-            AND pic IS NOT NULL
-            AND pic <> ''
-            AND DATE(waktu)
-                BETWEEN DATE(?)
-                AND DATE(?)
+        WHERE status = 'PROCESS'
+        AND pic IS NOT NULL
+        AND pic <> ''
+        AND DATE(waktu)
+            BETWEEN DATE(?)
+            AND DATE(?)
     `;
 
     const params = [
@@ -852,6 +1181,17 @@ function topPICByDate(
 
     }
 
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
     sql += `
         GROUP BY pic
         ORDER BY total DESC, pic ASC
@@ -860,14 +1200,19 @@ function topPICByDate(
 
     params.push(limit);
 
-    return db.prepare(sql).all(...params);
+    return db
+        .prepare(sql)
+        .all(...params);
 
 }
 
 /**
  * Jumlah PROCESS
  */
-function countProcess(engineerTeam = null) {
+function countProcess(
+    engineerTeam = null,
+    location = null
+) {
 
     let sql = `
         SELECT COUNT(*) total
@@ -887,14 +1232,31 @@ function countProcess(engineerTeam = null) {
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
 /**
  * Jumlah CLOSED
  */
-function countClosed(engineerTeam = null) {
+function countClosed(
+    engineerTeam = null,
+    location = null
+) {
 
     let sql = `
         SELECT COUNT(*) total
@@ -914,19 +1276,37 @@ function countClosed(engineerTeam = null) {
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
 /**
  * Jumlah ticket hari ini
  */
-function countToday(engineerTeam = null) {
+function countToday(
+    engineerTeam = null,
+    location = null
+) {
 
     let sql = `
         SELECT COUNT(*) total
         FROM tickets
-        WHERE DATE(waktu) = DATE('now', 'localtime')
+        WHERE DATE(waktu)
+            = DATE('now', 'localtime')
     `;
 
     const params = [];
@@ -941,14 +1321,32 @@ function countToday(engineerTeam = null) {
 
     }
 
-    return db.prepare(sql).get(...params).total;
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
 
 }
 
 /**
  * Top Cabang
  */
-function topCabang(limit = 10, engineerTeam = null) {
+function topCabang(
+    limit = 10,
+    engineerTeam = null,
+    location = null
+) {
 
     let sql = `
         SELECT
@@ -956,7 +1354,7 @@ function topCabang(limit = 10, engineerTeam = null) {
             COUNT(*) AS total
         FROM tickets
         WHERE cabang IS NOT NULL
-            AND cabang <> ''
+        AND cabang <> ''
     `;
 
     const params = [];
@@ -968,6 +1366,17 @@ function topCabang(limit = 10, engineerTeam = null) {
         `;
 
         params.push(engineerTeam);
+
+    }
+
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
 
     }
 
@@ -979,7 +1388,9 @@ function topCabang(limit = 10, engineerTeam = null) {
 
     params.push(limit);
 
-    return db.prepare(sql).all(...params);
+    return db
+        .prepare(sql)
+        .all(...params);
 
 }
 
@@ -989,17 +1400,20 @@ function topCabang(limit = 10, engineerTeam = null) {
 /**
  * Top PIC Assignment
  */
-function topPIC(limit = 6, engineerTeam = null) {
+function topPIC(
+    limit = 6,
+    engineerTeam = null,
+    location = null
+) {
 
     let sql = `
         SELECT
             pic,
             COUNT(*) total
         FROM tickets
-        WHERE
-            status = 'PROCESS'
-            AND pic IS NOT NULL
-            AND pic <> ''
+        WHERE status = 'PROCESS'
+        AND pic IS NOT NULL
+        AND pic <> ''
     `;
 
     const params = [];
@@ -1014,6 +1428,17 @@ function topPIC(limit = 6, engineerTeam = null) {
 
     }
 
+    if (location) {
+
+        sql += `
+            AND UPPER(TRIM(cabang))
+                = UPPER(TRIM(?))
+        `;
+
+        params.push(location);
+
+    }
+
     sql += `
         GROUP BY pic
         ORDER BY total DESC, pic ASC
@@ -1022,7 +1447,9 @@ function topPIC(limit = 6, engineerTeam = null) {
 
     params.push(limit);
 
-    return db.prepare(sql).all(...params);
+    return db
+        .prepare(sql)
+        .all(...params);
 
 }
 
@@ -1265,6 +1692,12 @@ module.exports = {
 
     countTotalByDate,
 
-    countBranchHandled
+    countBranchHandled,
+
+    countAssignedByPICAndLocation,
+
+    countCompletedByPICAndLocation,
+
+    countProcessByPICAndLocation
 
 };

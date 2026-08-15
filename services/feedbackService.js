@@ -112,9 +112,15 @@ function submitFeedback({
    Dashboard
 ========================================================== */
 
-function getLatestFeedback(limit = 5) {
+function getLatestFeedback(
+    limit = 5,
+    location = null
+) {
 
-    return feedbackRepository.findLatest(limit);
+    return feedbackRepository.findLatest(
+        limit,
+        location
+    );
 
 }
 

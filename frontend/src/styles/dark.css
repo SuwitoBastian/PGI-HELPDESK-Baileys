@@ -2535,3 +2535,17 @@
     height:20px;
 
 }
+
+.dark .engineer-code{
+
+    background:#1e3a8a33;
+
+    color:#93c5fd;
+
+}
+
+.dark .engineer-summary strong{
+
+    color:#f8fafc;
+
+}

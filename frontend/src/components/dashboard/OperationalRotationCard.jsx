@@ -14,38 +14,64 @@ const MONTHS = [
     "December"
 ];
 
-export default function OperationalRotationCard({ rotation }) {
+
+export default function OperationalRotationCard({
+    rotation
+}) {
 
     if (!rotation?.current) {
         return null;
     }
 
-    const { current, next } = rotation;
 
-    const primary = current.primaryTeam;
-    const backup = current.backupTeam;
+    const {
+        current,
+        next
+    } = rotation;
+
 
     return (
+
         <div className="rotation-overview-card">
+
+            {/* ==================================================
+                HEADER
+            ================================================== */}
 
             <div className="rotation-overview-header">
 
                 <div>
 
                     <h3>
+
                         <i className="bi bi-arrow-repeat"></i>
-                        <span>Operational Rotation</span>
+
+                        <span>
+                            Operational Rotation
+                        </span>
+
                     </h3>
 
+
                     <p>
-                        Current operational team assignment
+                        Current operational assignment period
                     </p>
 
                 </div>
 
             </div>
 
+
+            {/* ==================================================
+                BODY
+            ================================================== */}
+
             <div className="rotation-overview-body">
+
+
+                {/* ==================================================
+                    CURRENT PERIOD
+                ================================================== */}
 
                 <div className="rotation-period">
 
@@ -53,67 +79,81 @@ export default function OperationalRotationCard({ rotation }) {
                         Current Period
                     </span>
 
+
                     <h4>
-                        {MONTHS[current.month]} {current.year}
+
+                        {MONTHS[current.month]}{" "}
+                        {current.year}
+
                     </h4>
 
                 </div>
 
+
+                {/* ==================================================
+                    CURRENT LOCATION
+                ================================================== */}
+
                 <div className="rotation-team-grid">
 
-                    <div
-                        className={`rotation-team ${
-                            primary === "TEAM_A"
-                                ? "team-a"
-                                : "team-b"
-                        }`}
-                    >
+                    <div className="rotation-team team-a">
 
                         <span className="rotation-team-badge">
-                            {primary.replace("_", " ")}
+                            HO - AKR Tower
                         </span>
 
+
                         <small>
-                            PRIMARY TEAM
+                            OPERATIONAL LOCATION
                         </small>
 
                     </div>
 
-                    <div
-                        className={`rotation-team ${
-                            backup === "TEAM_A"
-                                ? "team-a"
-                                : "team-b"
-                        }`}
-                    >
+
+                    <div className="rotation-team team-b">
 
                         <span className="rotation-team-badge">
-                            {backup.replace("_", " ")}
+                            Head Office
                         </span>
 
+
                         <small>
-                            BACKUP TEAM
+                            OPERATIONAL LOCATION
                         </small>
 
                     </div>
 
                 </div>
 
-                <div className="rotation-next">
 
-                    <span className="rotation-label">
-                        Next Rotation
-                    </span>
+                {/* ==================================================
+                    NEXT ROTATION
+                ================================================== */}
 
-                    <strong>
-                        {MONTHS[next.month]} {next.year}
-                    </strong>
+                {next && (
 
-                </div>
+                    <div className="rotation-next">
+
+                        <span className="rotation-label">
+                            Next Rotation
+                        </span>
+
+
+                        <strong>
+
+                            {MONTHS[next.month]}{" "}
+                            {next.year}
+
+                        </strong>
+
+                    </div>
+
+                )}
 
             </div>
 
         </div>
+
     );
 
 }

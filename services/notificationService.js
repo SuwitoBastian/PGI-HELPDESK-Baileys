@@ -1,5 +1,48 @@
 const client = require("./waService");
 
+const engineerService =
+    require("./engineerService");
+
+/* ==========================================================
+   Engineer Menu
+========================================================== */
+
+function getEngineerMenu() {
+
+    return engineerService
+
+        .getAll()
+
+        .map(engineer =>
+
+            `${engineer.code} = ${engineer.name}`
+
+        )
+
+        .join("\n");
+
+}
+
+/* ==========================================================
+   Engineer Code List
+========================================================== */
+
+function getEngineerCodeList() {
+
+    return engineerService
+
+        .getAll()
+
+        .map(engineer => engineer.code)
+
+        .join("\n");
+
+}
+
+/* ==========================================================
+   Ticket Created
+========================================================== */
+
 async function ticketCreated(chatId, ticket){
 
     try{
@@ -9,26 +52,24 @@ async function ticketCreated(chatId, ticket){
             chatId,
 
 `🎫 *IT SUPPORT HELPDESK*
-Halo Kak, Laporan Anda berhasil diterima.
-🎫 *Nomor Ticket*
-${ticket.id}
-🟡 *OPEN*
-(Menunggu Assignment PIC)
+📩 Laporan Anda telah kami terima.
 ━━━━━━━━━━━━━━━━━━━━━━
-👨‍💻 *PIC Assignment*
-GL = Galih
-SW = Suwito
-RP = Rifaldo
-KA = Andi
-IW = Iwan
-HL = Hilmi
+🎫 *Ticket*   : ${ticket.id}
+🟡 *Status*   : OPEN
+⏳ *Progress* : Menunggu Assignment PIC
+━━━━━━━━━━━━━━━━━━━━━━
+👨‍💻 *PIC IT Support*
+${getEngineerMenu()
+    .split("\n")
+    .map(pic => `• ${pic.replace(" = ", " - ")}`)
+    .join("\n")}
+━━━━━━━━━━━━━━━━━━━━━━
+ℹ️ *Informasi*
+• Tidak perlu membalas pesan ini.
+• Kode PIC hanya digunakan oleh Tim IT Support.
+• Kami akan menghubungi kembali setelah PIC ditentukan.
 
-⚠️ *NOTE*
-*_Mohon cabang tidak membalas atau mengetik kode PIC._*
-*_Kode PIC hanya digunakan oleh tim IT Support untuk proses penanganan tiket._*
-*_Silakan menunggu informasi lebih lanjut dari PIC yang menangani._*
-*_Terima kasih._*
-━━━━━━━━━━━━━━━━━━━━━━`
+Terima kasih 🙏`
 
         );
 
@@ -41,95 +82,89 @@ HL = Hilmi
 
 }
 
+/* ==========================================================
+   Ticket Assigned
+========================================================== */
+
 async function ticketAssigned(chatId, ticket, pic){
 
     await client.sendMessage(
 
         chatId,
 
-
 `🎫 *IT SUPPORT HELPDESK*
-Halo Kak,
-Laporan Anda sedang ditangani.
-🎫 *Nomor Ticket*
-${ticket.id}
-🏢 *Cabang*
-${ticket.cabang}
-📝 *Kendala*
-${ticket.kendala}
-👨‍💻 *PIC*
-${pic}
-
-📌 Status
-🟢 *PROCESS*
-*_Mohon menunggu proses perbaikan._*
-*_Terima kasih._*
-`
+🛠️ Laporan sedang diproses.
+━━━━━━━━━━━━━━━━━━━━━━
+🎫 *Ticket*   : ${ticket.id}
+🟢 *Status*   : PROCESS
+👨‍💻 *PIC*      : ${pic}
+━━━━━━━━━━━━━━━━━━━━━━
+🏢 *Cabang*    : ${ticket.cabang}
+📝 *Kendala*   : ${ticket.kendala}
+━━━━━━━━━━━━━━━━━━━━━━
+Terima kasih.
+Mohon menunggu proses perbaikan 🙏`
 
     );
 
 }
+
+/* ==========================================================
+   Ticket Closed
+========================================================== */
+
 async function ticketClosed(chatId, ticket, pic) {
 
     await client.sendMessage(
 
         chatId,
 
-`🎫 *IT SUPPORT HELPDESK*
-Halo Kak,
-Kendala Anda telah selesai dikerjakan.
-🎫 *Nomor Ticket*
-${ticket.id}
-🏢 *Cabang*
-${ticket.cabang}
-📝 *Kendala*
-${ticket.kendala}
-👨‍💻 *PIC*
-${pic}
-
-📌 Status
-✅ *CLOSED*
-
-🙏 *Silakan mengisi penilaian layanan berikut:*
+`🎉 *IT SUPPORT HELPDESK*
+🎉 Kendala Anda telah berhasil diselesaikan.
+━━━━━━━━━━━━━━━━━━━━━━
+🎫 *Ticket*   : ${ticket.id}
+✅ *Status*   : CLOSED
+👨‍💻 *PIC*      : ${pic}
+━━━━━━━━━━━━━━━━━━━━━━
+🏢 *Cabang*    : ${ticket.cabang}
+📝 *Kendala*   : ${ticket.kendala}
+━━━━━━━━━━━━━━━━━━━━━━
+🙏 *_Mohon meluangkan waktu untuk mengisi penilaian layanan berikut:_*
+*_Dan ini wajib ya, karena ini akan menjadi bahan evaluasi tim IT Support._*
 
 https://forms.gle/of1HSXAQa6xrsqGJA
 
-⚠️ *_NOTE_*
-*_Penilaian ini wajib diisi sebagai evaluasi dan peningkatan layanan IT Support._*
-*_Dan tetap laporan penyelesaian di grup ya._*`
+Terima kasih atas kerja samanya 🙏`
 
     );
 
 }
+
+/* ==========================================================
+   DONE - Choose Ticket
+========================================================== */
+
 async function doneChooseTicket(chatId, pic, tickets){
 
     let text =
-`━━━━━━━━━━━━━━━━━━━━━━
+`
 🎫 *IT SUPPORT HELPDESK*
 ━━━━━━━━━━━━━━━━━━━━━━
-
 👨‍💻 *PIC*
 ${pic}
-
 Silakan pilih ticket yang akan diselesaikan.
-
 `;
-
     tickets.forEach((t, index)=>{
-
         text +=
 `${index+1}.
 🎫 ${t.id}
 🏢 ${t.cabang}
 📝 ${t.kendala}
-
 `;
-
     });
 
     text +=
 `━━━━━━━━━━━━━━━━━━━━━━
-
 ✍️ Balas dengan *nomor ticket*.
 
 Contoh:
@@ -138,51 +173,85 @@ Contoh:
     await client.sendMessage(chatId, text);
 
 }
+
+/* ==========================================================
+   DONE - Choose PIC
+========================================================== */
+
 async function doneChoosePIC(chatId){
 
     await client.sendMessage(
 
         chatId,
 
-
 `🎫 *IT SUPPORT HELPDESK*
 
-*Pilih PIC*
-GL = Galih
-SW = Suwito
-RP = Rifaldo
-KA = Andi
-IW = Iwan
-HL = Hilmi
+*Pilih PIC Assignment*
+(*_yaitu PIC yang akan menangani ticket ini._*)
 
-*Balas dengan kode PIC*`
+${getEngineerMenu()}
+
+*Balas dengan kode PIC*
+0 = Kembali
+9 = Batal
+
+ℹ️ *Informasi*
+
+*_Mohon cabang tidak perlu membalas._*
+*_Kode PIC hanya digunakan oleh tim IT Support_*`
 
     );
 
 }
-async function doneConfirm(chatId, ticket){
+
+async function doneChooseClosePIC(chatId){
 
     await client.sendMessage(
 
         chatId,
 
-`━━━━━━━━━━━━━━━━━━━━━━
-🎫 *IT SUPPORT HELPDESK*
+`🎫 *IT SUPPORT HELPDESK*
+
+Pilih PIC yang menyelesaikan ticket ini.
+
+${getEngineerMenu()}
+
+0 = Kembali
+9 = Batal
+
+ℹ️ *Informasi*
+*_Mohon cabang tidak perlu membalas._*
+*_Kode PIC hanya digunakan oleh tim IT Support_*`
+
+    );
+
+}
+
+/* ==========================================================
+   DONE - Confirm
+========================================================== */
+
+async function doneConfirm(
+    chatId,
+    ticket,
+    picAssignment,
+    picPenyelesai
+){
+
+    await client.sendMessage(
+
+        chatId,
+
+`🎫 *IT SUPPORT HELPDESK*
+Mohon konfirmasi penyelesaian ticket berikut.
 ━━━━━━━━━━━━━━━━━━━━━━
+🎫 *Ticket*            : ${ticket.id}
+🏢 *Cabang*          : ${ticket.cabang}
+📝 *Kendala*          : ${ticket.kendala}
 
-Apakah ticket berikut sudah selesai?
-
-🎫 *Nomor Ticket*
-${ticket.id}
-
-🏢 *Cabang*
-${ticket.cabang}
-
-📝 *Kendala*
-${ticket.kendala}
-
+👨‍💻 *PIC Assignment* : ${picAssignment}
+✅ *PIC Penyelesai*   : ${picPenyelesai}
 ━━━━━━━━━━━━━━━━━━━━━━
-
 Balas:
 
 1️⃣ Ya, tutup ticket
@@ -195,24 +264,28 @@ Balas:
 
 }
 
+/* ==========================================================
+   OPEN Reminder
+========================================================== */
+
 async function openReminder(tickets){
 
     if(!tickets.length)
         return;
 
-let text =
+    let text =
 `🚨 *OPEN TICKET REMINDER*
 
 Masih terdapat *${tickets.length}* ticket yang belum di-Assignment lebih dari 15 menit.
 
 `;
 
-tickets.forEach((ticket, index) => {
+    tickets.forEach((ticket, index) => {
 
-    const menit =
-        ticket.umurMenit;
+        const menit =
+            ticket.umurMenit;
 
-    text +=
+        text +=
 `━━━━━━━━━━━━━━━━━━━━━━
 📌 *Ticket #${index + 1}*
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -226,9 +299,9 @@ tickets.forEach((ticket, index) => {
 
 `;
 
-});
+    });
 
-text +=
+    text +=
 `━━━━━━━━━━━━━━━━━━━━━━
 
 ⚠️ *Mohon segera dilakukan Assignment PIC atau ditindaklanjuti.*
@@ -259,14 +332,30 @@ text +=
     }
 
 }
+
+/* ==========================================================
+   Export
+========================================================== */
+
 module.exports = {
 
     ticketCreated,
+
     ticketAssigned,
+
     ticketClosed,
+
     openReminder,
+
     doneChoosePIC,
+
     doneChooseTicket,
-    doneConfirm
+
+    doneConfirm,
+
+    doneChooseClosePIC,
+
+    getEngineerCodeList
+    
 
 };

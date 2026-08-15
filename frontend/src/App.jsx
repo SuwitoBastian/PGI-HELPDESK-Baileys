@@ -1,24 +1,29 @@
-import { useEffect, useMemo, useState } from 'react'
-import { LayoutDashboard, Headset } from 'lucide-react'
+import { useEffect, useMemo, useState } from "react";
+import { LayoutDashboard, Headset } from "lucide-react";
 
-import { useDashboard } from './hooks/useDashboard'
+import { useDashboard } from "./hooks/useDashboard";
 import { MASTER_PIC } from "./constants/picList";
 import { ToastProvider } from "./context/ToastContext";
 
-import Sidebar from './components/Sidebar'
-import Topbar from './components/Topbar'
-import StatCards from './components/StatCards'
-import StatusTabs from './components/StatusTabs'
-import TicketTable from './components/TicketTable'
-import SummaryView from './components/SummaryView'
-import FilterCard from './components/FilterCard'
+import Sidebar from "./components/Sidebar";
+import Topbar from "./components/Topbar";
+import StatCards from "./components/StatCards";
+import StatusTabs from "./components/StatusTabs";
+import TicketTable from "./components/TicketTable";
+import SummaryView from "./components/SummaryView";
+import FilterCard from "./components/FilterCard";
 import TeamRotation from "./components/settings/TeamRotation";
+
+
+// =====================================================
+// PAGE CONFIGURATION
+// =====================================================
 
 const PAGES = {
 
-  // ===========================
+  // =====================================================
   // ALL PERFORMANCE
-  // ===========================
+  // =====================================================
 
   "dashboard-overview": {
     title: "All Performance",
@@ -33,58 +38,61 @@ const PAGES = {
   },
 
   "dashboard-trend": {
-  title: "All Performance",
-  subtitle: "Trend performa seluruh Helpdesk.",
-  icon: LayoutDashboard,
-},
-
-  // ===========================
-  // TEAM A
-  // ===========================
-
-  "team-a-overview": {
-    title: "Team A",
-    subtitle: "Ringkasan performa Team A.",
+    title: "All Performance",
+    subtitle: "Trend performa seluruh Helpdesk.",
     icon: LayoutDashboard,
   },
 
-  "team-a-analytics": {
-    title: "Team A",
-    subtitle: "Analisis performa Team A.",
+
+  // =====================================================
+  // HO - AKR TOWER
+  // =====================================================
+
+  "akr-overview": {
+    title: "HO - AKR Tower",
+    subtitle: "Ringkasan performa HO - AKR Tower.",
     icon: LayoutDashboard,
   },
 
-  "team-a-trend": {
-  title: "Team A",
-  subtitle: "Trend performa Team A.",
-  icon: LayoutDashboard,
-},
-
-  // ===========================
-  // TEAM B
-  // ===========================
-
-  "team-b-overview": {
-    title: "Team B",
-    subtitle: "Ringkasan performa Team B.",
+  "akr-analytics": {
+    title: "HO - AKR Tower",
+    subtitle: "Analisis performa HO - AKR Tower.",
     icon: LayoutDashboard,
   },
 
-  "team-b-analytics": {
-    title: "Team B",
-    subtitle: "Analisis performa Team B.",
+  "akr-trend": {
+    title: "HO - AKR Tower",
+    subtitle: "Trend performa HO - AKR Tower.",
     icon: LayoutDashboard,
   },
 
-  "team-b-trend": {
-  title: "Team B",
-  subtitle: "Trend performa Team B.",
-  icon: LayoutDashboard,
-},
 
-  // ===========================
+  // =====================================================
+  // HEAD OFFICE
+  // =====================================================
+
+  "ho-overview": {
+    title: "Head Office",
+    subtitle: "Ringkasan performa Head Office.",
+    icon: LayoutDashboard,
+  },
+
+  "ho-analytics": {
+    title: "Head Office",
+    subtitle: "Analisis performa Head Office.",
+    icon: LayoutDashboard,
+  },
+
+  "ho-trend": {
+    title: "Head Office",
+    subtitle: "Trend performa Head Office.",
+    icon: LayoutDashboard,
+  },
+
+
+  // =====================================================
   // HELPDESK
-  // ===========================
+  // =====================================================
 
   helpdesk: {
     title: "Helpdesk",
@@ -92,17 +100,21 @@ const PAGES = {
     icon: Headset,
   },
 
-  //Team Rotation
+
+  // =====================================================
+  // TEAM ROTATION
+  // =====================================================
 
   "team-rotation": {
-  title: "Operational Settings",
-  subtitle: "Konfigurasi Team Rotation.",
-  icon: LayoutDashboard,
+    title: "Operational Settings",
+    subtitle: "Konfigurasi Team Rotation.",
+    icon: LayoutDashboard,
   },
 
-  // ===========================
+
+  // =====================================================
   // LEGACY
-  // ===========================
+  // =====================================================
 
   legacy: {
     title: "Dashboard Lama",
@@ -112,99 +124,258 @@ const PAGES = {
 
 };
 
+
+// =====================================================
+// APP
+// =====================================================
+
 export default function App() {
+
 
   // =====================================================
   // PAGE
   // =====================================================
 
-const [view, setView] = useState(() => {
-  return (
-    localStorage.getItem("helpdesk-page") ||
-    "dashboard-overview"
-  );
-});
+  const [view, setView] = useState(() => {
 
-const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-  return localStorage.getItem("helpdesk-sidebar") === "true";
-});
+    const stored =
+      localStorage.getItem("helpdesk-page");
 
-const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("helpdesk-theme") || "light";
-});
 
-const [filter, setFilter] = useState('ALL')
+    /*
+    =====================================================
+    LEGACY VIEW MIGRATION
+    =====================================================
 
-  // =====================================================
-  // FILTER FORM
-  // =====================================================
+    Browser lama mungkin masih menyimpan:
 
-  const [startInput, setStartInput] = useState('')
-  const [endInput, setEndInput] = useState('')
+        team-a-overview
+        team-a-analytics
+        team-a-trend
 
-  // =====================================================
-  // FILTER ACTIVE
-  // =====================================================
+        team-b-overview
+        team-b-analytics
+        team-b-trend
 
-  const [startFilter, setStartFilter] = useState('')
-  const [endFilter, setEndFilter] = useState('')
+    Migrasikan otomatis ke identifier baru.
+    =====================================================
+    */
 
-  const selectedTeam = useMemo(() => {
+    const legacyMap = {
 
-  if (view.startsWith("team-a")) {
-    return "TEAM_A";
-  }
+      "team-a-overview":
+        "akr-overview",
 
-  if (view.startsWith("team-b")) {
-    return "TEAM_B";
-  }
+      "team-a-analytics":
+        "akr-analytics",
 
-  return "";
+      "team-a-trend":
+        "akr-trend",
 
-}, [view]);
+      "team-b-overview":
+        "ho-overview",
 
-  // =====================================================
-// SAVE LAST PAGE
-// =====================================================
+      "team-b-analytics":
+        "ho-analytics",
 
-useEffect(() => {
+      "team-b-trend":
+        "ho-trend",
 
-  localStorage.setItem(
-    'helpdesk-page',
-    view
-  )
+    };
 
-}, [view])
 
-useEffect(() => {
+    return (
 
-  localStorage.setItem(
-    'helpdesk-sidebar',
-    sidebarCollapsed
-  )
+      legacyMap[stored] ||
+      stored ||
+      "dashboard-overview"
 
-}, [sidebarCollapsed])
+    );
 
-// ============================
-// THEME
-// ============================
+  });
 
-useEffect(() => {
-
-  document.documentElement.setAttribute(
-    "data-theme",
-    theme
-  );
-
-  localStorage.setItem(
-    "helpdesk-theme",
-    theme
-  );
-
-}, [theme]);
 
   // =====================================================
-  // DASHBOARD
+  // SIDEBAR
+  // =====================================================
+
+  const [
+    sidebarCollapsed,
+    setSidebarCollapsed
+  ] = useState(() => {
+
+    return (
+      localStorage.getItem(
+        "helpdesk-sidebar"
+      ) === "true"
+    );
+
+  });
+
+
+  // =====================================================
+  // THEME
+  // =====================================================
+
+  const [
+    theme,
+    setTheme
+  ] = useState(() => {
+
+    return (
+      localStorage.getItem(
+        "helpdesk-theme"
+      ) ||
+      "light"
+    );
+
+  });
+
+
+  // =====================================================
+  // STATUS FILTER
+  // =====================================================
+
+  const [
+    filter,
+    setFilter
+  ] = useState("ALL");
+
+
+  // =====================================================
+  // DATE FILTER FORM
+  // =====================================================
+
+  const [
+    startInput,
+    setStartInput
+  ] = useState("");
+
+  const [
+    endInput,
+    setEndInput
+  ] = useState("");
+
+
+  // =====================================================
+  // ACTIVE DATE FILTER
+  // =====================================================
+
+  const [
+    startFilter,
+    setStartFilter
+  ] = useState("");
+
+  const [
+    endFilter,
+    setEndFilter
+  ] = useState("");
+
+
+  // =====================================================
+  // SELECTED LOCATION
+  // =====================================================
+  //
+  // Location sekarang menjadi sumber
+  // filter utama dashboard.
+  //
+  // akr-* -> AKR
+  // ho-*  -> HO
+  //
+  // All Performance -> ""
+  //
+  // Tidak lagi menggunakan:
+  //
+  // TEAM_A
+  // TEAM_B
+  //
+  // sebagai filter frontend.
+  // =====================================================
+
+  const selectedLocation =
+    useMemo(() => {
+
+      if (
+        view.startsWith("akr-")
+      ) {
+
+        return "AKR";
+
+      }
+
+
+      if (
+        view.startsWith("ho-")
+      ) {
+
+        return "HO";
+
+      }
+
+
+      return "";
+
+    }, [view]);
+
+    console.log(
+    "PAGE DEBUG:",
+    {
+        view,
+        selectedLocation
+    }
+);
+
+
+  // =====================================================
+  // SAVE LAST PAGE
+  // =====================================================
+
+  useEffect(() => {
+
+    localStorage.setItem(
+      "helpdesk-page",
+      view
+    );
+
+  }, [view]);
+
+
+  // =====================================================
+  // SAVE SIDEBAR
+  // =====================================================
+
+  useEffect(() => {
+
+    localStorage.setItem(
+      "helpdesk-sidebar",
+      sidebarCollapsed
+    );
+
+  }, [sidebarCollapsed]);
+
+
+  // =====================================================
+  // THEME
+  // =====================================================
+
+  useEffect(() => {
+
+    document.documentElement.setAttribute(
+      "data-theme",
+      theme
+    );
+
+
+    localStorage.setItem(
+      "helpdesk-theme",
+      theme
+    );
+
+  }, [theme]);
+
+
+  // =====================================================
+  // DASHBOARD DATA
   // =====================================================
 
   const {
@@ -215,9 +386,10 @@ useEffect(() => {
   } = useDashboard(
     startFilter,
     endFilter,
-    selectedTeam
+    selectedLocation
   );
- 
+
+
   // =====================================================
   // COUNTS
   // =====================================================
@@ -227,33 +399,180 @@ useEffect(() => {
     if (!data) {
 
       return {
+
         ALL: 0,
         OPEN: 0,
         PROCESS: 0,
         CLOSED: 0,
-      }
+
+      };
 
     }
+
 
     return {
 
-      ALL: data.total || 0,
+      ALL:
+        data.total || 0,
 
-      OPEN: data.open || 0,
+      OPEN:
+        data.open || 0,
 
-      PROCESS: data.process || 0,
+      PROCESS:
+        data.process || 0,
 
-      CLOSED: data.closed || 0,
+      CLOSED:
+        data.closed || 0,
 
-    }
+    };
 
-  }, [data])
+  }, [data]);
+
 
   // =====================================================
   // PAGE INFO
   // =====================================================
 
-  const page = PAGES[view]
+  const page =
+    PAGES[view];
+
+
+  const locationPage =
+    useMemo(() => {
+
+
+      // =================================================
+      // AKR
+      // =================================================
+
+      if (
+        selectedLocation === "AKR"
+      ) {
+
+        if (
+          view.endsWith("analytics")
+        ) {
+
+          return {
+
+            title:
+              "HO - AKR Tower",
+
+            subtitle:
+              "Analisis performa HO - AKR Tower."
+
+          };
+
+        }
+
+
+        if (
+          view.endsWith("trend")
+        ) {
+
+          return {
+
+            title:
+              "HO - AKR Tower",
+
+            subtitle:
+              "Trend performa HO - AKR Tower."
+
+          };
+
+        }
+
+
+        return {
+
+          title:
+            "HO - AKR Tower",
+
+          subtitle:
+            "Ringkasan performa HO - AKR Tower."
+
+        };
+
+      }
+
+
+      // =================================================
+      // HEAD OFFICE
+      // =================================================
+
+      if (
+        selectedLocation === "HO"
+      ) {
+
+        if (
+          view.endsWith("analytics")
+        ) {
+
+          return {
+
+            title:
+              "Head Office",
+
+            subtitle:
+              "Analisis performa Head Office."
+
+          };
+
+        }
+
+
+        if (
+          view.endsWith("trend")
+        ) {
+
+          return {
+
+            title:
+              "Head Office",
+
+            subtitle:
+              "Trend performa Head Office."
+
+          };
+
+        }
+
+
+        return {
+
+          title:
+            "Head Office",
+
+          subtitle:
+            "Ringkasan performa Head Office."
+
+        };
+
+      }
+
+
+      // =================================================
+      // ALL PERFORMANCE / OTHER
+      // =================================================
+
+      return {
+
+        title:
+          page?.title ||
+          "All Performance",
+
+        subtitle:
+          page?.subtitle ||
+          "Ringkasan performa seluruh Helpdesk."
+
+      };
+
+    }, [
+      selectedLocation,
+      view,
+      page
+    ]);
+
 
   // =====================================================
   // FILTER
@@ -261,148 +580,312 @@ useEffect(() => {
 
   function applyFilter() {
 
-    if (startInput && endInput && startInput > endInput) {
+    if (
+      startInput &&
+      endInput &&
+      startInput > endInput
+    ) {
 
-      alert('Tanggal mulai tidak boleh lebih besar dari tanggal selesai.')
+      alert(
+        "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
+      );
 
-      return
+      return;
 
     }
 
-    setStartFilter(startInput)
 
-    setEndFilter(endInput)
+    setStartFilter(
+      startInput
+    );
+
+    setEndFilter(
+      endInput
+    );
 
   }
+
+
+  // =====================================================
+  // RESET FILTER
+  // =====================================================
 
   function resetFilter() {
 
-    setStartInput('')
-    setEndInput('')
+    setStartInput("");
+    setEndInput("");
 
-    setStartFilter('')
-    setEndFilter('')
+    setStartFilter("");
+    setEndFilter("");
 
   }
+
 
   // =====================================================
   // RENDER
   // =====================================================
-return (
 
-  <ToastProvider>
+  return (
 
-    <div className={`layout ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+    <ToastProvider>
 
-      <Sidebar
-        view={view}
-        onNavigate={setView}
-        collapsed={sidebarCollapsed}
-      />
 
-      <div className="main">
+      <div
+        className={`layout ${
+          sidebarCollapsed
+            ? "sidebar-collapsed"
+            : ""
+        }`}
+      >
 
-        <Topbar
-          collapsed={sidebarCollapsed}
-          onToggleSidebar={() =>
-            setSidebarCollapsed(!sidebarCollapsed)
+
+        {/* =================================================
+            SIDEBAR
+        ================================================= */}
+
+        <Sidebar
+          view={view}
+          onNavigate={setView}
+          collapsed={
+            sidebarCollapsed
           }
-          theme={theme}
-          setTheme={setTheme}
         />
 
-        <div className="content">
 
-          <div className="page-head">
+        {/* =================================================
+            MAIN
+        ================================================= */}
+
+        <div className="main">
+
+
+          {/* =================================================
+              TOPBAR
+          ================================================= */}
+
+          <Topbar
+
+            collapsed={
+              sidebarCollapsed
+            }
+
+            onToggleSidebar={() =>
+              setSidebarCollapsed(
+                !sidebarCollapsed
+              )
+            }
+
+            theme={theme}
+
+            setTheme={setTheme}
+
+          />
+
+
+          {/* =================================================
+              CONTENT
+          ================================================= */}
+
+          <div className="content">
+
+
+            {/* =================================================
+                PAGE HEADER
+            ================================================= */}
+
+            <div className="page-head">
+
 
               <div className="page-head-icon">
-                  <page.icon size={20} strokeWidth={2.1} />
+
+                {page?.icon && (
+
+                  <page.icon
+                    size={20}
+                    strokeWidth={2.1}
+                  />
+
+                )}
+
               </div>
+
 
               <div className="page-head-content">
-                  <h1>{page.title}</h1>
-                  <p>{page.subtitle}</p>
+
+                <h1>
+                  {locationPage.title}
+                </h1>
+
+                <p>
+                  {locationPage.subtitle}
+                </p>
+
               </div>
 
-          </div>
-
-          {view === 'helpdesk' && (
-
-            <FilterCard
-              startInput={startInput}
-              endInput={endInput}
-              setStartInput={setStartInput}
-              setEndInput={setEndInput}
-              onApply={applyFilter}
-              onReset={resetFilter}
-            />
-
-          )}
-
-          {loading && !data ? (
-
-            <div className="state">
-              Memuat data...
             </div>
 
-          ) : error && !data ? (
 
-            <div className="state error">
-              ⚠️ {error}
-            </div>
+            {/* =================================================
+                FILTER CARD
+            ================================================= */}
 
-          ) : view === "team-rotation" ? (
+            {view === "helpdesk" && (
+
+              <FilterCard
+
+                startInput={
+                  startInput
+                }
+
+                endInput={
+                  endInput
+                }
+
+                setStartInput={
+                  setStartInput
+                }
+
+                setEndInput={
+                  setEndInput
+                }
+
+                onApply={
+                  applyFilter
+                }
+
+                onReset={
+                  resetFilter
+                }
+
+              />
+
+            )}
+
+
+            {/* =================================================
+                LOADING
+            ================================================= */}
+
+            {loading && !data ? (
+
+              <div className="state">
+
+                Memuat data...
+
+              </div>
+
+
+            ) : error && !data ? (
+
+              <div className="state error">
+
+                ⚠️ {error}
+
+              </div>
+
+
+            ) : view === "team-rotation" ? (
 
               <TeamRotation />
 
-          ) : view !== "helpdesk" && view !== "legacy" ? (
+
+            ) : (
+              view !== "helpdesk" &&
+              view !== "legacy"
+            ) ? (
+
+              // =================================================
+              // PERFORMANCE PAGES
+              // =================================================
 
               <SummaryView
-                  data={data}
-                  team={selectedTeam || "ALL"}
-                  page={
-                      view.endsWith("trend")
-                          ? "trend"
-                          : view.endsWith("analytics")
-                              ? "analytics"
-                              : "overview"
-                  }
+
+                data={data}
+
+                /*
+                -------------------------------------------------
+                Compatibility prop.
+                Filtering sekarang menggunakan location.
+                -------------------------------------------------
+                */
+
+                team="ALL"
+
+                location={
+                  selectedLocation
+                }
+
+                page={
+
+                  view.endsWith(
+                    "trend"
+                  )
+
+                    ? "trend"
+
+                    : view.endsWith(
+                        "analytics"
+                      )
+
+                      ? "analytics"
+
+                      : "overview"
+
+                }
+
               />
 
-          ) : (
+
+            ) : (
+
+              // =================================================
+              // HELPDESK PAGE
+              // =================================================
 
               <>
 
-              <StatCards
-                data={data}
-              />
+                <StatCards
+                  data={data}
+                />
 
-              <StatusTabs
-                active={filter}
-                onChange={setFilter}
-                counts={counts}
-              />
 
-              <TicketTable
-                tickets={data.tickets}
-                statusFilter={filter}
-                picList={MASTER_PIC}
-                onChanged={refresh}
-                onRefresh={refresh}
-              />
+                <StatusTabs
+                  active={filter}
+                  onChange={setFilter}
+                  counts={counts}
+                />
 
-            </>
 
-          )}
+                <TicketTable
+                  tickets={
+                    data?.tickets || []
+                  }
+                  statusFilter={
+                    filter
+                  }
+                  picList={
+                    MASTER_PIC
+                  }
+                  onChanged={
+                    refresh
+                  }
+                  onRefresh={
+                    refresh
+                  }
+                />
+
+              </>
+
+            )}
+
+          </div>
 
         </div>
 
       </div>
 
-    </div>
+    </ToastProvider>
 
-  </ToastProvider>
-
-);
+  );
 
 }

@@ -1,436 +1,543 @@
 import {
-    Users
+    Building2,
+    MapPin
 } from "lucide-react";
 
-export default function TeamPerformanceCard({
-    teams = [],
-    team = "ALL"
-}) {
 
-    const isAll = team === "ALL";
-    const selectedTeam =
-    team === "ALL"
-        ? teams[0]
-        : teams.find(t => t.id === team);
+// =====================================================
+// LOCATION LABEL
+// =====================================================
 
-    let selectedPerformance = selectedTeam?.status || "ATTENTION";
-    let selectedPerformanceClass = "attention";
+function getLocationLabel(location) {
 
-    switch (selectedTeam?.status) {
+    switch (location) {
 
-        case "STANDBY":
-            selectedPerformanceClass = "excellent";
-            break;
+        case "AKR":
+            return "HO - AKR Tower";
 
-        case "EXCELLENT":
-            selectedPerformanceClass = "excellent";
-            break;
-
-        case "GOOD":
-            selectedPerformanceClass = "healthy";
-            break;
-
-        case "FAIR":
-            selectedPerformanceClass = "warning";
-            break;
+        case "HO":
+            return "Head Office";
 
         default:
-            selectedPerformanceClass = "attention";
-            break;
+            return location || "-";
 
     }
 
+}
+
+
+// =====================================================
+// PERFORMANCE CLASS
+// =====================================================
+
+function getPerformanceClass(status) {
+
+    switch (status) {
+
+        case "STANDBY":
+            return "excellent";
+
+        case "EXCELLENT":
+            return "excellent";
+
+        case "GOOD":
+            return "healthy";
+
+        case "FAIR":
+            return "warning";
+
+        case "NEEDS ATTENTION":
+            return "attention";
+
+        default:
+            return "attention";
+
+    }
+
+}
+
+
+// =====================================================
+// LOCATION CARD
+// =====================================================
+
+function LocationCard({
+    location
+}) {
+
+    const performance =
+        location?.status || "NO DATA";
+
+
+    const performanceClass =
+        getPerformanceClass(
+            location?.status
+        );
+
+
     return (
 
-        <div className="card team-performance-card">
+        <div
+            className="team-card"
+        >
+
+            {/* =================================================
+                HEADER
+            ================================================= */}
+
+            <div className="location-card-header">
+
+                <div className="location-card-identity">
+
+                    <div className="location-icon">
+
+                        <Building2
+                            size={21}
+                            strokeWidth={2}
+                        />
+
+                    </div>
+
+
+                    <div className="location-card-title">
+
+                        <h4>
+                            {getLocationLabel(
+                                location?.id
+                            )}
+                        </h4>
+
+
+                        <div className="location-card-subtitle">
+
+                            <MapPin
+                                size={14}
+                                strokeWidth={2}
+                            />
+
+                            <span>
+                                {location?.id || "-"}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <span
+                    className={
+                        `team-status ${
+                            location?.status?.toLowerCase()
+                                .replace(/\s+/g, "-") || ""
+                        }`
+                    }
+                >
+
+                    <span className="status-dot"></span>
+
+                    {performance}
+
+                </span>
+
+            </div>
+
+            {/* =================================================
+                COMPLETION
+            ================================================= */}
+
+            <div className="team-completion">
+
+                <small>
+                    Completion Rate
+                </small>
+
+
+                <strong>
+                    {location?.completionRate ?? 0}%
+                </strong>
+
+
+                <span
+                    className={
+                        `team-performance ${performanceClass}`
+                    }
+                >
+                    {performance}
+                </span>
+
+            </div>
+
+
+            {/* =================================================
+                PROGRESS
+            ================================================= */}
+
+            <div className="team-progress">
+
+                <div className="progress">
+
+                    <div
+                        className={
+                            `progress-fill ${performanceClass}`
+                        }
+                        style={{
+                            width:
+                                `${Math.min(
+                                    Number(
+                                        location?.completionRate
+                                    ) || 0,
+                                    100
+                                )}%`
+                        }}
+                    />
+
+                </div>
+
+            </div>
+
+
+            {/* =================================================
+                METRICS
+            ================================================= */}
+
+            <div className="team-metrics">
+
+
+                {/* ASSIGNED */}
+
+                <div className="metric">
+
+                    <span>
+                        Assigned
+                    </span>
+
+                    <strong>
+                        {location?.assigned ?? 0}
+                    </strong>
+
+                </div>
+
+
+                {/* COMPLETED */}
+
+                <div className="metric">
+
+                    <span>
+                        Completed
+                    </span>
+
+                    <strong>
+                        {location?.completed ?? 0}
+                    </strong>
+
+                </div>
+
+
+                {/* PROCESS */}
+
+                <div className="metric">
+
+                    <span>
+                        Process
+                    </span>
+
+                    <strong>
+                        {location?.process ?? 0}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    );
+
+}
+
+
+// =====================================================
+// COMPONENT
+// =====================================================
+
+export default function TeamPerformanceCard({
+
+    teams = [],
+    location = ""
+
+}) {
+
+console.log(
+    "TEAM PERFORMANCE DEBUG:",
+    {
+        count: teams.length,
+        ids: teams.map(t => t.id),
+        names: teams.map(t => t.name)
+    }
+);
+
+    return (
+
+        <div
+            className={`card team-performance-card ${
+                location ? "location-mode" : ""
+            }`}
+        >
+
+
+            {/* =================================================
+                HEADER
+            ================================================= */}
 
             <div className="card-header">
 
                 <div className="card-title">
 
-                    <Users size={20} />
+                    <Building2
+                        size={20}
+                        strokeWidth={2}
+                    />
 
-                    <span>Team Performance</span>
+                    <span>
+                        Location Performance
+                    </span>
 
                 </div>
 
+
                 <p className="card-description">
 
-                    Ringkasan performa dan beban kerja setiap team.
+                    Ringkasan performa dan beban kerja
+                    setiap lokasi.
 
                 </p>
 
             </div>
 
+
+            {/* =================================================
+                CONTENT
+            ================================================= */}
+
             <div className="card-content">
 
                 <div className="team-grid">
 
-                    {isAll ? (
 
-                    teams.map(team => {
+                    {teams.length > 0 ? (
 
-                        /* ==========================
-                           Completion Insight
-                        ========================== */
+                        teams.map(
+                            location => (
 
-                        let performance = team.status;
-                        let performanceClass = "attention";
+                                <LocationCard
+                                    key={
+                                        location.id
+                                    }
+                                    location={
+                                        location
+                                    }
+                                />
 
-                        switch (team.status) {
+                            )
+                        )
 
-                            case "STANDBY":
-                                performanceClass = "excellent";
-                                break;
-
-                            case "EXCELLENT":
-                                performanceClass = "excellent";
-                                break;
-
-                            case "GOOD":
-                                performanceClass = "healthy";
-                                break;
-
-                            case "FAIR":
-                                performanceClass = "warning";
-                                break;
-
-                            default:
-                                performanceClass = "attention";
-                                break;
-
-                        }
-
-                        return (
-
-                            <div
-                                key={team.id}
-                                className="team-card"
-                            >
-
-                                <div className="team-top">
-
-                                    <h4>
-
-                                        {team.name}
-
-                                    </h4>
-
-                                    <span
-                                        className={`team-status ${team.status.toLowerCase()}`}
-                                    >
-
-                                        <span className="status-dot"></span>
-
-                                        {team.status}
-
-                                    </span>
-
-                                </div>
-
-                                <div className="team-completion">
-
-                                    <small>
-
-                                        Completion Rate
-
-                                    </small>
-
-                                    <strong>
-
-                                        {team.completionRate}%
-
-                                    </strong>
-
-                                    <span
-                                        className={`team-performance ${performanceClass}`}
-                                    >
-
-                                        {performance}
-
-                                    </span>
-
-                                </div>
-
-                                <div className="team-progress">
-
-                                    <div className="progress">
-
-                                        <div
-                                            className={`progress-fill ${performanceClass}`}
-                                            style={{
-                                                width: `${team.completionRate}%`
-                                            }}
-                                        />
-
-                                    </div>
-
-                                </div>
-
-                                <div className="team-metrics">
-
-                                    <div className="metric">
-
-                                        <span>
-
-                                            Assigned
-
-                                        </span>
-
-                                        <strong>
-
-                                            {team.assigned}
-
-                                        </strong>
-
-                                    </div>
-
-                                    <div className="metric">
-
-                                        <span>
-
-                                            Completed
-
-                                        </span>
-
-                                        <strong>
-
-                                            {team.completed}
-
-                                        </strong>
-
-                                    </div>
-
-                                    <div className="metric">
-
-                                        <span>
-
-                                            Process
-
-                                        </span>
-
-                                        <strong>
-
-                                            {team.process}
-
-                                        </strong>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        );
-
-                                        })
-
-                ) : (
-
-                    <>
+                    ) : (
 
                         <div className="team-card">
 
                             <div className="team-top">
 
                                 <h4>
-
-                                    {selectedTeam?.name}
-
+                                    No Data
                                 </h4>
 
-                                <span
-                                    className={`team-status ${selectedTeam?.status?.toLowerCase()}`}
-                                >
+                            </div>
 
-                                    <span className="status-dot"></span>
+                            <div className="team-metrics">
 
-                                    {selectedTeam?.status}
+                                <div className="metric">
 
-                                </span>
+                                    <span>
+                                        Location
+                                    </span>
+
+                                    <strong>
+                                        -
+                                    </strong>
+
+                                </div>
 
                             </div>
 
-                            <div className="team-completion">
+                        </div>
 
-                                <small>
+                    )}
 
-                                    Completion Rate
+                </div>
 
-                                </small>
 
-                                <strong>
+                {/* =================================================
+                    LOCATION OVERVIEW
+                ================================================= */}
 
-                                    {selectedTeam?.completionRate}%
+                {teams.length === 1 && (
 
-                                </strong>
+                    <div className="team-card location-overview-card">
 
-                                <span
-                                    className={`team-performance ${selectedPerformanceClass}`}
-                                >
+                        {/* =================================================
+                            LOCATION OVERVIEW HEADER
+                        ================================================= */}
 
-                                    {selectedTeam?.status}
+                        <div className="location-overview-header">
 
-                                </span>
+                            <div className="location-card-identity">
 
-                            </div>
+                                <div className="overview-icon">
 
-                            <div className="team-progress">
-
-                                <div className="progress">
-
-                                    <div
-                                        className={`progress-fill ${selectedPerformanceClass}`}
-                                        style={{
-                                            width: `${selectedTeam?.completionRate || 0}%`
-                                        }}
+                                    <Building2
+                                        size={21}
+                                        strokeWidth={2}
                                     />
 
                                 </div>
 
+
+                                <div className="location-card-title">
+
+                                    <h4>
+                                        Location Overview
+                                    </h4>
+
+
+                                    <div className="location-card-subtitle">
+
+                                        <MapPin
+                                            size={14}
+                                            strokeWidth={2}
+                                        />
+
+                                        <span>
+                                            {
+                                                getLocationLabel(
+                                                    teams[0]?.id
+                                                )
+                                            }
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
                             </div>
 
-                            <div className="team-metrics">
 
-                                <div className="metric">
+                            <span className="overview-type-badge">
 
-                                    <span>
+                                <span className="overview-badge-dot" />
 
-                                        Assigned
+                                OVERVIEW
 
-                                    </span>
+                            </span>
 
-                                    <strong>
+                        </div>
 
-                                        {selectedTeam?.assigned}
+                        <div className="team-metrics">
 
-                                    </strong>
 
-                                </div>
+                            {/* TOTAL ENGINEER */}
 
-                                <div className="metric">
+                            <div className="metric">
 
-                                    <span>
+                                <span>
+                                    Total Engineer
+                                </span>
 
-                                        Completed
+                                <strong>
 
-                                    </span>
+                                    {
+                                        teams[0]
+                                            ?.overview
+                                            ?.totalEngineer
+                                        ?? 0
+                                    }
 
-                                    <strong>
+                                </strong>
 
-                                        {selectedTeam?.completed}
+                            </div>
 
-                                    </strong>
 
-                                </div>
+                            {/* AVG TICKET */}
 
-                                <div className="metric">
+                            <div className="metric">
 
-                                    <span>
+                                <span>
+                                    Avg Ticket / Engineer
+                                </span>
 
-                                        Process
+                                <strong>
 
-                                    </span>
+                                    {
+                                        teams[0]
+                                            ?.overview
+                                            ?.avgTicketPerEngineer
+                                        ?? 0
+                                    }
 
-                                    <strong>
+                                </strong>
 
-                                        {selectedTeam?.process}
+                            </div>
 
-                                    </strong>
 
-                                </div>
+                            {/* WAITING FEEDBACK */}
+
+                            <div className="metric">
+
+                                <span>
+                                    Waiting Feedback
+                                </span>
+
+                                <strong>
+
+                                    {
+                                        teams[0]
+                                            ?.overview
+                                            ?.waitingFeedback
+                                        ?? 0
+                                    }
+
+                                </strong>
+
+                            </div>
+
+
+                            {/* BRANCH HANDLED */}
+
+                            <div className="metric">
+
+                                <span>
+                                    Branch Handled
+                                </span>
+
+                                <strong>
+
+                                    {
+                                        teams[0]
+                                            ?.overview
+                                            ?.branchHandled
+                                        ?? 0
+                                    }
+
+                                </strong>
 
                             </div>
 
                         </div>
 
-                        <div className="team-card">
-
-                            <div className="team-top">
-
-                                <h4>
-
-                                    Team Overview
-
-                                </h4>
-
-                            </div>
-
-                            <div className="team-metrics">
-
-                                <div className="metric">
-
-                                    <span>
-
-                                        Total Engineer
-
-                                    </span>
-
-                                    <strong>
-
-                                        {selectedTeam?.overview?.totalEngineer ?? 0}
-
-                                    </strong>
-
-                                </div>
-
-                                <div className="metric">
-
-                                    <span>
-
-                                        Avg Ticket / Engineer
-
-                                    </span>
-
-                                    <strong>
-
-                                        {selectedTeam?.overview?.avgTicketPerEngineer ?? 0}
-
-                                    </strong>
-
-                                </div>
-
-                                <div className="metric">
-
-                                    <span>
-
-                                        Waiting Feedback
-
-                                    </span>
-
-                                    <strong>
-
-                                        {selectedTeam?.overview?.waitingFeedback ?? 0}
-
-                                    </strong>
-
-                                </div>
-
-                                <div className="metric">
-
-                                    <span>
-
-                                        Branch Handled
-
-                                    </span>
-
-                                    <strong>
-
-                                        {selectedTeam?.overview?.branchHandled ?? 0}
-
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </>
+                    </div>
 
                 )}
-
-                </div>
 
             </div>
 

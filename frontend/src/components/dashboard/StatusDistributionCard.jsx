@@ -312,20 +312,12 @@ export default function StatusDistributionCard({
 
                         {statusData.map(
                             item => {
-
                                 const percent =
                                     total === 0
-
                                         ? null
-
-                                        : Math.round(
-                                            (
-                                                item.value /
-                                                total
-                                            ) * 100
+                                        : Number(
+                                            ((item.value / total) * 100).toFixed(1)
                                         );
-
-
                                 return (
 
                                     <div

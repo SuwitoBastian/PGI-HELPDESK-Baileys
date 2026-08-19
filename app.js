@@ -3,6 +3,10 @@ const path = require("path");
 
 const app = express();
 
+const packageInfo = require("./package.json");
+
+app.locals.appVersion = packageInfo.version;
+
 const config = require("./config");
 
 /* ==========================================================

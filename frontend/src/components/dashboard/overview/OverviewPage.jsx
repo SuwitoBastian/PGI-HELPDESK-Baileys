@@ -5,14 +5,18 @@ import InsightCard from "../InsightCard";
 import RecentActivityCard from "../RecentActivityCard";
 
 
+/* =====================================================
+   OVERVIEW PAGE
+===================================================== */
+
 export default function OverviewPage({
     data,
     location = ""
 }) {
 
-    // =====================================================
-    // LOCATION
-    // =====================================================
+    /* =====================================================
+       LOCATION
+    ===================================================== */
 
     const normalizedLocation =
         String(location || "")
@@ -22,6 +26,7 @@ export default function OverviewPage({
 
     const isAKR =
         normalizedLocation === "AKR";
+
 
     const isHO =
         normalizedLocation === "HO";
@@ -43,9 +48,9 @@ export default function OverviewPage({
                 : "Ringkasan performa seluruh Helpdesk.";
 
 
-    // =====================================================
-    // OPERATIONAL ROTATION
-    // =====================================================
+    /* =====================================================
+       OPERATIONAL ROTATION
+    ===================================================== */
 
     const rotation =
         data?.rotation?.current;
@@ -73,9 +78,7 @@ export default function OverviewPage({
 
     const rotationPeriod =
         rotation
-
             ? `${monthNames[rotation.month]} ${rotation.year}`
-
             : "-";
 
 
@@ -85,30 +88,28 @@ export default function OverviewPage({
 
     const nextRotationPeriod =
         nextRotation
-
             ? `${monthNames[nextRotation.month]} ${nextRotation.year}`
-
             : "-";
 
 
-    // =====================================================
-    // ROTATION LOCATION LABEL
-    // =====================================================
-    //
-    // ALL:
-    //   Location -> HO - AKR Tower
-    //   Support  -> Head Office
-    //
-    // AKR:
-    //   Selected Location -> HO - AKR Tower
-    //
-    // HO:
-    //   Selected Location -> Head Office
-    //
-    // Jangan mengubah sumber data rotation.
-    // Ini hanya mengubah presentasi berdasarkan
-    // halaman yang sedang dibuka.
-    // =====================================================
+    /* =====================================================
+       ROTATION LOCATION LABEL
+    =====================================================
+
+       ALL:
+         Location -> HO - AKR Tower
+         Support  -> Head Office
+
+       AKR:
+         Selected Location -> HO - AKR Tower
+
+       HO:
+         Selected Location -> Head Office
+
+       Jangan mengubah sumber data rotation.
+       Ini hanya mengubah presentasi berdasarkan
+       halaman yang sedang dibuka.
+    ===================================================== */
 
     const selectedLocationLabel =
         isAKR
@@ -121,7 +122,6 @@ export default function OverviewPage({
     return (
 
         <>
-
 
             {/* ==================================================
                 PERFORMANCE CARD
@@ -303,43 +303,46 @@ export default function OverviewPage({
 
                 <StatCards
                     data={data}
+                    location={location}
                 />
 
             </div>
 
+
             <div className="overview-card-stack">
-            {/* ==================================================
-                INSIGHT
-            ================================================== */}
 
-            <InsightCard
+                {/* ==================================================
+                    INSIGHT
+                ================================================== */}
 
-                overview={
-                    data.analytics?.overview
-                }
+                <InsightCard
 
-                engineers={
-                    data.analytics?.engineers || []
-                }
+                    overview={
+                        data.analytics?.overview
+                    }
 
-                teams={
-                    data.analytics?.teams || []
-                }
+                    engineers={
+                        data.analytics?.engineers || []
+                    }
 
-            />
+                    teams={
+                        data.analytics?.teams || []
+                    }
+
+                />
 
 
-            {/* ==================================================
-                RECENT ACTIVITY
-            ================================================== */}
+                {/* ==================================================
+                    RECENT ACTIVITY
+                ================================================== */}
 
-            <RecentActivityCard
+                <RecentActivityCard
 
-                tickets={
-                    data.tickets || []
-                }
+                    tickets={
+                        data.tickets || []
+                    }
 
-            />
+                />
 
             </div>
 

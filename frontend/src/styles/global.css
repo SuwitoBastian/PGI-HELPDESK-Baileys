@@ -778,6 +778,15 @@ body {
   margin-bottom: 24px;
 }
 
+/* =====================================================
+   ALL PERFORMANCE
+   6 KPI karena ada AUTO RESOLVED
+===================================================== */
+
+.kpis-all {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
 /* Card */
 
 .kpi {
@@ -834,6 +843,7 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  min-height: 72px;
 }
 
 .kpi-heading {

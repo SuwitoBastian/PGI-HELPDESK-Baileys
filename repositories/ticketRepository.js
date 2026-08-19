@@ -138,6 +138,27 @@ function findProcess() {
     `).all();
 
 }
+
+/**
+ * =====================================================
+ * AUTO CLOSE PROCESS
+ * Cari ticket PROCESS yang berasal dari tanggal sebelumnya
+ * =====================================================
+ */
+function findProcessFromPreviousDate() {
+
+    return db.prepare(`
+        SELECT *
+        FROM tickets
+        WHERE status = 'PROCESS'
+        AND DATE(waktu) < DATE('now', 'localtime')
+        AND pic IS NOT NULL
+        AND TRIM(pic) <> ''
+        ORDER BY waktu ASC
+    `).all();
+
+}
+
 function findProcessByPIC(pic) {
 
     return db.prepare(`
@@ -575,6 +596,42 @@ function closeTicket(
             pic_selesai = ?,
             pic_selesai_team = ?
         WHERE id = ?
+    `).run(
+        selesai,
+        durasi,
+        picSelesai,
+        picSelesaiTeam,
+        id
+    );
+
+}
+
+/**
+ * =====================================================
+ * AUTO CLOSE PROCESS
+ * Menutup ticket PROCESS dari tanggal sebelumnya
+ * PIC tetap PIC yang melakukan assignment
+ * =====================================================
+ */
+function autoCloseProcess(
+    id,
+    selesai,
+    durasi,
+    picSelesai,
+    picSelesaiTeam
+) {
+
+    db.prepare(`
+        UPDATE tickets
+        SET
+            status = 'CLOSED',
+            selesai = ?,
+            durasi = ?,
+            pic_selesai = ?,
+            pic_selesai_team = ?,
+            close_type = 'AUTO_CLOSE'
+        WHERE id = ?
+        AND status = 'PROCESS'
     `).run(
         selesai,
         durasi,
@@ -1032,6 +1089,47 @@ function countClosedByDate(
         `;
 
         params.push(location);
+
+    }
+
+    return db
+        .prepare(sql)
+        .get(...params)
+        .total;
+
+}
+
+/**
+ * Jumlah AUTO RESOLVED
+ * Ticket CLOSED oleh SYSTEM / AUTO
+ */
+function countAutoResolved(
+    start = null,
+    end = null
+) {
+
+    let sql = `
+        SELECT COUNT(*) total
+        FROM tickets
+        WHERE status = 'CLOSED'
+        AND pic_selesai = 'SYSTEM'
+        AND pic_selesai_team = 'AUTO'
+    `;
+
+    const params = [];
+
+    if (start && end) {
+
+        sql += `
+            AND DATE(selesai)
+            BETWEEN DATE(?)
+            AND DATE(?)
+        `;
+
+        params.push(
+            start,
+            end
+        );
 
     }
 
@@ -1609,6 +1707,7 @@ function topPICSelesai(
 
 }
 
+
 module.exports = {
 
     create,
@@ -1670,6 +1769,8 @@ module.exports = {
 
     countClosedByDate,
 
+    countAutoResolved,
+
     topCabangByDate,
 
     topPICByDate,
@@ -1698,6 +1799,10 @@ module.exports = {
 
     countCompletedByPICAndLocation,
 
-    countProcessByPICAndLocation
+    countProcessByPICAndLocation,
+
+    findProcessFromPreviousDate,
+
+    autoCloseProcess
 
 };

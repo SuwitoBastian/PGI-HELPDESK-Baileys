@@ -47,13 +47,22 @@ function close(ticket, picSelesai, kodePIC) {
 
     const durasi = durasiMenit;
 
-    const engineer =
-        engineerService.getByCode(kodePIC);
+    let picSelesaiTeam = null;
 
-    const picSelesaiTeam =
-        engineer
-            ? engineer.team
-            : null;
+    if (picSelesai === "SYSTEM") {
+
+        picSelesaiTeam = "AUTO";
+
+    } else {
+
+        const engineer =
+            engineerService.getByCode(kodePIC);
+
+        picSelesaiTeam =
+            engineer
+                ? engineer.team
+                : null;
+    }
 
     repository.closeTicket(
 

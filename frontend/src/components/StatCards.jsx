@@ -5,8 +5,10 @@ import {
   LoaderCircle,
   Ticket,
   CircleCheck,
-  ChartColumn
+  ChartColumn,
+  Bot
 } from 'lucide-react'
+
 
 const CARDS = [
   {
@@ -43,53 +45,119 @@ const CARDS = [
     subtitle: 'Seluruh tiket tercatat',
     icon: <ChartColumn size={20} />,
     cls: 'kpi-total'
+  },
+  {
+    key: 'autoResolved',
+    label: 'Auto Resolved',
+    subtitle: 'Diselesaikan oleh sistem',
+    icon: <Bot size={20} />,
+    cls: 'kpi-auto'
   }
 ]
 
-export default function StatCards({ data }) {
+
+export default function StatCards({
+
+  data,
+
+  location = ""
+
+}) {
+
+
+  const visibleCards =
+    CARDS.filter(card => {
+
+      /*
+      --------------------------------------------------
+      AUTO RESOLVED HANYA UNTUK ALL PERFORMANCE
+      --------------------------------------------------
+      */
+
+      if (
+        card.key === 'autoResolved'
+      ) {
+
+        return !location
+
+      }
+
+
+      return true
+
+    })
+
 
   return (
 
-    <section className="kpis">
+    <section className={`kpis ${!location ? 'kpis-all' : 'kpis-location'}`}>
 
-      {CARDS.map((c) => (
+      {visibleCards.map(c => {
 
-        <div
-          key={c.key}
-          className={`kpi ${c.cls}`}
-        >
 
-          <div className="kpi-top">
+        /*
+        --------------------------------------------------
+        AMBIL NILAI CARD
+        --------------------------------------------------
+        */
 
-            <div className="kpi-heading">
+        const value =
+          c.key === 'autoResolved'
 
-              <span className="kpi-label">
-                {c.label}
-              </span>
+            ? data?.analytics?.overview?.autoResolved || 0
 
-              <span className="kpi-subtitle">
-                {c.subtitle}
+            : data?.[c.key] || 0
+
+
+        return (
+
+          <div
+            key={c.key}
+            className={`kpi ${c.cls}`}
+          >
+
+            <div className="kpi-top">
+
+              <div className="kpi-heading">
+
+                <span className="kpi-label">
+
+                  {c.label}
+
+                </span>
+
+
+                <span className="kpi-subtitle">
+
+                  {c.subtitle}
+
+                </span>
+
+              </div>
+
+
+              <span className="kpi-icon">
+
+                {c.icon}
+
               </span>
 
             </div>
 
-            <span className="kpi-icon">
-              {c.icon}
-            </span>
+
+            <div className="kpi-value">
+
+              <CountUp
+                end={value}
+              />
+
+            </div>
 
           </div>
 
-          <div className="kpi-value">
+        )
 
-            <CountUp
-              end={data[c.key] || 0}
-            />
-
-          </div>
-
-        </div>
-
-      ))}
+      })}
 
     </section>
 

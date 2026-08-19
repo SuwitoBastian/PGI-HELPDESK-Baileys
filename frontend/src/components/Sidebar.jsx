@@ -601,7 +601,7 @@ export default function Sidebar({
         </div>
 
         <small>
-          v3.0.0
+          v{__APP_VERSION__}
         </small>
 
       </div>

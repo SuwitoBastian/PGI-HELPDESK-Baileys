@@ -846,6 +846,7 @@ export default function App() {
 
                 <StatCards
                   data={data}
+                  location="HELPDESK"
                 />
 
 

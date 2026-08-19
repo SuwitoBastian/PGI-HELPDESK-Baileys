@@ -400,7 +400,18 @@ async function getOverview(
 
                 : ticketRepository.countClosed(
                     team
-                )
+                ),
+
+        autoResolved:
+            
+            ticketRepository.countAutoResolved(
+                byDate
+                    ? start
+                    : null, 
+                byDate
+                    ? end
+                    : null, 
+            )   
 
     };
 

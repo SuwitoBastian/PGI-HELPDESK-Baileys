@@ -106,6 +106,12 @@ function migrate() {
         "TEXT"
     );
 
+    migration.addColumn(
+    "tickets",
+    "close_type",
+    "TEXT DEFAULT 'MANUAL'"
+    );
+
     /* ==========================
        Operational Rotation
     ========================== */

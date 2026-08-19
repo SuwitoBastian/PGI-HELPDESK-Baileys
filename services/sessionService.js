@@ -3,7 +3,6 @@ const sessions = new Map();
 function createSession(){
 
     return{
-
         state:'IDLE',
 
         ticketId:null,
@@ -14,9 +13,9 @@ function createSession(){
 
         daftarTiket: [],
 
-        selectedTicket:null
+        selectedTicket:null,
 
-
+        autoTroubleshooting: null
     };
 
 }
@@ -67,12 +66,31 @@ function reset(groupId){
 
 }
 
+function linkSession(sourceId, targetId) {
+
+    const sourceSession =
+        get(sourceId);
+
+    sessions.set(
+        targetId,
+        sourceSession
+    );
+
+    console.log(
+        `🔗 Session linked: ${sourceId} → ${targetId}`
+    );
+
+    return sourceSession;
+}
+
 module.exports={
 
     get,
 
     setState,
 
-    reset
+    reset,
+
+    linkSession
 
 };

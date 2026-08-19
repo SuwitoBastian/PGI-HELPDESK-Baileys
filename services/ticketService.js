@@ -33,7 +33,9 @@ function create(data){
             data.kendala,
 
         waktu:
-            nowWIB(),
+            data.waktu instanceof Date
+                ? data.waktu.toISOString()
+                : data.waktu || nowWIB(),
 
         assignmentGroup:
             data.assignmentGroup,

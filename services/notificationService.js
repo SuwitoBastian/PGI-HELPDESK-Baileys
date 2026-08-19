@@ -40,12 +40,503 @@ function getEngineerCodeList() {
 }
 
 /* ==========================================================
+   Kendala - Template Khusus
+========================================================== */
+
+function getKendalaType(kendala = "") {
+
+    const text = kendala
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+
+
+    // ==========================================================
+    // PRINTER TERTUKAR / TERTUKER
+    // ==========================================================
+
+    const isTukar =
+        /\btertukar\b/i.test(text) ||
+        /\btertuker\b/i.test(text);
+
+
+    const isPrinter =
+        /\bprinter\b/i.test(text);
+
+
+    const isHasilPrint =
+        /\bhasil\s+(print|cetak)\b/i.test(text);
+
+
+    const isKwitansiBarcode =
+        /\bkwitansi\b/i.test(text) &&
+        /\bbarcode\b/i.test(text);
+
+
+    if (
+        isTukar &&
+        (
+            isPrinter ||
+            isHasilPrint ||
+            isKwitansiBarcode
+        )
+    ) {
+
+        return "PRINTER_TERTUKAR";
+
+    }
+
+
+
+    // ==========================================================
+    // TV
+    // ==========================================================
+
+    const isTV =
+        /\btv\b/i.test(text);
+
+    if (isTV) {
+
+        return "TV";
+
+    }
+
+
+    // ==========================================================
+    // WIFI
+    // ==========================================================
+
+    const isWifi =
+        /\bwifi\b/i.test(text) ||
+        /\bwi[\s-]?fi\b/i.test(text) ||
+        /\binternet\b/i.test(text);
+
+
+    /*
+     * Semua laporan WiFi / Internet
+     * masuk Auto Troubleshooting WIFI.
+     */
+
+    if (isWifi) {
+
+        return "WIFI";
+
+    }
+
+
+    // ==========================================================
+    // TIDAK TERDETEKSI
+    // ==========================================================
+
+    return null;
+}
+
+function getKendalaTemplate(kendala = "") {
+
+    const text = kendala
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .trim();
+
+
+    // ==========================================================
+    // PRINTER TERTUKAR
+    // ==========================================================
+
+    const isPrinterTertukar =
+        text.includes("tertukar") &&
+        text.includes("printer") &&
+        (
+            text.includes("barcode") ||
+            text.includes("thermal")
+        );
+
+    if (isPrinterTertukar) {
+
+        return `
+⚠️ *INFORMASI INSTRUKSI PENANGANAN KENDALA*
+
+Laporan Anda terdeteksi terkait hasil *printer barcode dan thermal tertukar*
+
+📋 *Mohon lakukan langkah berikut:*
+
+1. Matikan kedua printer *(kwitansi & barcode)*.
+2. Nyalakan *printer kwitansi* terlebih dahulu.
+3. Tunggu hingga printer siap, lalu lakukan *tes print*.
+4. Nyalakan *printer barcode*, lalu lakukan *tes print*.
+
+Mohon lakukan sesuai urutan di atas. 🙏`;
+}
+
+
+    // ==========================================================
+    // TV
+    // ==========================================================
+
+    if (/\btv\b/i.test(text)) {
+
+        return `
+📺 *INFORMASI PENANGANAN KENDALA TV*
+
+Untuk setting TV silakan hubungi PIC/divisi terkait:
+
+📱 *+62 811-8113-3405*
+
+Mohon hubungi nomor tersebut untuk penanganan setting TV ya kak. 🙏`;
+}
+    // ==========================================================
+    // WIFI
+    // ==========================================================
+
+    const isWifi =
+        /\bwifi\b/i.test(text) ||
+        /\bwi[\s-]?fi\b/i.test(text) ||
+        /\binternet\b/i.test(text);
+
+    if (isWifi) {
+
+        return `
+📡 *PENGECEKAN KENDALA WIFI*
+
+Mohon cek lampu indikator *LOS* pada modem.
+
+🔴 Jika lampu *LOS berwarna merah*, balas:
+*MERAH*
+
+🟢 Jika lampu *LOS tidak merah*, balas:
+*NORMAL*
+
+ℹ️ *Informasi:*
+Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon
+`;
+    }
+
+
+    return "";
+}
+
+async function sendAutoTroubleshooting(
+    chatId,
+    cabang,
+    kendala,
+    kendalaType
+) {
+
+    try {
+
+        console.log("");
+        console.log(
+            "========== SEND AUTO TROUBLESHOOTING =========="
+        );
+
+        console.log(
+            "TYPE    :",
+            kendalaType
+        );
+
+        console.log(
+            "CABANG  :",
+            cabang
+        );
+
+        console.log(
+            "KENDALA :",
+            kendala
+        );
+
+        console.log(
+            "==============================================="
+        );
+
+
+// ======================================================
+// PRINTER TERTUKAR
+// ======================================================
+
+if (
+    kendalaType === "PRINTER_TERTUKAR"
+) {
+
+    await client.sendMessage(
+        chatId,
+
+`🎫 *IT SUPPORT HELPDESK*
+
+⚠️ *PENANGANAN OTOMATIS*
+
+🏢 *Cabang* : ${cabang}
+📝 *Kendala* : ${kendala}
+
+⚠️ *INFORMASI INSTRUKSI PENANGANAN KENDALA*
+
+Laporan Anda terdeteksi terkait hasil *printer barcode dan thermal tertukar*
+
+📋 *Mohon lakukan langkah berikut:*
+
+1. Matikan kedua printer *(kwitansi & barcode)*.
+2. Nyalakan *printer kwitansi* terlebih dahulu.
+3. Tunggu hingga printer siap, lalu lakukan *tes print*.
+4. Nyalakan *printer barcode*, lalu lakukan *tes print*.
+
+Mohon lakukan sesuai urutan di atas. 🙏
+━━━━━━━━━━━━━━━━━━━━━━
+Setelah melakukan langkah di atas, silakan balas:
+
+✅ *BERHASIL*
+❌ *BELUM BERHASIL*
+
+ℹ️ *Informasi:*
+Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon
+
+🤖 Sistem akan melanjutkan proses sesuai hasil penanganan.
+
+Terima kasih 🙏`
+    );
+
+    return true;
+}
+
+        // ======================================================
+        // TV
+        // ======================================================
+
+        if (
+            kendalaType === "TV"
+        ) {
+
+            await client.sendMessage(
+                chatId,
+
+`📺 *KENDALA TV*
+
+Untuk kendala yang berkaitan dengan setting atau penggunaan TV, silakan hubungi PIC TV/divisi terkait:
+
+📞 *+62 811-8113-3405*
+
+Kendala TV berada di luar penanganan IT Support.
+
+Apabila PIC belum merespons, mohon menunggu atau menghubungi kembali PIC terkait.
+
+❗ *Mohon tidak membuat laporan IT Support untuk kendala TV.*
+
+Terima kasih 🙏`
+            );
+
+            return true;
+        }
+
+
+        // ======================================================
+        // WIFI
+        // ======================================================
+
+        if (
+            kendalaType === "WIFI"
+        ) {
+
+            await client.sendMessage(
+                chatId,
+
+`🎫 *IT SUPPORT HELPDESK*
+
+⚠️ *PENANGANAN OTOMATIS*
+
+🏢 *Cabang* : ${cabang}
+📝 *Kendala* : ${kendala}
+
+Mohon cek indikator *LOS* pada modem.
+
+Jika lampu *LOS MERAH*, balas:
+
+🔴 *MERAH*
+
+Jika lampu *LOS NORMAL*, balas:
+
+🟢 *NORMAL*
+
+ℹ️ *Informasi:*
+Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon
+
+🤖 Sistem akan melanjutkan proses sesuai hasil pengecekan.
+
+Terima kasih 🙏
+
+`
+            );
+
+            return true;
+        }
+
+
+        // ======================================================
+        // TYPE TIDAK DIKENAL
+        // ======================================================
+
+        console.log(
+            "⚠️ Auto Troubleshooting Type tidak dikenali:",
+            kendalaType
+        );
+
+        return false;
+
+
+    } catch (err) {
+
+        console.error(
+            "❌ Gagal mengirim Auto Troubleshooting:"
+        );
+
+        console.error(
+            err.message
+        );
+
+        return false;
+
+    }
+
+}
+
+async function autoTroubleshootingSuccess(ticket) {
+
+    await client.sendMessage(
+
+        ticket.chatId,
+
+`🎉 *IT SUPPORT HELPDESK*
+
+✅ *PENANGANAN OTOMATIS BERHASIL*
+━━━━━━━━━━━━━━━━━━━━━━
+🎫 *Ticket* : ${ticket.id}
+🟢 *Status* : CLOSED
+🤖 *Closed By* : SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━
+Kendala *${ticket.kendala}* telah berhasil
+ditangani melalui instruksi otomatis.
+
+Tidak diperlukan tindakan lebih lanjut
+dari Tim IT Support.
+
+Terima kasih 🙏`
+
+    );
+
+}
+
+async function autoTroubleshootingNoTicketSuccess(
+    chatId,
+    type
+) {
+
+    let message = "";
+
+    if (type === "TV") {
+
+        message = `
+🎉 *IT SUPPORT HELPDESK*
+
+✅ *PENANGANAN BERHASIL*
+━━━━━━━━━━━━━━━━━━━━━━
+📺 Kendala TV telah diarahkan ke PIC/divisi terkait.
+Tidak diperlukan pembuatan ticket IT Support.
+Terima kasih 🙏
+`;
+    }
+
+
+    if (type === "WIFI") {
+
+        message = `
+🎉 *IT SUPPORT HELPDESK*
+
+✅ *PENANGANAN BERHASIL*
+━━━━━━━━━━━━━━━━━━━━━━
+📡 Kendala WiFi telah diarahkan melalui KC untuk ditindaklanjuti dengan provider.
+Tidak diperlukan pembuatan ticket IT Support.
+Terima kasih 🙏
+`;
+    }
+
+
+    if (!message)
+        return;
+
+
+    await client.sendMessage(
+        chatId,
+        message
+    );
+}
+
+/* ==========================================================
+   WIFI - PROVIDER
+========================================================== */
+
+async function wifiProvider(chatId) {
+
+    await client.sendMessage(
+
+        chatId,
+
+`📡 *INFORMASI KENDALA WIFI*
+
+Jika lampu *LOS berwarna merah*, silakan chat *KC masing-masing* ya kak.
+
+Nanti KC akan menghubungi provider untuk penanganan lebih lanjut. 🙏
+
+Tidak perlu membuat ticket IT Support untuk kondisi ini.`
+
+    );
+
+}
+
+
+/* ==========================================================
+   WIFI - RESTART MODEM
+========================================================== */
+
+async function wifiRestart(chatId) {
+
+    await client.sendMessage(
+
+        chatId,
+
+`📡 *PENGECEKAN KENDALA WIFI*
+
+Karena lampu LOS tidak merah, silakan coba *restart modem* terlebih dahulu.
+
+🔄 Matikan modem, tunggu sekitar 1 menit, lalu nyalakan kembali.
+
+🎥 *Panduan restart modem:*
+https://youtu.be/xFcYzBdXUpA?si=CeLGiJrpMv2V2IFg
+
+Setelah dicoba, balas:
+
+✅ *BERHASIL*
+❌ *BELUM BERHASIL*
+
+ℹ️ *Informasi:*
+Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon`
+
+    );
+
+}
+
+/* ==========================================================
    Ticket Created
 ========================================================== */
 
-async function ticketCreated(chatId, ticket){
+async function ticketCreated(
+    chatId,
+    ticket,
+    includeKendalaTemplate = true
+){
 
     try{
+
+        const kendalaTemplate =
+            includeKendalaTemplate
+                ? getKendalaTemplate(ticket.kendala)
+                : "";
 
         await client.sendMessage(
 
@@ -58,6 +549,7 @@ async function ticketCreated(chatId, ticket){
 🟡 *Status*   : OPEN
 ⏳ *Progress* : Menunggu Assignment PIC
 ━━━━━━━━━━━━━━━━━━━━━━
+${kendalaTemplate}
 👨‍💻 *PIC IT Support*
 ${getEngineerMenu()
     .split("\n")
@@ -341,6 +833,8 @@ module.exports = {
 
     ticketCreated,
 
+    sendAutoTroubleshooting,
+
     ticketAssigned,
 
     ticketClosed,
@@ -355,7 +849,19 @@ module.exports = {
 
     doneChooseClosePIC,
 
-    getEngineerCodeList
+    getEngineerCodeList,
+
+    getKendalaTemplate,
+
+    getKendalaType,
+
+    autoTroubleshootingSuccess,
+
+    autoTroubleshootingNoTicketSuccess,
+
+    wifiProvider,
+
+    wifiRestart
     
 
 };

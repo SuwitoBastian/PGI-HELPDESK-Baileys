@@ -160,10 +160,19 @@ Laporan Anda terdeteksi terkait hasil *printer barcode dan thermal tertukar*
 
 📋 *Mohon lakukan langkah berikut:*
 
+Cara 1
+
 1. Matikan kedua printer *(kwitansi & barcode)*.
 2. Nyalakan *printer kwitansi* terlebih dahulu.
 3. Tunggu hingga printer siap, lalu lakukan *tes print*.
 4. Nyalakan *printer barcode*, lalu lakukan *tes print*.
+
+Cara 2
+
+1. Matikan kedua printer *(kwitansi & barcode)*.
+2. Nyalakan *printer barcode* terlebih dahulu.
+3. Tunggu hingga printer siap, lalu lakukan *tes print*.
+4. Nyalakan *printer kwitansi*, lalu lakukan *tes print*.
 
 Mohon lakukan sesuai urutan di atas. 🙏`;
 }
@@ -273,10 +282,19 @@ Laporan Anda terdeteksi terkait hasil *printer barcode dan thermal tertukar*
 
 📋 *Mohon lakukan langkah berikut:*
 
+Cara 1
+
 1. Matikan kedua printer *(kwitansi & barcode)*.
 2. Nyalakan *printer kwitansi* terlebih dahulu.
 3. Tunggu hingga printer siap, lalu lakukan *tes print*.
 4. Nyalakan *printer barcode*, lalu lakukan *tes print*.
+
+Cara 2
+
+1. Matikan kedua printer *(kwitansi & barcode)*.
+2. Nyalakan *printer barcode* terlebih dahulu.
+3. Tunggu hingga printer siap, lalu lakukan *tes print*.
+4. Nyalakan *printer kwitansi*, lalu lakukan *tes print*.
 
 Mohon lakukan sesuai urutan di atas. 🙏
 ━━━━━━━━━━━━━━━━━━━━━━

@@ -629,7 +629,6 @@ summarySheet.getRow(9).height = 20;
 // ==========================
 
 engineerLeaderboards
-    .slice(0, 6)
     .forEach((engineer, index) => {
 
         const row = 10 + index;

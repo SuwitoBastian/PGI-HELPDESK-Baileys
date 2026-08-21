@@ -215,8 +215,11 @@ Mohon cek lampu indikator *LOS* pada modem.
 🟢 Jika lampu *LOS tidak merah*, balas:
 *NORMAL*
 
+⚫ Jika modem *MATI / TIDAK MENYALA*, balas:
+*MATI*
+
 ℹ️ *Informasi:*
-Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon
+*SILAKAN BALAS DENGAN MENGETIK SALAH SATU KATA DI ATAS TANPA EMOJI/ICON*
 `;
     }
 
@@ -232,31 +235,6 @@ async function sendAutoTroubleshooting(
 ) {
 
     try {
-
-        console.log("");
-        console.log(
-            "========== SEND AUTO TROUBLESHOOTING =========="
-        );
-
-        console.log(
-            "TYPE    :",
-            kendalaType
-        );
-
-        console.log(
-            "CABANG  :",
-            cabang
-        );
-
-        console.log(
-            "KENDALA :",
-            kendala
-        );
-
-        console.log(
-            "==============================================="
-        );
-
 
 // ======================================================
 // PRINTER TERTUKAR
@@ -304,7 +282,7 @@ Setelah melakukan langkah di atas, silakan balas:
 ❌ *BELUM BERHASIL*
 
 ℹ️ *Informasi:*
-Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon
+*SILAKAN BALAS DENGAN MENGETIK SALAH SATU KATA DI ATAS TANPA EMOJI/ICON*
 
 🤖 Sistem akan melanjutkan proses sesuai hasil penanganan.
 
@@ -314,35 +292,28 @@ Terima kasih 🙏`
     return true;
 }
 
-        // ======================================================
-        // TV
-        // ======================================================
+// ======================================================
+// TV
+// LANGSUNG ARAHKAN KE PIC TV
+// TANPA AUTO TROUBLESHOOTING LANJUTAN
+// ======================================================
 
-        if (
-            kendalaType === "TV"
-        ) {
+if (
+    kendalaType === "TV"
+) {
 
-            await client.sendMessage(
-                chatId,
+    await client.sendMessage(
+        chatId,
 
 `📺 *KENDALA TV*
 
 Untuk kendala yang berkaitan dengan setting atau penggunaan TV, silakan hubungi PIC TV/divisi terkait:
 
-📞 *+62 811-8113-3405*
+📞 *+62 811-8113-3405*`
+    );
 
-Kendala TV berada di luar penanganan IT Support.
-
-Apabila PIC belum merespons, mohon menunggu atau menghubungi kembali PIC terkait.
-
-❗ *Mohon tidak membuat laporan IT Support untuk kendala TV.*
-
-Terima kasih 🙏`
-            );
-
-            return true;
-        }
-
+    return true;
+}
 
         // ======================================================
         // WIFI
@@ -372,8 +343,12 @@ Jika lampu *LOS NORMAL*, balas:
 
 🟢 *NORMAL*
 
+Jika lampu indikator modem *MATI / TIDAK MENYALA*, balas:
+
+⚫ *MATI*
+
 ℹ️ *Informasi:*
-Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon
+*SILAKAN BALAS DENGAN MENGETIK SALAH SATU KATA DI ATAS TANPA EMOJI/ICON*
 
 🤖 Sistem akan melanjutkan proses sesuai hasil pengecekan.
 
@@ -485,6 +460,27 @@ Terima kasih 🙏
     );
 }
 
+async function sendAutoTroubleshootingExpired(
+    chatId
+) {
+
+    const message = `
+⚠️ *SESI PENANGANAN OTOMATIS BERAKHIR*
+
+Tidak ada balasan selama 20 menit, sehingga penanganan dianggap selesai.
+
+Jika kendala masih terjadi, silakan laporkan kembali melalui grup IT - AM.
+
+Terima kasih 🙏
+`;
+
+    await client.sendMessage(
+        chatId,
+        message
+    );
+
+}
+
 /* ==========================================================
    WIFI - PROVIDER
 ========================================================== */
@@ -533,8 +529,7 @@ Setelah dicoba, balas:
 ❌ *BELUM BERHASIL*
 
 ℹ️ *Informasi:*
-Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon`
-
+*SILAKAN BALAS DENGAN MENGETIK SALAH SATU KATA DI ATAS TANPA EMOJI/ICON*`
     );
 
 }
@@ -879,7 +874,9 @@ module.exports = {
 
     wifiProvider,
 
-    wifiRestart
+    wifiRestart,
+
+    sendAutoTroubleshootingExpired
     
 
 };

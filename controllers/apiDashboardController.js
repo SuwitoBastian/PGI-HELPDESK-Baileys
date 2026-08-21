@@ -16,6 +16,9 @@ const slaService =
 const feedbackService =
     require("../services/feedbackService");
 
+const notificationService =
+    require("../services/notificationService");
+
 const overviewAnalytics =
     require("../services/analytics/overviewAnalytics");
 
@@ -681,37 +684,113 @@ async function dashboard(req, res) {
 TUTUP TIKET
 ========================================================== */
 
-function closeTicket(req, res) {
+async function closeTicket(req, res) {
 
-    const ticket =
-        ticketRepository.findById(
-            req.params.id
+    try {
+
+        const ticket =
+            ticketRepository.findById(
+                req.params.id
+            );
+
+
+        if (!ticket) {
+
+            return res.status(404).json({
+
+                error:
+                    "Tiket tidak ditemukan"
+
+            });
+
+        }
+
+
+        // ======================================================
+        // TUTUP TICKET
+        // ======================================================
+
+        doneService.close(
+            ticket,
+            ticket.pic
         );
 
 
-    if (!ticket) {
+        // ======================================================
+        // KIRIM FEEDBACK KE PELAPOR
+        // Hanya jika feedback belum pernah dikirim
+        // ======================================================
 
-        return res.status(404).json({
+        if (!ticket.feedback_sent) {
+
+            try {
+
+                await notificationService.ticketClosed(
+
+                    ticket.chatId,
+
+                    ticket,
+
+                    ticket.pic
+
+                );
+
+
+                ticketRepository.markFeedbackSent(
+                    ticket.id
+                );
+
+
+                console.log(
+                    `📨 Feedback Dashboard terkirim → ${ticket.id}`
+                );
+
+
+            } catch (feedbackError) {
+
+                console.error(
+                    `❌ Gagal mengirim feedback → ${ticket.id}`
+                );
+
+                console.error(
+                    feedbackError.message
+                );
+
+            }
+
+        }
+
+
+        // ======================================================
+        // RESPONSE
+        // Ticket tetap dianggap berhasil CLOSED
+        // meskipun WhatsApp gagal mengirim feedback
+        // ======================================================
+
+        return res.json({
+
+            ok: true
+
+        });
+
+
+    } catch (err) {
+
+        console.error(
+            "❌ Dashboard Close Ticket Error:"
+        );
+
+        console.error(err);
+
+
+        return res.status(500).json({
 
             error:
-                "Tiket tidak ditemukan"
+                "Gagal menutup tiket"
 
         });
 
     }
-
-
-    doneService.close(
-        ticket,
-        ticket.pic
-    );
-
-
-    res.json({
-
-        ok: true
-
-    });
 
 }
 

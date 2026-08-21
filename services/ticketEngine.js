@@ -30,8 +30,6 @@ async function handleIncoming(msg) {
 
     if (msg.from.endsWith("@broadcast"))
         return;
-
-
     const session =
         sessionService.get(msg.from);
 
@@ -147,17 +145,45 @@ async function handleAutoTroubleshooting(
     session
 ) {
 
-    const jawaban =
+    // ==========================================================
+    // NORMALISASI JAWABAN
+    // ==========================================================
+
+    let jawaban =
         msg.body
             .trim()
             .toUpperCase();
 
-    console.log("");
-    console.log("==============================");
-    console.log("🤖 AUTO TROUBLESHOOTING");
-    console.log("JAWABAN :", jawaban);
-    console.log("==============================");
 
+    // ==========================================================
+    // NORMALISASI EMOJI
+    //
+    // 🔴 = MERAH
+    // 🟢 = NORMAL
+    // ⚫ = MATI
+    // ❌ = BELUM BERHASIL
+    // ✅ = BERHASIL
+    // ==========================================================
+
+    if (jawaban.includes("🔴")) {
+        jawaban += " MERAH";
+    }
+
+    if (jawaban.includes("🟢")) {
+        jawaban += " NORMAL";
+    }
+
+    if (jawaban.includes("⚫")) {
+        jawaban += " MATI";
+    }
+
+    if (jawaban.includes("❌")) {
+        jawaban += " BELUM BERHASIL";
+    }
+
+    if (jawaban.includes("✅")) {
+        jawaban += " BERHASIL";
+    }
 
     // ==========================================================
     // WIFI - CEK LOS
@@ -168,11 +194,14 @@ async function handleAutoTroubleshooting(
         session.state === "AUTO_TROUBLESHOOTING"
     ) {
 
+
         // ======================================================
         // LOS MERAH
         // ======================================================
 
-        if (jawaban === "MERAH") {
+        if (
+            jawaban.includes("MERAH")
+        ) {
 
             console.log(
                 "🔴 WIFI LOS MERAH → PROVIDER"
@@ -182,7 +211,9 @@ async function handleAutoTroubleshooting(
                 session.autoTroubleshooting.chatId
             );
 
-            sessionService.reset(msg.from);
+            sessionService.reset(
+                msg.from
+            );
 
             return true;
         }
@@ -192,7 +223,9 @@ async function handleAutoTroubleshooting(
         // LOS NORMAL
         // ======================================================
 
-        if (jawaban === "NORMAL") {
+        if (
+            jawaban.includes("NORMAL")
+        ) {
 
             console.log(
                 "🟢 WIFI LOS NORMAL → RESTART MODEM"
@@ -209,11 +242,82 @@ async function handleAutoTroubleshooting(
         }
 
 
+        // ======================================================
+        // MODEM MATI
+        // LANGSUNG BUAT TICKET OPEN NORMAL
+        // ======================================================
+
+        if (
+            jawaban.includes("MATI")
+        ) {
+
+            console.log(
+                "⚫ WIFI MODEM MATI → BUAT TICKET OPEN"
+            );
+
+            const data =
+                session.autoTroubleshooting;
+
+
+            const ticket =
+                ticketService.create({
+
+                    nama:
+                        data.nama,
+
+                    nomor:
+                        data.nomor,
+
+                    chatId:
+                        data.chatId,
+
+                    cabang:
+                        data.cabang,
+
+                    kendala:
+                        data.kendala,
+
+                    waktu:
+                        data.startedAt,
+
+                    assignmentGroup:
+                        data.assignmentGroup
+
+                });
+
+
+            console.log(
+                `🎫 Ticket ${ticket.id} dibuat dari WiFi Troubleshooting - MODEM MATI`
+            );
+
+
+            // Ticket dibuat seperti laporan normal
+
+            await notificationService.ticketCreated(
+                ticket.chatId,
+                ticket,
+                false
+            );
+
+
+            sessionService.reset(
+                msg.from
+            );
+
+            return true;
+        }
+
+
+        // ======================================================
+        // JAWABAN WIFI TIDAK DIKENAL
+        // ======================================================
+
         await msg.reply(
 `⚠️ Mohon pilih salah satu:
 
 🔴 *MERAH*
-🟢 *NORMAL*`
+🟢 *NORMAL*
+⚫ *MATI*`
         );
 
         return true;
@@ -229,40 +333,25 @@ async function handleAutoTroubleshooting(
         session.state === "WIFI_RESTART"
     ) {
 
-        // ======================================================
-        // BERHASIL
-        // ======================================================
-
-        if (jawaban === "BERHASIL") {
-
-            console.log(
-                "✅ WIFI BERHASIL SETELAH RESTART MODEM"
-            );
-
-            await msg.reply(
-`🎉 *IT SUPPORT HELPDESK*
-
-✅ Kendala WiFi berhasil ditangani.
-
-Tidak diperlukan pembuatan ticket IT Support.
-
-Terima kasih 🙏`
-            );
-
-            sessionService.reset(msg.from);
-
-            return true;
-        }
-
 
         // ======================================================
         // BELUM BERHASIL
+        //
+        // HARUS DICEK SEBELUM BERHASIL
+        // karena "BELUM BERHASIL" mengandung "BERHASIL"
         // ======================================================
 
-        if (jawaban === "BELUM BERHASIL") {
+        if (
+            jawaban.includes("BELUM BERHASIL")
+        ) {
+
+            console.log(
+                "❌ WIFI BELUM BERHASIL → BUAT TICKET OPEN"
+            );
 
             const data =
                 session.autoTroubleshooting;
+
 
             const ticket =
                 ticketService.create({
@@ -296,9 +385,6 @@ Terima kasih 🙏`
             );
 
 
-            // Ticket dibuat seperti laporan normal
-            // Tanpa template troubleshooting tambahan
-
             await notificationService.ticketCreated(
                 ticket.chatId,
                 ticket,
@@ -306,7 +392,41 @@ Terima kasih 🙏`
             );
 
 
-            sessionService.reset(msg.from);
+            sessionService.reset(
+                msg.from
+            );
+
+            return true;
+        }
+
+
+        // ======================================================
+        // BERHASIL
+        // ======================================================
+
+        if (
+            jawaban.includes("BERHASIL")
+        ) {
+
+            console.log(
+                "✅ WIFI BERHASIL SETELAH RESTART MODEM"
+            );
+
+
+            await msg.reply(
+`🎉 *IT SUPPORT HELPDESK*
+
+✅ Kendala WiFi berhasil ditangani.
+
+Tidak diperlukan pembuatan ticket IT Support.
+
+Terima kasih 🙏`
+            );
+
+
+            sessionService.reset(
+                msg.from
+            );
 
             return true;
         }
@@ -316,10 +436,7 @@ Terima kasih 🙏`
 `⚠️ Mohon pilih salah satu:
 
 ✅ *BERHASIL*
-❌ *BELUM BERHASIL*
-
-ℹ️ *Informasi:*
-Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon`
+❌ *BELUM BERHASIL*`
         );
 
         return true;
@@ -340,77 +457,68 @@ Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon`
             "❌ Data Auto Troubleshooting tidak ditemukan"
         );
 
-        sessionService.reset(msg.from);
+        sessionService.reset(
+            msg.from
+        );
 
         return true;
     }
 
-
     // ==========================================================
-    // TV - BERHASIL
-    // ==========================================================
-
-    if (
-        data.type === "TV" &&
-        jawaban === "BERHASIL"
-    ) {
-
-        console.log(
-            "✅ Auto Troubleshooting TV berhasil"
-        );
-
-        console.log(
-            "🎫 Ticket tidak dibuat"
-        );
-
-
-        await notificationService
-            .autoTroubleshootingNoTicketSuccess(
-                data.chatId,
-                data.type
-            );
-
-
-        sessionService.reset(msg.from);
-
-        return true;
-    }
-
-
-    // ==========================================================
-    // TV - BELUM BERHASIL
-    // TETAP DIARAHKAN KE PIC TV
-    // TIDAK MEMBUAT TICKET IT
+    // PRINTER - BELUM BERHASIL
+    //
+    // CEK DULU SEBELUM BERHASIL
     // ==========================================================
 
     if (
-        data.type === "TV" &&
-        jawaban === "BELUM BERHASIL"
+        data.type === "PRINTER_TERTUKAR" &&
+        jawaban.includes("BELUM BERHASIL")
     ) {
 
+        const ticket =
+            ticketService.create({
+
+                nama:
+                    data.nama,
+
+                nomor:
+                    data.nomor,
+
+                chatId:
+                    data.chatId,
+
+                cabang:
+                    data.cabang,
+
+                kendala:
+                    data.kendala,
+
+                waktu:
+                    data.startedAt,
+
+                assignmentGroup:
+                    data.assignmentGroup
+
+            });
+
+
         console.log(
-            "📺 TV BELUM BERHASIL → TETAP KE PIC TV"
+            `🎫 Ticket ${ticket.id} dibuat dari Printer Troubleshooting`
         );
 
 
-        await msg.reply(
-    `📺 *KENDALA TV*
+        // Ticket dibuat seperti laporan normal
 
-    Untuk kendala yang berkaitan dengan setting atau penggunaan TV, silakan hubungi PIC TV/divisi terkait:
-
-    📞 *+62 811-8113-3405*
-
-    Kendala TV berada di luar penanganan IT Support.
-
-    Apabila PIC belum merespons, mohon menunggu atau menghubungi kembali PIC terkait.
-
-    ❗ *Mohon tidak membuat laporan IT Support untuk kendala TV.*
-
-    Terima kasih 🙏`
+        await notificationService.ticketCreated(
+            ticket.chatId,
+            ticket,
+            false
         );
 
 
-        sessionService.reset(msg.from);
+        sessionService.reset(
+            msg.from
+        );
 
         return true;
     }
@@ -423,7 +531,7 @@ Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon`
 
     if (
         data.type === "PRINTER_TERTUKAR" &&
-        jawaban === "BERHASIL"
+        jawaban.includes("BERHASIL")
     ) {
 
         const ticket =
@@ -476,65 +584,9 @@ Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon`
             );
 
 
-        sessionService.reset(msg.from);
-
-        return true;
-    }
-
-
-    // ==========================================================
-    // PRINTER - BELUM BERHASIL
-    // BUAT TICKET OPEN NORMAL
-    // ==========================================================
-
-    if (
-        data.type === "PRINTER_TERTUKAR" &&
-        jawaban === "BELUM BERHASIL"
-    ) {
-
-        const ticket =
-            ticketService.create({
-
-                nama:
-                    data.nama,
-
-                nomor:
-                    data.nomor,
-
-                chatId:
-                    data.chatId,
-
-                cabang:
-                    data.cabang,
-
-                kendala:
-                    data.kendala,
-
-                waktu:
-                    data.startedAt,
-
-                assignmentGroup:
-                    data.assignmentGroup
-
-            });
-
-
-        console.log(
-            `🎫 Ticket ${ticket.id} dibuat dari Printer Troubleshooting`
+        sessionService.reset(
+            msg.from
         );
-
-
-        // Ticket dibuat seperti laporan normal
-        // Tanpa template troubleshooting tambahan
-
-        await notificationService.ticketCreated(
-            ticket.chatId,
-            ticket,
-            false
-        );
-
-
-        sessionService.reset(msg.from);
 
         return true;
     }
@@ -545,13 +597,7 @@ Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon`
     // ==========================================================
 
     await msg.reply(
-`⚠️ Mohon pilih salah satu:
-
-✅ *BERHASIL*
-❌ *BELUM BERHASIL*
-
-ℹ️ *Informasi:*
-Silakan balas dengan mengetik salah satu kata di atas tanpa emoji/icon`
+`⚠️ Mohon pilih jawaban sesuai instruksi sebelumnya.`
     );
 
     return true;
@@ -663,6 +709,38 @@ async function handleIdle(msg) {
 
 
         // ======================================================
+        // TV
+        // LANGSUNG KIRIM PESAN PIC
+        // TIDAK MEMBUAT SESSION AUTO TROUBLESHOOTING
+        // ======================================================
+
+        if (kendalaType === "TV") {
+
+            console.log(
+                "📺 KENDALA TV → LANGSUNG ARAHKAN KE PIC TV"
+            );
+
+            try {
+                await msg.react("🤖");
+            } catch (err) {
+                console.log(
+                    "⚠️ Gagal memberi reaction:",
+                    err.message
+                );
+            }
+
+            await notificationService.sendAutoTroubleshooting(
+                targetChatId,
+                cabang,
+                kendala,
+                kendalaType
+            );
+
+            return;
+        }
+
+
+        // ======================================================
         // SET SESSION
         // ======================================================
 
@@ -713,61 +791,32 @@ async function handleIdle(msg) {
 
         }
 
-
         // ======================================================
-        // DEBUG AUTO TROUBLESHOOTING
+        // AUTO TROUBLESHOOTING TIMER
+        // 20 MENIT
         // ======================================================
 
-        console.log("");
+        sessionService.startAutoTroubleshootingTimer(
+            targetChatId,
+            20 * 60 * 1000,
+            async (session) => {
 
-        console.log(
-            "=============================="
+                const chatId =
+                    session.autoTroubleshooting?.chatId;
+
+                if (!chatId) {
+
+                    return;
+
+                }
+
+
+                await notificationService.sendAutoTroubleshootingExpired(
+                    chatId
+                );
+
+            }
         );
-
-        console.log(
-            "🤖 AUTO TROUBLESHOOTING"
-        );
-
-        console.log(
-            "=============================="
-        );
-
-        console.log(
-            "GROUP   :",
-            msg.from
-        );
-
-        console.log(
-            "PRIVATE :",
-            targetChatId
-        );
-
-        console.log(
-            "CABANG  :",
-            cabang
-        );
-
-        console.log(
-            "KENDALA :",
-            kendala
-        );
-
-        console.log(
-            "TYPE    :",
-            kendalaType
-        );
-
-        console.log(
-            "STATE   :",
-            autoSession.state
-        );
-
-        console.log(
-            "=============================="
-        );
-
-        console.log("");
-
 
         // ======================================================
         // KIRIM INSTRUKSI AUTO TROUBLESHOOTING
@@ -884,8 +933,6 @@ async function handleWaitingAssign(msg) {
         msg.body
             .trim()
             .toUpperCase();
-    
-    console.log("KODE :", kodePIC);
 
     const daftarKode =
         engineerService
@@ -944,8 +991,6 @@ async function handleWaitingAssign(msg) {
 
 async function handleProcess(msg, session) {
 
-    console.log("STATE : PROCESS");
-
 }
 
 /*
@@ -955,8 +1000,6 @@ async function handleProcess(msg, session) {
 */
 
 async function handleWaitingClose(msg, session) {
-
-    console.log("STATE : WAITING_CLOSE");
 
 }
 

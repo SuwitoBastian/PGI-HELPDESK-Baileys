@@ -317,6 +317,63 @@ export default function App() {
 
     }, [view]);
 
+    // =====================================================
+    // AUTO DATE FILTER - BULAN BERJALAN
+    // =====================================================
+
+    useEffect(() => {
+
+      // ALL PERFORMANCE
+      // Tidak menggunakan filter tanggal
+      if (!selectedLocation) {
+
+        setStartInput("");
+        setEndInput("");
+
+        setStartFilter("");
+        setEndFilter("");
+
+        return;
+
+      }
+
+
+      // LOCATION PERFORMANCE
+      // Otomatis dari tanggal 1 sampai hari ini
+
+      const now = new Date();
+
+      const year = 
+       now.getFullYear();
+
+      const month =
+        String(
+          now.getMonth() + 1
+        ).padStart(2, "0");
+
+      const day =
+        String(
+          now.getDate()
+        ).padStart(2, "0");
+
+
+      const startDate =
+        `${year}-${month}-01`;
+
+      const endDate =
+        `${year}-${month}-${day}`;
+
+
+      setStartInput(startDate);
+      setEndInput(endDate);
+
+      setStartFilter(startDate);
+      setEndFilter(endDate);
+
+    }, [
+      selectedLocation
+    ]);
+
     console.log(
     "PAGE DEBUG:",
     {
@@ -612,11 +669,51 @@ export default function App() {
 
   function resetFilter() {
 
-    setStartInput("");
-    setEndInput("");
+    // ALL PERFORMANCE
+    if (!selectedLocation) {
 
-    setStartFilter("");
-    setEndFilter("");
+      setStartInput("");
+      setEndInput("");
+
+      setStartFilter("");
+      setEndFilter("");
+
+      return;
+
+    }
+
+
+    // LOCATION PERFORMANCE
+    // Kembali ke bulan berjalan
+
+const now = new Date();
+
+const year =
+ now.getFullYear();
+
+    const month =
+      String(
+        now.getMonth() + 1
+      ).padStart(2, "0");
+
+    const day =
+      String(
+        now.getDate()
+      ).padStart(2, "0");
+
+
+    const startDate =
+      `${year}-${month}-01`;
+
+    const endDate =
+      `${year}-${month}-${day}`;
+
+
+    setStartInput(startDate);
+    setEndInput(endDate);
+
+    setStartFilter(startDate);
+    setEndFilter(endDate);
 
   }
 

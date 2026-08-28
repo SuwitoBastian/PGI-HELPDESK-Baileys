@@ -21,7 +21,7 @@ function getLocationLabel(location) {
             return "Head Office";
 
         default:
-            return "All Performance";
+            return "Semua Performa";
 
     }
 
@@ -161,22 +161,23 @@ export default function AnalyticsPage({
                 CUSTOMER FEEDBACK
             ================================================== */}
 
-            <div className="feedback-row">
+            {!location && (
+                <div className="feedback-row">
 
-                <CustomerFeedbackActivityCard
+                    <CustomerFeedbackActivityCard
 
-                    feedback={
-                        data?.feedback || []
-                    }
+                        feedback={
+                            data?.feedback || []
+                        }
 
-                    statistics={
-                        data?.feedbackStatistics || {}
-                    }
+                        statistics={
+                            data?.feedbackStatistics || {}
+                        }
 
-                />
+                    />
 
-            </div>
-
+                </div>
+            )}
         </>
 
     );

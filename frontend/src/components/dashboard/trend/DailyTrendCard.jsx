@@ -34,19 +34,19 @@ function getRangeLabel(range) {
     switch (range) {
 
         case 7:
-            return "Last 7 Days";
+            return "7 Hari Terakhir";
 
         case 30:
-            return "Last 30 Days";
+            return "30 Hari Terakhir";
 
         case 90:
-            return "Last 90 Days";
+            return "90 Hari Terakhir";
 
         case "ALL":
-            return "All Period";
+            return "Semua Periode";
 
         default:
-            return "Selected Period";
+            return "Periode Terpilih";
 
     }
 
@@ -95,14 +95,14 @@ export default function DailyTrendCard({
 
                         <div className="trend-title">
 
-                            Daily Ticket Trend
+                            Tren Tiket Harian
 
                         </div>
 
 
                         <div className="trend-subtitle">
 
-                            Ticket volume by day
+                            Jumlah tiket per hari
 
                         </div>
 
@@ -204,7 +204,7 @@ export default function DailyTrendCard({
                                 <Tooltip
                                     labelFormatter={formatDate}
                                     formatter={(value) => [
-                                        `${value} Ticket`,
+                                        `${value} Tiket`,
                                         "Total"
                                     ]}
                                 />
@@ -213,7 +213,7 @@ export default function DailyTrendCard({
                                 <Line
                                     type="linear"
                                     dataKey="total"
-                                    name="Total Ticket"
+                                    name="Total Tiket"
                                     stroke="#2563eb"
                                     strokeWidth={3}
                                     dot={{

@@ -70,7 +70,7 @@ function RankList({
                     />
 
                     <span>
-                        Top Location
+                        Lokasi Teratas
                     </span>
 
                 </div>
@@ -171,7 +171,7 @@ function RankList({
 
                                                     {total === 1
                                                         ? "Ticket"
-                                                        : "Tickets"}
+                                                        : "Tiket"}
 
                                                 </span>
 

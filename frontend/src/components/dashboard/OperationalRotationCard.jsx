@@ -54,7 +54,7 @@ export default function OperationalRotationCard({
 
 
                     <p>
-                        Current operational assignment period
+                        Periode penugasan operasional saat ini
                     </p>
 
                 </div>

@@ -6,6 +6,7 @@ import {
     ShieldAlert
 } from "lucide-react";
 
+
 // =====================================================
 // HELPERS
 // =====================================================
@@ -28,27 +29,27 @@ function getResponseStatus(minutes, hasData) {
 
     if (!hasData) {
         return {
-            text: "No Data",
+            text: "Tidak Ada Data",
             className: "neutral"
         };
     }
 
     if (minutes <= 5) {
         return {
-            text: "Excellent",
+            text: "Sangat Baik",
             className: "excellent"
         };
     }
 
     if (minutes <= 10) {
         return {
-            text: "Good",
+            text: "Baik",
             className: "good"
         };
     }
 
     return {
-        text: "Slow",
+        text: "Lambat",
         className: "warning"
     };
 }
@@ -62,27 +63,27 @@ function getResolutionStatus(minutes, hasData) {
 
     if (!hasData) {
         return {
-            text: "No Data",
+            text: "Tidak Ada Data",
             className: "neutral"
         };
     }
 
     if (minutes <= 30) {
         return {
-            text: "Good",
+            text: "Baik",
             className: "excellent"
         };
     }
 
     if (minutes <= 60) {
         return {
-            text: "Average",
+            text: "Rata-rata",
             className: "good"
         };
     }
 
     return {
-        text: "Over SLA",
+        text: "Melewati SLA",
         className: "warning"
     };
 }
@@ -185,7 +186,7 @@ export default function SLAPerformanceCard({
 
                 <h3 className="card-title">
 
-                    SLA Performance
+                    Performa SLA
 
                 </h3>
 
@@ -226,7 +227,7 @@ export default function SLAPerformanceCard({
                             <div>
 
                                 <span>
-                                    Avg Response
+                                    Rata-rata Respons
                                 </span>
 
                                 <strong>
@@ -267,7 +268,7 @@ export default function SLAPerformanceCard({
                             <div>
 
                                 <span>
-                                    Avg Resolution
+                                    Rata-rata Penyelesaian
                                 </span>
 
                                 <strong>
@@ -308,7 +309,7 @@ export default function SLAPerformanceCard({
                             <div>
 
                                 <span>
-                                    Total Duration
+                                    Total Durasi
                                 </span>
 
                                 <strong>
@@ -345,7 +346,7 @@ export default function SLAPerformanceCard({
                     <div className="sla-progress-header">
 
                         <span>
-                            SLA Success Rate
+                            Tingkat Keberhasilan SLA
                         </span>
 
 
@@ -403,7 +404,7 @@ export default function SLAPerformanceCard({
 
                             <span>
 
-                                Normal SLA
+                                SLA Normal
 
                             </span>
 
@@ -430,7 +431,7 @@ export default function SLAPerformanceCard({
 
                             <span>
 
-                                Expired SLA
+                                SLA Terlewati
 
                             </span>
 
@@ -461,4 +462,5 @@ export default function SLAPerformanceCard({
         </div>
 
     );
+
 }

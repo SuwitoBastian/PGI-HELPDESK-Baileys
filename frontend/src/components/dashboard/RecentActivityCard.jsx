@@ -49,7 +49,7 @@ export default function RecentActivityCard({ tickets = [] }) {
                 return {
                     icon: <CircleDot size={18} />,
                     color: "open",
-                    title: "Ticket Baru Masuk",
+                    title: "Tiket Baru Masuk",
                     subtitle: `Cabang ${ticket.cabang || "-"}`,
                 };
 

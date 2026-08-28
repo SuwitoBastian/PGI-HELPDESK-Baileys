@@ -313,6 +313,18 @@ export async function getFeedback(
 
 }
 
+/* ==========================================================
+   Start Feedback Reminder
+========================================================== */
+
+export async function startFeedbackReminder() {
+
+    return post(
+        "/feedback/reminder"
+    );
+
+}
+
 
 /* ==========================================================
    Export Customer Feedback Excel

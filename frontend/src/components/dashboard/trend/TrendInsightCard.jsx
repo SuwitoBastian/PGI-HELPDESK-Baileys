@@ -23,7 +23,7 @@ function getInsightConfig(item) {
     if (text.includes("naik")) {
 
         return {
-            title: "Trend",
+            title: "Tren",
             color: "#16a34a",
             bg: "#dcfce7",
             Icon: TrendingUp
@@ -35,7 +35,7 @@ function getInsightConfig(item) {
     if (text.includes("turun")) {
 
         return {
-            title: "Trend",
+            title: "Tren",
             color: "#dc2626",
             bg: "#fee2e2",
             Icon: TrendingDown
@@ -44,11 +44,13 @@ function getInsightConfig(item) {
     }
 
 
-    if (text.includes("peak") ||
-        text.includes("puncak")) {
+    if (
+        text.includes("peak") ||
+        text.includes("puncak")
+    ) {
 
         return {
-            title: "Peak",
+            title: "Puncak",
             color: "#f59e0b",
             bg: "#fef3c7",
             Icon: Flame
@@ -57,11 +59,13 @@ function getInsightConfig(item) {
     }
 
 
-    if (text.includes("average") ||
-        text.includes("rata-rata")) {
+    if (
+        text.includes("average") ||
+        text.includes("rata-rata")
+    ) {
 
         return {
-            title: "Average",
+            title: "Rata-rata",
             color: "#2563eb",
             bg: "#dbeafe",
             Icon: CalendarDays
@@ -137,7 +141,7 @@ export default function TrendInsightCard({
 
                         <div className="trend-title">
 
-                            Trend Insights
+                            Insight Tren
 
                         </div>
 
@@ -145,7 +149,7 @@ export default function TrendInsightCard({
                         <div className="trend-subtitle">
 
                             Ringkasan otomatis berdasarkan
-                            aktivitas ticket.
+                            aktivitas tiket.
 
                         </div>
 
@@ -183,6 +187,7 @@ export default function TrendInsightCard({
                                 getInsightConfig(
                                     item
                                 );
+
 
                             const Icon =
                                 config.Icon;

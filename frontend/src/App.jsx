@@ -26,19 +26,19 @@ const PAGES = {
   // =====================================================
 
   "dashboard-overview": {
-    title: "All Performance",
+    title: "Seluruh Performa",
     subtitle: "Ringkasan performa seluruh Helpdesk.",
     icon: LayoutDashboard,
   },
 
   "dashboard-analytics": {
-    title: "All Performance",
+    title: "Seluruh Performa",
     subtitle: "Analisis performa seluruh Helpdesk.",
     icon: LayoutDashboard,
   },
 
   "dashboard-trend": {
-    title: "All Performance",
+    title: "Seluruh Performa",
     subtitle: "Trend performa seluruh Helpdesk.",
     icon: LayoutDashboard,
   },
@@ -106,7 +106,7 @@ const PAGES = {
   // =====================================================
 
   "team-rotation": {
-    title: "Operational Settings",
+    title: "Pengaturan Operasional",
     subtitle: "Konfigurasi Team Rotation.",
     icon: LayoutDashboard,
   },

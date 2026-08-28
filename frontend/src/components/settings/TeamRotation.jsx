@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 
+import useToast from "../../hooks/useToast";
+import ConfirmDialog from "../dialogs/ConfirmDialog";
+
 const MONTHS = [
 
     "",
@@ -48,6 +51,21 @@ function teamLabel(team) {
 }
 
 export default function TeamRotation() {
+
+    const toast = useToast();
+
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        type: "info",
+        title: "",
+        message: "",
+        confirmText: "Simpan",
+        cancelText: "Batal",
+        action: null
+    });
+
+    const [confirmLoading, setConfirmLoading] =
+        useState(false);
 
     const [loading, setLoading] = useState(true);
 
@@ -103,7 +121,7 @@ export default function TeamRotation() {
 
     const [scheduleAssignmentLoading, setScheduleAssignmentLoading] =
         useState(false);
-    
+
     const [scheduleAssignments, setScheduleAssignments] =
         useState({});
 
@@ -385,21 +403,45 @@ function openScheduleAssignment(item, location) {
 
 }
 
-async function saveRotation() {
+function saveRotation() {
+
+    if (!next || !current) {
+        return;
+    }
+
+    setConfirmDialog({
+
+        open: true,
+
+        type: "info",
+
+        title:
+            "Terapkan Rotasi Operasional ?",
+
+        message:
+            `Periode        : ${MONTHS[next.month]} ${next.year}\n` +
+            `PIC : ${teamLabel(current.backupTeam)}\n` +
+            `Tim Backup : ${teamLabel(current.primaryTeam)}\n\n` +
+            `Tindakan ini akan memperbarui jadwal operasional.`,
+
+        confirmText:
+            "Konfirmasi",
+
+        cancelText:
+            "Batal",
+
+        action:
+            applyRotation
+
+    });
+
+}
+
+async function applyRotation() {
 
     try {
 
-        const confirmed = window.confirm(
-            `Apply Operational Rotation?\n\n` +
-            `Period        : ${MONTHS[next.month]} ${next.year}\n` +
-            `PIC : ${current.backupTeam}\n` +
-            `Backup Team  : ${current.primaryTeam}\n\n` +
-            `This action will update the operational schedule.`
-        );
-
-        if (!confirmed) {
-            return;
-        }
+        setConfirmLoading(true);
 
         const res = await fetch(
             "/api/operational-rotation/update",
@@ -422,21 +464,42 @@ async function saveRotation() {
         if (!res.ok || !result.success) {
             throw new Error(
                 result.message ||
-                "Failed to apply Operational Rotation."
+                "Gagal menerapkan Operational Rotation."
             );
         }
 
-        alert(
-            `Operational Rotation has been applied.\n\n` +
-            `PIC : ${current.backupTeam}\n` +
-            `Backup Team  : ${current.primaryTeam}`
+        setConfirmDialog(prev => ({
+            ...prev,
+            open: false,
+            action: null
+        }));
+
+        toast.success(
+            "Operational Rotation",
+            `Operational Rotation berhasil diterapkan.\n` +
+            `PIC: ${current.backupTeam}\n` +
+            `Backup Team: ${current.primaryTeam}`
         );
 
         await loadRotation();
 
     } catch (err) {
 
-        alert(err.message);
+        setConfirmDialog(prev => ({
+            ...prev,
+            open: false,
+            action: null
+        }));
+
+        toast.error(
+            "Operational Rotation Gagal",
+            err.message ||
+            "Gagal menerapkan Operational Rotation."
+        );
+
+    } finally {
+
+        setConfirmLoading(false);
 
     }
 
@@ -493,72 +556,77 @@ async function handleRotationChange(e) {
 
 }
 
-async function saveAssignment() {
+function saveAssignment() {
+
+    if (assignedAKR.length < 3) {
+
+        toast.warning(
+            "Assignment Engineer",
+            "Minimal pilih 3 engineer untuk HO - AKR Tower."
+        );
+
+        return;
+
+    }
+
+    const selectedSchedule =
+        schedule.find(
+            r => r.id === selectedRotationId
+        );
+
+    setConfirmDialog({
+
+        open: true,
+
+        type: "info",
+
+        title:
+            "Simpan Assignment Engineer?",
+
+        message:
+            `Periode : ${
+                selectedSchedule?.month || "-"
+            }/${
+                selectedSchedule?.year || "-"
+            }\n\n` +
+            `HO - AKR Tower : ${assignedAKR.length} Engineer\n` +
+            `Head Office : ${
+                engineers.length - assignedAKR.length
+            } Engineer`,
+
+        confirmText:
+            "Simpan",
+
+        cancelText:
+            "Batal",
+
+        action:
+            applyAssignment
+
+    });
+
+}
+
+async function applyAssignment() {
 
     try {
 
-        if (assignedAKR.length < 3) {
-
-            alert(
-                "Minimal pilih 3 engineer untuk HO - AKR Tower."
-            );
-
-            return;
-
-        }
-
-        const confirmed = window.confirm(
-
-            `Simpan Assignment Engineer?\n\n` +
-
-            `Periode : ${
-                schedule.find(
-                    r => r.id === selectedRotationId
-                )?.month
-            }/${
-
-                schedule.find(
-                    r => r.id === selectedRotationId
-                )?.year
-
-            }\n\n` +
-
-            `HO - AKR Tower : ${assignedAKR.length} Engineer\n` +
-
-            `Head Office : ${engineers.length - assignedAKR.length} Engineer`
-
-        );
-
-        if (!confirmed) {
-
-            return;
-
-        }
+        setConfirmLoading(true);
 
         const res = await fetch(
-
             "/api/operational-assignment",
-
             {
-
                 method: "POST",
 
                 headers: {
-
                     "Content-Type": "application/json"
-
                 },
 
                 body: JSON.stringify({
-
                     rotationId: selectedRotationId,
-
                     akrCodes: assignedAKR
-
                 })
-
             }
-
         );
 
         const result =
@@ -567,28 +635,42 @@ async function saveAssignment() {
         if (!res.ok || !result.success) {
 
             throw new Error(
-
                 result.message ||
-
                 "Gagal menyimpan assignment."
-
             );
 
         }
 
-        alert(
+        setConfirmDialog(prev => ({
+            ...prev,
+            open: false,
+            action: null
+        }));
 
+        toast.success(
+            "Assignment Engineer",
             "Assignment berhasil diperbarui."
-
         );
 
         await loadRotation();
 
-    }
+    } catch (err) {
 
-    catch (err) {
+        setConfirmDialog(prev => ({
+            ...prev,
+            open: false,
+            action: null
+        }));
 
-        alert(err.message);
+        toast.error(
+            "Assignment Engineer Gagal",
+            err.message ||
+            "Gagal menyimpan assignment."
+        );
+
+    } finally {
+
+        setConfirmLoading(false);
 
     }
 
@@ -603,7 +685,10 @@ async function saveEngineer() {
 
         if (!newEngineer.code.trim()) {
 
-            alert("Kode Engineer wajib diisi.");
+            toast.warning(
+                "Engineer",
+                "Kode Engineer wajib diisi."
+            );
 
             return;
 
@@ -611,7 +696,10 @@ async function saveEngineer() {
 
         if (!newEngineer.name.trim()) {
 
-            alert("Nama Engineer wajib diisi.");
+            toast.warning(
+                "Engineer",
+                "Nama Engineer wajib diisi."
+            );
 
             return;
 
@@ -683,14 +771,11 @@ async function saveEngineer() {
 
         }
 
-        alert(
-
+        toast.success(
+            "Engineer",
             editMode
-
                 ? "Engineer berhasil diperbarui."
-
                 : "Engineer berhasil ditambahkan."
-
         );
 
         setEditMode(false);
@@ -712,7 +797,11 @@ async function saveEngineer() {
 
     catch (err) {
 
-        alert(err.message);
+        toast.error(
+            "Engineer Gagal",
+            err.message ||
+            "Gagal menyimpan engineer."
+        );
 
     }
 
@@ -765,7 +854,7 @@ async function saveEngineer() {
             <div className="settings-content">
 
                 <h2 className="settings-title">
-                    Team Rotation
+                    Rotasi Tim
                 </h2>
 
                 <div className="rotation-grid">
@@ -779,11 +868,11 @@ async function saveEngineer() {
                         <div className="rotation-card-header">
 
                             <h3>
-                                Current Operational
+                                Operasional Saat Ini
                             </h3>
 
                             <span className="rotation-status active">
-                                ACTIVE
+                                AKTIF
                             </span>
 
                         </div>
@@ -793,7 +882,7 @@ async function saveEngineer() {
                             <div className="rotation-row">
 
                                 <span>
-                                    Period
+                                    Periode
                                 </span>
 
                                 <strong>
@@ -836,7 +925,7 @@ async function saveEngineer() {
                                 </div>
 
                                 <strong>
-                                    {akrMembers.length} Engineer
+                                    {akrMembers.length} PIC
                                 </strong>
 
                             </div>
@@ -900,7 +989,7 @@ async function saveEngineer() {
                                 </div>
 
                                 <strong>
-                                    {hoMembers.length} Engineer
+                                    {hoMembers.length} PIC
                                 </strong>
 
                             </div>
@@ -943,11 +1032,11 @@ async function saveEngineer() {
                         <div className="rotation-card-header">
 
                             <h3>
-                                Next Operational
+                                Operasional Berikutnya
                             </h3>
 
                             <span className="rotation-status next">
-                                NEXT
+                                SELANJUTNYA
                             </span>
 
                         </div>
@@ -957,7 +1046,7 @@ async function saveEngineer() {
                             <div className="rotation-row">
 
                                 <span>
-                                    Period
+                                    Periode
                                 </span>
 
                                 <strong>
@@ -1000,7 +1089,7 @@ async function saveEngineer() {
                                 </div>
 
                                 <strong>
-                                    {nextAKRMembers.length} Engineer
+                                    {nextAKRMembers.length} PIC
                                 </strong>
 
                             </div>
@@ -1064,7 +1153,7 @@ async function saveEngineer() {
                                 </div>
 
                                 <strong>
-                                    {nextHOMembers.length} Engineer
+                                    {nextHOMembers.length} PIC
                                 </strong>
 
                             </div>
@@ -1108,7 +1197,7 @@ async function saveEngineer() {
                                     <i className="bi bi-save"></i>
 
                                     <span>
-                                        Update Next Rotation
+                                        Update Rotasi Berikutnya
                                     </span>
 
                                 </button>
@@ -1130,7 +1219,7 @@ async function saveEngineer() {
 
                         <h3>
 
-                            Engineer Management
+                            PIC Manajemen
 
                         </h3>
 
@@ -1153,7 +1242,7 @@ async function saveEngineer() {
                             }}
                         >
 
-                            + Add Engineer
+                            + Tambah PIC
 
                         </button>
 
@@ -1165,7 +1254,7 @@ async function saveEngineer() {
 
                             <label>
 
-                                Assignment Period
+                                Periode Penugasan
 
                             </label>
 
@@ -1320,7 +1409,7 @@ async function saveEngineer() {
 
                                 <div className="engineer-summary-value">
 
-                                    {assignedAKR.length} Engineer
+                                    {assignedAKR.length} PIC
 
                                 </div>
 
@@ -1336,7 +1425,7 @@ async function saveEngineer() {
 
                                 <div className="engineer-summary-value">
 
-                                    {engineers.length - assignedAKR.length} Engineer
+                                    {engineers.length - assignedAKR.length} PIC
 
                                 </div>
 
@@ -1352,7 +1441,7 @@ async function saveEngineer() {
                             disabled={assignedAKR.length < 3}
                         >
 
-                            Save AKR / HO
+                            Simpan AKR / HO
 
                         </button>
 
@@ -1361,8 +1450,8 @@ async function saveEngineer() {
                 </div>
 
                 </div>
-                
-                
+
+
                 {/* Rotation Schedule */}
 
                 <div className="rotation-card rotation-schedule-card">
@@ -1371,7 +1460,7 @@ async function saveEngineer() {
 
                         <h3>
 
-                            Operational Assignment Schedule
+                            Jadwal Penugasan Operasional
 
                         </h3>
 
@@ -1387,9 +1476,9 @@ async function saveEngineer() {
 
                                     <tr>
 
-                                        <th>Year</th>
+                                        <th>Tahun</th>
 
-                                        <th>Month</th>
+                                        <th>Bulan</th>
 
                                         <th>Status</th>
 
@@ -1397,9 +1486,9 @@ async function saveEngineer() {
 
                                         <th>Head Office</th>
 
-                                        <th>Updated By</th>
+                                        <th>Diperbarui Oleh</th>
 
-                                        <th>Updated At</th>
+                                        <th>Diperbarui Pada</th>
 
                                     </tr>
 
@@ -1441,7 +1530,7 @@ async function saveEngineer() {
                                                     item.month === current.month ? (
 
                                                         <span className="rotation-status active">
-                                                            ACTIVE
+                                                            AKTIF
                                                         </span>
 
                                                     ) : next &&
@@ -1449,13 +1538,13 @@ async function saveEngineer() {
                                                     item.month === next.month ? (
 
                                                         <span className="rotation-status next">
-                                                            NEXT
+                                                            SELANJUTNYA
                                                         </span>
 
                                                     ) : (
 
                                                         <span className="rotation-status scheduled">
-                                                            SCHEDULED
+                                                            DIJADWALKAN
                                                         </span>
 
                                                     )}
@@ -1486,7 +1575,7 @@ async function saveEngineer() {
                                                         </span>
 
                                                         <span className="schedule-engineer-count-label">
-                                                            Engineer
+                                                            PIC
                                                         </span>
 
                                                     </button>
@@ -1517,7 +1606,7 @@ async function saveEngineer() {
                                                         </span>
 
                                                         <span className="schedule-engineer-count-label">
-                                                            Engineer
+                                                            PIC
                                                         </span>
 
                                                     </button>
@@ -1664,13 +1753,13 @@ async function saveEngineer() {
                             <div>
 
                                 <h3>
-                                    Engineer Assignment
+                                    Penugasan PIC
                                 </h3>
 
                                 <p>
                                     {MONTHS[scheduleAssignment.month]}{" "}
                                     {scheduleAssignment.year}
-                                    {" · "}
+                                    {" Â· "}
                                     {scheduleAssignment.location === "AKR"
                                         ? "HO - AKR Tower"
                                         : "Head Office"}
@@ -1685,7 +1774,7 @@ async function saveEngineer() {
                                     setShowScheduleAssignment(false)
                                 }
                             >
-                                ×
+                                X
                             </button>
 
                         </div>
@@ -1707,11 +1796,11 @@ async function saveEngineer() {
                                     </div>
 
                                     <strong>
-                                        No Data
+                                        Tidak ada data
                                     </strong>
 
                                     <span>
-                                        Belum ada engineer yang ditugaskan
+                                        Belum ada PIC yang ditugaskan
                                         pada lokasi ini untuk periode tersebut.
                                     </span>
 
@@ -1740,7 +1829,7 @@ async function saveEngineer() {
                                                     </strong>
 
                                                     <span>
-                                                        Engineer
+                                                        PIC
                                                     </span>
 
                                                 </div>
@@ -1761,6 +1850,32 @@ async function saveEngineer() {
                 </div>
 
             )}
+
+            <ConfirmDialog
+                open={confirmDialog.open}
+                type={confirmDialog.type}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                confirmText={confirmDialog.confirmText}
+                cancelText={confirmDialog.cancelText}
+                loading={confirmLoading}
+                onConfirm={() => {
+                    if (confirmDialog.action) {
+                        confirmDialog.action();
+                    }
+                }}
+                onCancel={() => {
+                    if (confirmLoading) {
+                        return;
+                    }
+
+                    setConfirmDialog(prev => ({
+                        ...prev,
+                        open: false,
+                        action: null
+                    }));
+                }}
+            />
 
         </div>
 

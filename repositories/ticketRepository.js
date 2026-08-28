@@ -554,7 +554,12 @@ function findClosedForSLA(
 /**
  * Assign PIC
  */
-function assignPIC(id, pic, picTeam) {
+function assignPIC(
+    id,
+    pic,
+    picTeam,
+    location
+) {
 
     db.prepare(`
         UPDATE tickets
@@ -562,6 +567,7 @@ function assignPIC(id, pic, picTeam) {
             pic = ?,
             engineer_team = ?,
             pic_team = ?,
+            location = ?,
             status = 'PROCESS',
             waiting_pic = 0,
             assigned_at = ?
@@ -570,6 +576,7 @@ function assignPIC(id, pic, picTeam) {
         pic,
         picTeam,
         picTeam,
+        location,
         nowWIB(),
         id
     );
@@ -584,7 +591,8 @@ function closeTicket(
     selesai,
     durasi,
     picSelesai,
-    picSelesaiTeam
+    picSelesaiTeam,
+    locationSelesai
 ) {
 
     db.prepare(`
@@ -594,13 +602,15 @@ function closeTicket(
             selesai = ?,
             durasi = ?,
             pic_selesai = ?,
-            pic_selesai_team = ?
+            pic_selesai_team = ?,
+            location_selesai = ?
         WHERE id = ?
     `).run(
         selesai,
         durasi,
         picSelesai,
         picSelesaiTeam,
+        locationSelesai,
         id
     );
 
@@ -1599,6 +1609,236 @@ function markOpenReminderSent(ticketIds)
 }
 
 /**
+ * ==========================================================
+ * Feedback Reminder
+ * ==========================================================
+ *
+ * Ambil customer/pelapor yang memiliki ticket
+ * pending Customer Feedback pada bulan berjalan.
+ *
+ * 1 customer = 1 reminder
+ *
+ * Setiap reminder dapat berisi beberapa ticket.
+ *
+ * Production:
+ *     findFeedbackReminderTickets(5)
+ *
+ * Testing:
+ *     findFeedbackReminderTickets(5, "2026-09-01")
+ *
+ * Limit = jumlah customer/pelapor per batch,
+ * BUKAN jumlah ticket.
+ */
+function findFeedbackReminderTickets(
+    limit = 5,
+    referenceDate = null
+) {
+
+    /*
+     * Kalau referenceDate diberikan,
+     * gunakan tanggal tersebut untuk testing.
+     *
+     * Kalau tidak diberikan,
+     * gunakan tanggal sekarang.
+     */
+
+    const dateReference =
+        referenceDate ||
+        new Date().toISOString();
+
+
+    /*
+     * Ambil YYYY-MM dari tanggal referensi.
+     */
+
+    const yearMonth =
+        dateReference.substring(0, 7);
+
+
+    /*
+     * Ambil seluruh ticket yang memenuhi syarat.
+     *
+     * Belum dilakukan LIMIT di SQL karena kita
+     * harus mengelompokkan ticket berdasarkan chatId
+     * terlebih dahulu.
+     */
+
+    const tickets =
+        db.prepare(`
+            SELECT
+                t.id,
+                t.nama,
+                t.nomor,
+                t.chatId,
+                t.cabang,
+                t.kendala,
+                t.waktu,
+                t.selesai,
+                t.pic,
+                t.pic_selesai,
+                t.feedback_sent,
+                t.feedback_sent_at,
+                t.feedback_reminder_sent_at,
+                t.location,
+                t.location_selesai
+
+            FROM tickets t
+
+            LEFT JOIN feedback f
+                ON f.ticket_id = t.id
+
+            WHERE
+
+                /* ==================================================
+                   Feedback sudah pernah dikirim
+                ================================================== */
+
+                t.feedback_sent = 1
+
+
+                /* ==================================================
+                   Hanya ticket bulan referensi
+                ================================================== */
+
+                AND strftime(
+                    '%Y-%m',
+                    t.waktu
+                ) = ?
+
+
+                /* ==================================================
+                   Customer belum mengisi feedback
+                ================================================== */
+
+                AND f.id IS NULL
+
+
+                /* ==================================================
+                   Belum pernah mendapat reminder
+                ================================================== */
+
+                AND t.feedback_reminder_sent_at IS NULL
+
+
+                /* ==================================================
+                   Chat WhatsApp harus tersedia
+                ================================================== */
+
+                AND t.chatId IS NOT NULL
+
+                AND TRIM(t.chatId) <> ''
+
+
+            ORDER BY
+                t.waktu ASC
+        `)
+        .all(
+            yearMonth
+        );
+
+
+    /*
+     * Kelompokkan ticket berdasarkan chatId.
+     *
+     * Satu chatId = satu customer/pelapor.
+     */
+
+    const grouped =
+        new Map();
+
+
+    for (const ticket of tickets) {
+
+        const chatId =
+            String(ticket.chatId).trim();
+
+
+        if (!grouped.has(chatId)) {
+
+            grouped.set(
+                chatId,
+                {
+                    chatId,
+
+                    nama:
+                        ticket.nama ||
+                        "Bapak/Ibu",
+
+                    nomor:
+                        ticket.nomor ||
+                        "",
+
+                    tickets: []
+
+                }
+            );
+
+        }
+
+
+        grouped
+            .get(chatId)
+            .tickets
+            .push(ticket);
+
+    }
+
+
+    /*
+     * Ambil maksimal sejumlah customer
+     * sesuai limit batch.
+     *
+     * Contoh:
+     * limit = 5
+     * berarti maksimal 5 customer
+     * per batch.
+     */
+
+    return Array
+        .from(grouped.values())
+        .slice(0, limit)
+        .map(customer => ({
+
+            chatId:
+                customer.chatId,
+
+            nama:
+                customer.nama,
+
+            nomor:
+                customer.nomor,
+
+            ticketCount:
+                customer.tickets.length,
+
+            tickets:
+                customer.tickets
+
+        }));
+
+}
+
+/**
+ * Tandai ticket bahwa reminder
+ * sudah berhasil dikirim.
+ */
+function markFeedbackReminderSent(
+    ticketId
+) {
+
+    db.prepare(`
+        UPDATE tickets
+        SET
+            feedback_reminder_sent_at = ?
+        WHERE id = ?
+    `).run(
+        nowWIB(),
+        ticketId
+    );
+
+}
+
+/**
  * Feedback Google Form
  */
 function markFeedbackSent(ticketId) {
@@ -1803,6 +2043,11 @@ module.exports = {
 
     findProcessFromPreviousDate,
 
-    autoCloseProcess
+    autoCloseProcess,
+
+    findFeedbackReminderTickets,
+
+    markFeedbackReminderSent
+
 
 };

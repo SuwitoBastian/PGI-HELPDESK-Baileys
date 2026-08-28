@@ -52,12 +52,11 @@ function getKendalaType(kendala = "") {
 
 
     // ==========================================================
-    // PRINTER TERTUKAR / TERTUKER
+    // PRINTER TERTUKAR / TERTUKER / TERBALIK
     // ==========================================================
 
     const isTukar =
-        /\btertukar\b/i.test(text) ||
-        /\btertuker\b/i.test(text);
+        /\b(?:tertukar|tertuker|ketuker|ketukar|terbalik|kebalik)\b/i.test(text);
 
 
     const isPrinter =
@@ -68,17 +67,64 @@ function getKendalaType(kendala = "") {
         /\bhasil\s+(print|cetak)\b/i.test(text);
 
 
-    const isKwitansiBarcode =
-        /\bkwitansi\b/i.test(text) &&
-        /\bbarcode\b/i.test(text);
+    /*
+     * Barcode
+     *
+     * barcode
+     * bacode
+     */
 
+    const isBarcode =
+        /\b(?:barcode|bacode)\b/i.test(text);
+
+
+    /*
+     * Thermal + Barcode
+     *
+     * Contoh:
+     * thermal dan barcode tertukar
+     * hasil thermal dan barcode tertuker
+     * thermal dan bacode terbalik
+     */
+
+    const isThermalBarcode =
+        /\bthermal\b/i.test(text) &&
+        isBarcode;
+
+
+    /*
+     * Kwitansi + Barcode
+     *
+     * Mendukung beberapa typo umum:
+     *
+     * kwitansi
+     * kwitasi
+     * kwintansi
+     * kwitnasi
+     */
+
+    const isKwitansi =
+        /\b(?:kwitansi|kwitasi|kwintansi|kwitnasi)\b/i.test(text);
+
+
+    const isKwitansiBarcode =
+        isKwitansi &&
+        isBarcode;
+
+
+    /*
+     * Semua kondisi yang berhubungan dengan
+     * printer barcode / thermal dianggap
+     * PRINTER_TERTUKAR.
+     */
 
     if (
         isTukar &&
         (
             isPrinter ||
             isHasilPrint ||
-            isKwitansiBarcode
+            isKwitansiBarcode ||
+            isThermalBarcode
         )
     ) {
 
@@ -87,13 +133,13 @@ function getKendalaType(kendala = "") {
     }
 
 
-
     // ==========================================================
     // TV
     // ==========================================================
 
     const isTV =
         /\btv\b/i.test(text);
+
 
     if (isTV) {
 
@@ -112,11 +158,6 @@ function getKendalaType(kendala = "") {
         /\binternet\b/i.test(text);
 
 
-    /*
-     * Semua laporan WiFi / Internet
-     * masuk Auto Troubleshooting WIFI.
-     */
-
     if (isWifi) {
 
         return "WIFI";
@@ -129,6 +170,7 @@ function getKendalaType(kendala = "") {
     // ==========================================================
 
     return null;
+
 }
 
 function getKendalaTemplate(kendala = "") {
@@ -144,7 +186,7 @@ function getKendalaTemplate(kendala = "") {
     // ==========================================================
 
     const isPrinterTertukar =
-        text.includes("tertukar") &&
+        /\b(?:tertukar|tertuker|ketuker|ketukar|terbalik|kebalik)\b/i.test(text) &&
         text.includes("printer") &&
         (
             text.includes("barcode") ||
@@ -278,11 +320,11 @@ Mohon lakukan sesuai urutan di atas. 🙏
 ━━━━━━━━━━━━━━━━━━━━━━
 Setelah melakukan langkah di atas, silakan balas:
 
-✅ *BERHASIL*
-❌ *BELUM BERHASIL*
+1. *BERHASIL*
+2. *BELUM BERHASIL*
 
 ℹ️ *Informasi:*
-*SILAKAN BALAS DENGAN MENGETIK SALAH SATU KATA DI ATAS TANPA EMOJI/ICON*
+*Silakan balas dengan mengetik angka 1 atau 2, atau salah satu kata diatas*
 
 🤖 Sistem akan melanjutkan proses sesuai hasil penanganan.
 
@@ -525,11 +567,11 @@ https://youtu.be/xFcYzBdXUpA?si=CeLGiJrpMv2V2IFg
 
 Setelah dicoba, balas:
 
-✅ *BERHASIL*
-❌ *BELUM BERHASIL*
+1. *BERHASIL*
+2. *BELUM BERHASIL*
 
 ℹ️ *Informasi:*
-*SILAKAN BALAS DENGAN MENGETIK SALAH SATU KATA DI ATAS TANPA EMOJI/ICON*`
+*Silakan balas dengan mengetik angka 1 atau 2, atau salah satu kata diatas*`
     );
 
 }
@@ -644,6 +686,7 @@ Terima kasih atas kerja samanya 🙏`
     );
 
 }
+
 
 /* ==========================================================
    DONE - Choose Ticket

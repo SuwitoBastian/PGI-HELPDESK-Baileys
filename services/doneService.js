@@ -7,17 +7,23 @@ const { nowWIB } =
 const engineerService =
     require("./engineerService");
 
+const dashboardLocationService =
+    require("./dashboard/dashboardLocationService");
+
+
 function getTicketsByPIC(pic){
 
     return repository.findProcessByPIC(pic);
 
 }
 
+
 function getProcessByNomor(nomor){
 
     return repository.findProcessByNomor(nomor);
 
 }
+
 
 // ======================================
 // Ambil semua ticket yang masih PROCESS
@@ -28,6 +34,34 @@ function getProcessTickets(){
     return repository.findProcess();
 
 }
+
+
+// ======================================
+// Tentukan Location Engineer
+// ======================================
+
+function getEngineerLocation(engineerCode) {
+
+    const akrEngineers =
+        dashboardLocationService
+            .getCurrentLocationEngineers("AKR");
+
+    const isAKR =
+        akrEngineers.some(
+            engineer =>
+                engineer.code === engineerCode
+        );
+
+    return isAKR
+        ? "AKR"
+        : "HO";
+
+}
+
+
+// ======================================
+// CLOSE TICKET
+// ======================================
 
 function close(ticket, picSelesai, kodePIC) {
 
@@ -49,11 +83,26 @@ function close(ticket, picSelesai, kodePIC) {
 
     let picSelesaiTeam = null;
 
+    let locationSelesai = null;
+
+
+    // ======================================
+    // SYSTEM AUTO CLOSE
+    // ======================================
+
     if (picSelesai === "SYSTEM") {
 
         picSelesaiTeam = "AUTO";
 
-    } else {
+        locationSelesai = null;
+
+    }
+
+    // ======================================
+    // NORMAL CLOSE
+    // ======================================
+
+    else {
 
         const engineer =
             engineerService.getByCode(kodePIC);
@@ -62,7 +111,19 @@ function close(ticket, picSelesai, kodePIC) {
             engineer
                 ? engineer.team
                 : null;
+
+
+        if (engineer) {
+
+            locationSelesai =
+                getEngineerLocation(
+                    engineer.code
+                );
+
+        }
+
     }
+
 
     repository.closeTicket(
 
@@ -74,11 +135,14 @@ function close(ticket, picSelesai, kodePIC) {
 
         picSelesai,        // pic_selesai
 
-        picSelesaiTeam     // pic_selesai_team
+        picSelesaiTeam,    // pic_selesai_team
+
+        locationSelesai    // location_selesai
 
     );
 
 }
+
 
 module.exports = {
 

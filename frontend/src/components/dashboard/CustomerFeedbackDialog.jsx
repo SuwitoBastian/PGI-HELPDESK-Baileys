@@ -4,15 +4,19 @@ import {
     X,
     Star,
     MessageSquareText,
-    Clock3
+    Clock3,
+    Bell
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
 import {
     getFeedback,
-    exportFeedbackExcel
+    exportFeedbackExcel,
+    startFeedbackReminder
 } from "../../api";
+
+import useToast from "../../hooks/useToast";
 
 
 export default function CustomerFeedbackDialog({
@@ -23,14 +27,21 @@ export default function CustomerFeedbackDialog({
 
 }) {
 
+
+    const toast = useToast();
+
+
     const [keyword, setKeyword] =
         useState("");
+
 
     const [startDate, setStartDate] =
         useState("");
 
+
     const [endDate, setEndDate] =
         useState("");
+
 
     /*
     ==========================================================
@@ -45,11 +56,131 @@ export default function CustomerFeedbackDialog({
     const [rows, setRows] =
         useState([]);
 
+
     const [summary, setSummary] =
         useState(statistics);
 
+
     const [loading, setLoading] =
         useState(false);
+
+
+    const [
+        reminderLoading,
+        setReminderLoading
+    ] = useState(false);
+
+
+    /* ==========================================================
+       FEEDBACK REMINDER
+    ========================================================== */
+
+    async function handleFeedbackReminder() {
+
+        if (reminderLoading) {
+            return;
+        }
+
+
+        try {
+
+            setReminderLoading(true);
+
+
+            const response =
+                await startFeedbackReminder();
+
+
+            toast.success(
+                "Feedback Reminder",
+                response?.message ||
+                "Feedback Reminder berhasil dimulai. Sistem sedang memproses reminder secara background."
+            );
+
+
+        } catch (err) {
+
+            console.error(
+                "Feedback Reminder Error:",
+                err
+            );
+
+
+            toast.error(
+                "Feedback Reminder Gagal",
+                err.message ||
+                "Gagal menjalankan feedback reminder."
+            );
+
+
+        } finally {
+
+            setReminderLoading(false);
+
+        }
+
+    }
+
+
+    /*
+    ==========================================================
+    AUTO DATE FILTER - CUSTOMER FEEDBACK
+    ==========================================================
+
+    ALL LOCATION
+    → Semua histori
+
+    AKR / HO
+    → Bulan berjalan sampai hari ini
+    ==========================================================
+    */
+
+    useEffect(() => {
+
+        // ALL LOCATION
+        // Tidak menggunakan filter tanggal
+        if (location === "ALL") {
+
+            setStartDate("");
+            setEndDate("");
+
+            return;
+        }
+
+
+        // LOCATION
+        // Otomatis bulan berjalan
+        const now = new Date();
+
+
+        const year =
+            now.getFullYear();
+
+
+        const month =
+            String(
+                now.getMonth() + 1
+            ).padStart(2, "0");
+
+
+        const day =
+            String(
+                now.getDate()
+            ).padStart(2, "0");
+
+
+        const startDate =
+            `${year}-${month}-01`;
+
+
+        const endDate =
+            `${year}-${month}-${day}`;
+
+
+        setStartDate(startDate);
+        setEndDate(endDate);
+
+    }, [location]);
 
 
     const PAGE_SIZE = 10;
@@ -307,7 +438,7 @@ export default function CustomerFeedbackDialog({
 
                 <span className="badge-feedback">
 
-                    Received
+                    Diterima
 
                 </span>
 
@@ -320,7 +451,7 @@ export default function CustomerFeedbackDialog({
 
             <span className="badge-waiting">
 
-                Waiting
+                Menunggu
 
             </span>
 
@@ -383,21 +514,22 @@ export default function CustomerFeedbackDialog({
 
                         <h2>
 
-                            Customer Feedback
+                            Feedback Customer
 
                         </h2>
 
 
                         <p>
 
-                            Monitor customer satisfaction and engineer performance after ticket completion.
+                            Pantau kepuasan customer dan
+                            performa PIC setelah tiket selesai.
 
                         </p>
 
 
                         <span className="feedback-last-update">
 
-                            Last updated :{" "}
+                            Terakhir diperbarui :{" "}
 
                             {
                                 new Date()
@@ -414,13 +546,26 @@ export default function CustomerFeedbackDialog({
                     <div className="feedback-header-action">
 
                         <button
+                            className="feedback-reminder-btn"
+                            onClick={handleFeedbackReminder}
+                            disabled={reminderLoading}
+                        >
 
-                            className="feedback-export-btn"
+                            <Bell
+                                size={12}
+                            />
 
-                            onClick={
-                                handleExport
+                            {reminderLoading
+                                ? "Mengirim..."
+                                : "Kirim Reminder"
                             }
 
+                        </button>
+
+
+                        <button
+                            className="feedback-export-btn"
+                            onClick={handleExport}
                         >
 
                             <Download
@@ -433,13 +578,8 @@ export default function CustomerFeedbackDialog({
 
 
                         <button
-
                             className="feedback-close-btn"
-
-                            onClick={
-                                onClose
-                            }
-
+                            onClick={onClose}
                         >
 
                             <X
@@ -474,7 +614,7 @@ export default function CustomerFeedbackDialog({
 
                                 <small>
 
-                                    Average Response
+                                    Rata-rata Respons
 
                                 </small>
 
@@ -492,7 +632,7 @@ export default function CustomerFeedbackDialog({
 
                                 <span>
 
-                                    Average customer response rating
+                                    Rata-rata penilaian respons customer
 
                                 </span>
 
@@ -516,7 +656,7 @@ export default function CustomerFeedbackDialog({
 
                                 <small>
 
-                                    Average Solution
+                                    Rata-rata Penyelesaian
 
                                 </small>
 
@@ -534,7 +674,7 @@ export default function CustomerFeedbackDialog({
 
                                 <span>
 
-                                    Average solution satisfaction
+                                    Rata-rata kepuasan terhadap penyelesaian
 
                                 </span>
 
@@ -689,7 +829,7 @@ export default function CustomerFeedbackDialog({
 
                             <label>
 
-                                Location
+                                Lokasi
 
                             </label>
 
@@ -712,7 +852,7 @@ export default function CustomerFeedbackDialog({
 
                                 <option value="ALL">
 
-                                    All Location
+                                    Semua Lokasi
 
                                 </option>
 
@@ -762,7 +902,7 @@ export default function CustomerFeedbackDialog({
                                     )
                                 }
 
-                                placeholder="Cari cabang, engineer, kendala, komentar..."
+                                placeholder="Cari cabang, PIC, kendala, komentar..."
 
                             />
 
@@ -789,7 +929,7 @@ export default function CustomerFeedbackDialog({
 
                                 <span>
 
-                                    Memuat data customer feedback...
+                                    Memuat data feedback customer...
 
                                 </span>
 
@@ -810,35 +950,35 @@ export default function CustomerFeedbackDialog({
                                 <tr>
 
                                     <th>
-                                        Ticket
+                                        Tiket
                                     </th>
 
                                     <th>
-                                        Feedback Activity
+                                        Aktivitas Feedback
                                     </th>
 
                                     <th>
-                                        Branch
+                                        Cabang
                                     </th>
 
                                     <th>
-                                        Issue
+                                        Kendala
                                     </th>
 
                                     <th>
-                                        Engineer
+                                        PIC
                                     </th>
 
                                     <th>
-                                        Response
+                                        Respons
                                     </th>
 
                                     <th>
-                                        Solution
+                                        Penyelesaian
                                     </th>
 
                                     <th>
-                                        Comment
+                                        Komentar
                                     </th>
 
                                     <th>
@@ -881,16 +1021,19 @@ export default function CustomerFeedbackDialog({
 
                                                         <h3>
 
-                                                            Belum ada aktivitas customer feedback.
+                                                            Belum ada aktivitas feedback customer.
 
-                                                            Aktivitas akan muncul setelah sistem mengirim link Google Form kepada customer.
+                                                            Aktivitas akan muncul setelah sistem
+                                                            mengirim link Google Form kepada customer.
 
                                                         </h3>
 
 
                                                         <p>
 
-                                                            Feedback Google Form akan muncul secara otomatis setelah customer mengisi form yang dikirim oleh sistem.
+                                                            Feedback Google Form akan muncul secara
+                                                            otomatis setelah customer mengisi form
+                                                            yang dikirim oleh sistem.
 
                                                         </p>
 
@@ -1050,8 +1193,10 @@ export default function CustomerFeedbackDialog({
                                                             >
 
                                                                 {
+
                                                                     item.comment ||
                                                                     "-"
+
                                                                 }
 
                                                             </div>
@@ -1062,9 +1207,11 @@ export default function CustomerFeedbackDialog({
                                                         <td>
 
                                                             {
+
                                                                 renderStatus(
                                                                     item
                                                                 )
+
                                                             }
 
                                                         </td>
@@ -1091,7 +1238,7 @@ export default function CustomerFeedbackDialog({
 
                         <div className="page-info">
 
-                            Showing{" "}
+                            Menampilkan{" "}
 
                             {
                                 rows.length === 0
@@ -1110,13 +1257,13 @@ export default function CustomerFeedbackDialog({
                                     )
                             }
 
-                            {" "}of{" "}
+                            {" dari "}
 
                             {
                                 rows.length
                             }
 
-                            {" "}feedback
+                            {" feedback"}
 
                         </div>
 

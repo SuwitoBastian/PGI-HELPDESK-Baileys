@@ -5,8 +5,11 @@ import {
     Star,
     ArrowRight
 } from "lucide-react";
+
 import { useMemo, useState } from "react";
+
 import CustomerFeedbackDialog from "./CustomerFeedbackDialog";
+
 
 function formatTime(dateString) {
 
@@ -18,6 +21,7 @@ function formatTime(dateString) {
     });
 
 }
+
 
 function getLocationLabel(branch) {
 
@@ -36,12 +40,14 @@ function getLocationLabel(branch) {
 
 }
 
+
 function renderStars(response = 0, solution = 0) {
 
     const rating = Math.round(
         ((Number(response) || 0) +
         (Number(solution) || 0)) / 2
     );
+
 
     return (
 
@@ -52,7 +58,11 @@ function renderStars(response = 0, solution = 0) {
                 <Star
                     key={index}
                     size={14}
-                    fill={index < rating ? "currentColor" : "none"}
+                    fill={
+                        index < rating
+                            ? "currentColor"
+                            : "none"
+                    }
                 />
 
             ))}
@@ -63,6 +73,7 @@ function renderStars(response = 0, solution = 0) {
 
 }
 
+
 export default function CustomerFeedbackActivityCard({
 
     feedback = [],
@@ -71,31 +82,36 @@ export default function CustomerFeedbackActivityCard({
 
 }) {
 
-    const [openDialog, setOpenDialog] = useState(false);
 
-    const recentFeedback = useMemo(() => {
+    const [openDialog, setOpenDialog] =
+        useState(false);
 
-        return [...feedback]
-            .sort(
-                (a, b) =>
-                    new Date(
-                        b.feedback_at ||
-                        b.feedback_sent_at ||
-                        b.selesai ||
-                        b.assigned_at ||
-                        b.waktu
-                    ) -
-                    new Date(
-                        a.feedback_at ||
-                        a.feedback_sent_at ||
-                        a.selesai ||
-                        a.assigned_at ||
-                        a.waktu
-                    )
-            )
-            .slice(0, 5);
 
-    }, [feedback]);
+    const recentFeedback =
+        useMemo(() => {
+
+            return [...feedback]
+                .sort(
+                    (a, b) =>
+                        new Date(
+                            b.feedback_at ||
+                            b.feedback_sent_at ||
+                            b.selesai ||
+                            b.assigned_at ||
+                            b.waktu
+                        ) -
+                        new Date(
+                            a.feedback_at ||
+                            a.feedback_sent_at ||
+                            a.selesai ||
+                            a.assigned_at ||
+                            a.waktu
+                        )
+                )
+                .slice(0, 5);
+
+        }, [feedback]);
+
 
     function getStatus(item) {
 
@@ -103,27 +119,35 @@ export default function CustomerFeedbackActivityCard({
 
             return {
 
-                icon: <CheckCircle2 size={18} />,
+                icon:
+                    <CheckCircle2 size={18} />,
 
-                color: "success",
+                color:
+                    "success",
 
-                label: "Received"
+                label:
+                    "Diterima"
 
             };
 
         }
 
+
         return {
 
-            icon: <Clock3 size={18} />,
+            icon:
+                <Clock3 size={18} />,
 
-            color: "waiting",
+            color:
+                "waiting",
 
-            label: "Waiting Feedback"
+            label:
+                "Menunggu Feedback"
 
         };
 
     }
+
 
     return (
 
@@ -140,31 +164,35 @@ export default function CustomerFeedbackActivityCard({
                             <MessageSquareText size={18} />
 
                             <span>
-                                Customer Feedback Activity
+                                Aktivitas Feedback Customer
                             </span>
 
                         </div>
 
+
                         <p className="card-description">
 
-                            Monitoring feedback customer yang telah dikirim maupun yang masih menunggu respon.
+                            Monitoring feedback customer yang telah
+                            dikirim maupun yang masih menunggu respon.
 
                         </p>
 
                     </div>
+
 
                     <button
                         className="btn-link-inline"
                         onClick={() => setOpenDialog(true)}
                     >
 
-                        View All
+                        Lihat Semua
 
                         <ArrowRight size={16} />
 
                     </button>
 
                 </div>
+
 
                 <div className="card-content">
 
@@ -185,7 +213,8 @@ export default function CustomerFeedbackActivityCard({
 
                             <p>
 
-                                Aktivitas akan muncul setelah link Google Form dikirim ke customer.
+                                Aktivitas akan muncul setelah link
+                                Google Form dikirim ke customer.
 
                             </p>
 
@@ -197,22 +226,30 @@ export default function CustomerFeedbackActivityCard({
 
                             {recentFeedback.map(item => {
 
-                                const status = getStatus(item);
+                                const status =
+                                    getStatus(item);
+
 
                                 return (
 
                                     <div
-                                        key={item.ticket_id || item.id}
+                                        key={
+                                            item.ticket_id ||
+                                            item.id
+                                        }
                                         className="feedback-item"
                                     >
 
                                         <div
-                                            className={`feedback-status ${status.color}`}
+                                            className={
+                                                `feedback-status ${status.color}`
+                                            }
                                         >
 
                                             {status.icon}
 
                                         </div>
+
 
                                         <div className="feedback-body">
 
@@ -222,77 +259,105 @@ export default function CustomerFeedbackActivityCard({
 
                                                     <div className="feedback-branch">
 
-                                                        {getLocationLabel(item.branch)}
+                                                        {
+                                                            getLocationLabel(
+                                                                item.branch
+                                                            )
+                                                        }
 
                                                     </div>
 
-                                                        <div className="feedback-ticket">
 
-                                                            Ticket : {item.ticket_id || "-"}
+                                                    <div className="feedback-ticket">
+
+                                                        Tiket : {
+                                                            item.ticket_id ||
+                                                            "-"
+                                                        }
 
                                                     </div>
+
 
                                                     <div className="feedback-issue">
 
-                                                        {item.issue_category || "-"}
+                                                        {
+                                                            item.issue_category ||
+                                                            "-"
+                                                        }
 
                                                     </div>
 
                                                 </div>
 
+
                                                 <div className="feedback-time">
 
-                                                    {formatTime(
-                                                        item.feedback_status === "received"
-                                                            ? item.feedback_at
-                                                            : item.feedback_sent_at
-                                                    )}
+                                                    {
+                                                        formatTime(
+                                                            item.feedback_status === "received"
+                                                                ? item.feedback_at
+                                                                : item.feedback_sent_at
+                                                        )
+                                                    }
 
                                                 </div>
 
                                             </div>
 
+
                                             {item.feedback_status === "received" &&
                                                 renderStars(
                                                     item.response_rating,
                                                     item.solution_rating
-                                                )}
+                                                )
+                                            }
+
 
                                             <div
                                                 className="feedback-comment-box"
                                                 title={
                                                     item.feedback_status === "received"
                                                         ? item.comment
-                                                        : "Waiting customer response..."
+                                                        : "Menunggu respon customer..."
                                                 }
                                             >
 
                                                 "
+
                                                 {
                                                     item.feedback_status === "received"
                                                         ? (
                                                             item.comment ||
                                                             "Tidak ada komentar."
                                                         )
-                                                        : "Waiting customer response..."
+                                                        : "Menunggu respon customer..."
                                                 }
+
                                                 "
 
                                             </div>
+
 
                                             <div className="feedback-timeline">
 
                                                 <div>
 
-                                                    <strong>Closed</strong>
+                                                    <strong>
+                                                        Selesai
+                                                    </strong>
 
                                                     <span>
 
-                                                        {formatTime(item.selesai)}
+                                                        {
+                                                            formatTime(
+                                                                item.selesai
+                                                            )
+                                                        }
 
                                                     </span>
 
                                                 </div>
+
 
                                                 <div>
 
@@ -301,7 +366,7 @@ export default function CustomerFeedbackActivityCard({
                                                         {
                                                             item.feedback_status === "received"
                                                                 ? "Feedback"
-                                                                : "Link Sent"
+                                                                : "Link Terkirim"
                                                         }
 
                                                     </strong>
@@ -310,8 +375,12 @@ export default function CustomerFeedbackActivityCard({
 
                                                         {
                                                             item.feedback_status === "received"
-                                                                ? formatTime(item.feedback_at)
-                                                                : formatTime(item.feedback_sent_at)
+                                                                ? formatTime(
+                                                                    item.feedback_at
+                                                                )
+                                                                : formatTime(
+                                                                    item.feedback_sent_at
+                                                                )
                                                         }
 
                                                     </span>
@@ -320,8 +389,11 @@ export default function CustomerFeedbackActivityCard({
 
                                             </div>
 
+
                                             <div
-                                                className={`feedback-badge ${status.color}`}
+                                                className={
+                                                    `feedback-badge ${status.color}`
+                                                }
                                             >
 
                                                 {status.label}
@@ -343,6 +415,7 @@ export default function CustomerFeedbackActivityCard({
                 </div>
 
             </div>
+
 
             <CustomerFeedbackDialog
                 open={openDialog}

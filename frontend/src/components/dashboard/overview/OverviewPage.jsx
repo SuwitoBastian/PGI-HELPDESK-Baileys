@@ -37,7 +37,7 @@ export default function OverviewPage({
             ? "HO - AKR Tower"
             : isHO
                 ? "Head Office"
-                : "All Performance";
+                : "Semua Performa";
 
 
     const performanceSubtitle =
@@ -97,8 +97,8 @@ export default function OverviewPage({
     =====================================================
 
        ALL:
-         Location -> HO - AKR Tower
-         Support  -> Head Office
+         Lokasi -> HO - AKR Tower
+         Pendukung -> Head Office
 
        AKR:
          Selected Location -> HO - AKR Tower
@@ -169,7 +169,7 @@ export default function OverviewPage({
                             />
 
                             <span>
-                                Operational Rotation
+                                Rotasi Operasional
                             </span>
 
                         </div>
@@ -183,7 +183,7 @@ export default function OverviewPage({
 
                             <span className="performance-rotation-key">
 
-                                Current Period
+                                Periode Saat Ini
 
                             </span>
 
@@ -207,7 +207,7 @@ export default function OverviewPage({
 
                                 <span className="performance-rotation-key">
 
-                                    Location
+                                    Lokasi
 
                                 </span>
 
@@ -228,7 +228,7 @@ export default function OverviewPage({
 
                                     <span className="performance-rotation-key">
 
-                                        Location
+                                        Lokasi
 
                                     </span>
 
@@ -246,7 +246,7 @@ export default function OverviewPage({
 
                                     <span className="performance-rotation-key">
 
-                                        Support
+                                        Pendukung
 
                                     </span>
 
@@ -273,7 +273,7 @@ export default function OverviewPage({
 
                         <div className="performance-rotation-next-title">
 
-                            Next Rotation
+                            Rotasi Berikutnya
 
                         </div>
 

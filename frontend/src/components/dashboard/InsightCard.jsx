@@ -54,7 +54,7 @@ export default function InsightCard({
                     />
 
                     <span>
-                        Operational Insight
+                        Ringkasan Operasional
                     </span>
 
                 </div>

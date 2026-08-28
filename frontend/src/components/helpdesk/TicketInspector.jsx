@@ -285,7 +285,7 @@ function TicketInspector({
             <section className="inspector-card action-section">
 
                 <label>
-                    Action
+                    Aksi
                 </label>
 
                 <div className="action-buttons">
@@ -307,7 +307,7 @@ function TicketInspector({
                         >
 
                             <option value="">
-                                Assign PIC...
+                                PIC...
                             </option>
 
                             {picList.map((pic) => (

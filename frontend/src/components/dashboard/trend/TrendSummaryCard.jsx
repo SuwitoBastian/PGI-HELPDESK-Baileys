@@ -5,6 +5,7 @@ import {
     Flame
 } from "lucide-react";
 
+
 function formatDate(date) {
 
     if (!date) {
@@ -18,38 +19,82 @@ function formatDate(date) {
 
 }
 
+
 export default function TrendSummary({ summary }) {
 
     const cards = [
+
         {
-            title: "Total Ticket",
-            value: summary?.totalTicket ?? 0,
-            icon: ClipboardList,
-            description: "Total tiket pada periode terpilih",
-            color: "#2563eb"
+            title: "Total Tiket",
+
+            value:
+                summary?.totalTicket ?? 0,
+
+            icon:
+                ClipboardList,
+
+            description:
+                "Total tiket pada periode terpilih",
+
+            color:
+                "#2563eb"
         },
+
+
         {
-            title: "Average / Day",
-            value: summary?.averagePerDay ?? 0,
-            icon: TrendingUp,
-            description: "Rata-rata tiket setiap hari",
-            color: "#16a34a"
+            title: "Rata-rata / Hari",
+
+            value:
+                summary?.averagePerDay ?? 0,
+
+            icon:
+                TrendingUp,
+
+            description:
+                "Rata-rata tiket setiap hari",
+
+            color:
+                "#16a34a"
         },
+
+
         {
-            title: "Peak Day",
-            value: formatDate(summary?.peakDay),
-            icon: Trophy,
-            description: "Hari dengan tiket terbanyak",
-            color: "#f59e0b"
+            title: "Hari Tertinggi",
+
+            value:
+                formatDate(
+                    summary?.peakDay
+                ),
+
+            icon:
+                Trophy,
+
+            description:
+                "Hari dengan tiket terbanyak",
+
+            color:
+                "#f59e0b"
         },
+
+
         {
-            title: "Peak Ticket",
-            value: summary?.peakTicket ?? 0,
-            icon: Flame,
-            description: "Jumlah tiket tertinggi dalam sehari",
-            color: "#ef4444"
+            title: "Tiket Tertinggi",
+
+            value:
+                summary?.peakTicket ?? 0,
+
+            icon:
+                Flame,
+
+            description:
+                "Jumlah tiket tertinggi dalam sehari",
+
+            color:
+                "#ef4444"
         }
+
     ];
+
 
     return (
 
@@ -57,7 +102,9 @@ export default function TrendSummary({ summary }) {
 
             {cards.map((card) => {
 
-                const Icon = card.icon;
+                const Icon =
+                    card.icon;
+
 
                 return (
 
@@ -69,11 +116,18 @@ export default function TrendSummary({ summary }) {
                         <div
                             className="trend-card-accent"
                             style={{
-                                background: card.color
+                                background:
+                                    card.color
                             }}
                         />
 
+
                         <div className="trend-card-body">
+
+
+                            {/* =================================================
+                                HEADER
+                            ================================================= */}
 
                             <div className="trend-header">
 
@@ -83,37 +137,61 @@ export default function TrendSummary({ summary }) {
                                         className="trend-subtitle"
                                         style={{
                                             marginTop: 0,
-                                            textTransform: "uppercase",
+                                            textTransform:
+                                                "uppercase",
                                             fontWeight: 700,
-                                            letterSpacing: ".4px"
+                                            letterSpacing:
+                                                ".4px"
                                         }}
                                     >
+
                                         {card.title}
+
                                     </div>
 
                                 </div>
 
+
                                 <div
                                     className="trend-icon"
                                     style={{
-                                        background: `${card.color}15`
+                                        background:
+                                            `${card.color}15`
                                     }}
                                 >
+
                                     <Icon
                                         size={24}
-                                        color={card.color}
+                                        color={
+                                            card.color
+                                        }
                                         strokeWidth={2.2}
                                     />
+
                                 </div>
 
                             </div>
 
+
+                            {/* =================================================
+                                VALUE
+                            ================================================= */}
+
                             <div className="trend-value">
+
                                 {card.value}
+
                             </div>
 
+
+                            {/* =================================================
+                                DESCRIPTION
+                            ================================================= */}
+
                             <div className="trend-label">
+
                                 {card.description}
+
                             </div>
 
                         </div>

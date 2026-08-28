@@ -1,4 +1,12 @@
-const feedbackService = require("../services/feedbackService");
+const feedbackReminderService =
+    require("../services/feedbackReminderService");
+
+const feedbackService =
+    require("../services/feedbackService");
+
+const ticketRepository =
+    require("../repositories/ticketRepository");
+
 
 /* ==========================================================
    Submit Feedback
@@ -13,6 +21,7 @@ function submitFeedback(req, res) {
                 req.body
             );
 
+
         return res.status(201).json({
 
             success: true,
@@ -21,7 +30,8 @@ function submitFeedback(req, res) {
                 "Feedback berhasil dikirim.",
 
             data: {
-                id: result.lastInsertRowid
+                id:
+                    result.lastInsertRowid
             }
 
         });
@@ -32,7 +42,8 @@ function submitFeedback(req, res) {
 
             success: false,
 
-            message: err.message
+            message:
+                err.message
 
         });
 
@@ -66,7 +77,8 @@ function getLatestFeedback(req, res) {
 
             success: true,
 
-            data: feedback
+            data:
+                feedback
 
         });
 
@@ -76,7 +88,8 @@ function getLatestFeedback(req, res) {
 
             success: false,
 
-            message: err.message
+            message:
+                err.message
 
         });
 
@@ -101,12 +114,6 @@ function buildFilters(req) {
 
         location:
             req.query.location || null,
-
-        /*
-         * Team tetap diterima untuk
-         * compatibility dengan frontend
-         * atau request lama.
-         */
 
         team:
             req.query.team || "ALL",
@@ -147,7 +154,8 @@ function getAllFeedback(req, res) {
 
             success: true,
 
-            data: feedback,
+            data:
+                feedback,
 
             statistics
 
@@ -165,7 +173,8 @@ function getAllFeedback(req, res) {
 
             success: false,
 
-            message: err.message
+            message:
+                err.message
 
         });
 
@@ -196,7 +205,8 @@ function getStatistics(req, res) {
 
             success: true,
 
-            data: statistics
+            data:
+                statistics
 
         });
 
@@ -212,7 +222,8 @@ function getStatistics(req, res) {
 
             success: false,
 
-            message: err.message
+            message:
+                err.message
 
         });
 
@@ -250,7 +261,151 @@ async function exportExcel(req, res) {
 
             success: false,
 
-            message: err.message
+            message:
+                err.message
+
+        });
+
+    }
+
+}
+
+
+/* ==========================================================
+   Test Feedback Reminder
+========================================================== */
+
+/* ==========================================================
+   Test Feedback Reminder
+========================================================== */
+
+async function testFeedbackReminder(req, res) {
+
+    try {
+
+        const {
+            referenceDate
+        } = req.body;
+
+
+        /*
+         * referenceDate digunakan khusus untuk
+         * simulasi bulan reminder.
+         *
+         * Contoh:
+         *
+         * {
+         *     "referenceDate": "2026-09-02"
+         * }
+         *
+         * Kalau tidak dikirim,
+         * gunakan tanggal sekarang.
+         */
+
+        const result =
+            await feedbackReminderService.runReminder(
+                referenceDate || null
+            );
+
+
+        return res.json({
+
+            success: true,
+
+            data:
+                result
+
+        });
+
+
+    } catch (err) {
+
+        console.error(
+            "TEST FEEDBACK REMINDER ERROR:",
+            err
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                err.message
+
+        });
+
+    }
+
+}
+
+
+/* ==========================================================
+   Production Feedback Reminder
+========================================================== */
+
+function startFeedbackReminder(req, res) {
+
+    try {
+
+        /*
+         * Jalankan proses di background.
+         *
+         * Tidak menggunakan await.
+         *
+         * Jadi HTTP response langsung dikembalikan
+         * tanpa menunggu seluruh batch selesai.
+         */
+
+        feedbackReminderService
+            .runReminder()
+            .then((result) => {
+
+                console.log(
+                    "✅ Background Feedback Reminder selesai"
+                );
+
+                console.log(
+                    result
+                );
+
+            })
+            .catch((err) => {
+
+                console.error(
+                    "❌ Background Feedback Reminder gagal"
+                );
+
+                console.error(
+                    err
+                );
+
+            });
+
+
+        return res.status(202).json({
+
+            success: true,
+
+            message:
+                "Feedback Reminder berhasil dimulai."
+
+        });
+
+    } catch (err) {
+
+        console.error(
+            "START FEEDBACK REMINDER ERROR:",
+            err
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                err.message
 
         });
 
@@ -273,6 +428,10 @@ module.exports = {
 
     getStatistics,
 
-    exportExcel
+    exportExcel,
+
+    testFeedbackReminder,
+
+    startFeedbackReminder
 
 };

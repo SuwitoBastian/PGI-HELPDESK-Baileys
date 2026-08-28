@@ -13,7 +13,7 @@ import {
 const CARDS = [
   {
     key: 'open',
-    label: 'Open',
+    label: 'Terbuka',
     subtitle: 'Menunggu assignment',
     icon: <CircleAlert size={20} />,
     cls: 'kpi-open'
@@ -48,7 +48,7 @@ const CARDS = [
   },
   {
     key: 'autoResolved',
-    label: 'Auto Resolved',
+    label: 'Selesai Otomatis',
     subtitle: 'Diselesaikan oleh sistem',
     icon: <Bot size={20} />,
     cls: 'kpi-auto'

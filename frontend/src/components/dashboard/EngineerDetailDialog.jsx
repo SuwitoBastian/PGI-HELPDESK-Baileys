@@ -8,6 +8,7 @@ import {
     MapPin
 } from "lucide-react";
 
+
 // =====================================================
 // CAPACITY CLASS
 // =====================================================
@@ -35,6 +36,7 @@ function getCapacityClass(level) {
 
 }
 
+
 // =====================================================
 // CAPACITY LABEL
 // =====================================================
@@ -44,16 +46,16 @@ function getCapacityLabel(level) {
     switch (level) {
 
         case "LOW":
-            return "Available";
+            return "Tersedia";
 
         case "MEDIUM":
-            return "Busy";
+            return "Sibuk";
 
         case "HIGH":
-            return "High Load";
+            return "Beban Tinggi";
 
         case "FULL":
-            return "Full Capacity";
+            return "Kapasitas Penuh";
 
         default:
             return level || "-";
@@ -61,6 +63,7 @@ function getCapacityLabel(level) {
     }
 
 }
+
 
 // =====================================================
 // CAPACITY DESCRIPTION
@@ -71,16 +74,16 @@ function getCapacityDescription(level) {
     switch (level) {
 
         case "LOW":
-            return "Engineer memiliki kapasitas yang cukup untuk menerima assignment baru.";
+            return "PIC memiliki kapasitas yang cukup untuk menerima assignment baru.";
 
         case "MEDIUM":
-            return "Beban kerja engineer mulai meningkat namun masih dapat menerima assignment bila diperlukan.";
+            return "Beban kerja PIC mulai meningkat namun masih dapat menerima assignment bila diperlukan.";
 
         case "HIGH":
-            return "Beban kerja engineer cukup tinggi. Pertimbangkan engineer lain untuk assignment berikutnya.";
+            return "Beban kerja PIC cukup tinggi. Pertimbangkan PIC lain untuk assignment berikutnya.";
 
         case "FULL":
-            return "Engineer telah mencapai kapasitas maksimum. Disarankan mengalihkan assignment ke engineer lain.";
+            return "PIC telah mencapai kapasitas maksimum. Disarankan mengalihkan assignment ke PIC lain.";
 
         default:
             return "";
@@ -88,6 +91,7 @@ function getCapacityDescription(level) {
     }
 
 }
+
 
 // =====================================================
 // LOCATION LABEL
@@ -109,6 +113,7 @@ function getLocationLabel(location) {
     }
 
 }
+
 
 // =====================================================
 // COMPONENT
@@ -139,7 +144,7 @@ export default function EngineerDetailDialog({
 
         <Modal
             open={!!engineer}
-            title="Engineer Detail"
+            title="Detail PIC"
             onClose={onClose}
         >
 
@@ -198,7 +203,7 @@ export default function EngineerDetailDialog({
 
                         <span>
 
-                            Performance Score
+                            Skor Performa
 
                         </span>
 
@@ -231,7 +236,7 @@ export default function EngineerDetailDialog({
 
                             <span>
 
-                                Assigned
+                                Ditugaskan
 
                             </span>
 
@@ -246,7 +251,7 @@ export default function EngineerDetailDialog({
                             }
                         >
 
-                            {engineer.assigned ?? 0} Ticket
+                            {engineer.assigned ?? 0} Tiket
 
                         </strong>
 
@@ -263,7 +268,7 @@ export default function EngineerDetailDialog({
 
                             <span>
 
-                                Completed
+                                Selesai
 
                             </span>
 
@@ -272,7 +277,7 @@ export default function EngineerDetailDialog({
 
                         <strong>
 
-                            {engineer.completed ?? 0} Ticket
+                            {engineer.completed ?? 0} Tiket
 
                         </strong>
 
@@ -289,7 +294,7 @@ export default function EngineerDetailDialog({
 
                             <span>
 
-                                Process
+                                Dalam Proses
 
                             </span>
 
@@ -304,7 +309,7 @@ export default function EngineerDetailDialog({
                             }
                         >
 
-                            {engineer.process ?? 0} Ticket
+                            {engineer.process ?? 0} Tiket
 
                         </strong>
 
@@ -321,7 +326,7 @@ export default function EngineerDetailDialog({
 
                             <span>
 
-                                Contribution
+                                Kontribusi
 
                             </span>
 
@@ -347,7 +352,7 @@ export default function EngineerDetailDialog({
 
                     <div className="capacity-header">
 
-                        Workload Status
+                        Status Beban Kerja
 
                     </div>
 

@@ -1,8 +1,5 @@
 const db = require("../database/database");
 
-const dashboardLocationService =
-    require("../services/dashboard/dashboardLocationService");
-
 /* ==========================================================
    Create Feedback
 ========================================================== */
@@ -126,35 +123,6 @@ function findLatest(
     ========================================================
     */
 
-    const engineerNames =
-        dashboardLocationService
-            .getCurrentLocationNames(
-                normalizedLocation
-            );
-
-
-    /*
-    --------------------------------------------------------
-    Tidak ada engineer aktif di lokasi tersebut.
-    Jangan sampai fallback mengambil feedback lokasi lain.
-    --------------------------------------------------------
-    */
-
-    if (
-        engineerNames.length === 0
-    ) {
-
-        return [];
-
-    }
-
-
-    const placeholders =
-        engineerNames
-            .map(() => "?")
-            .join(", ");
-
-
     const sql = `
 
         SELECT
@@ -213,9 +181,7 @@ function findLatest(
 
             t.feedback_sent = 1
 
-            AND t.pic IN (
-                ${placeholders}
-            )
+            AND t.location_selesai = ?
 
 
         ORDER BY datetime(
@@ -245,7 +211,7 @@ function findLatest(
     return db
         .prepare(sql)
         .all(
-            ...engineerNames,
+            normalizedLocation,
             limit
         );
 
@@ -398,39 +364,12 @@ function findAll(filters = {}) {
 
     if (normalizedLocation) {
 
-        const engineerNames =
-            dashboardLocationService
-                .getCurrentLocationNames(
-                    normalizedLocation
-                );
-
-
-        /*
-         * Tidak ada engineer aktif di lokasi tersebut.
-         * Supaya tidak salah menampilkan seluruh feedback,
-         * langsung kembalikan hasil kosong.
-         */
-
-        if (engineerNames.length === 0) {
-
-            return [];
-
-        }
-
-
-        const placeholders =
-            engineerNames
-                .map(() => "?")
-                .join(", ");
-
-
         sql += `
-            AND t.pic IN (${placeholders})
+            AND t.location_selesai = ?
         `;
 
-
         params.push(
-            ...engineerNames
+            normalizedLocation
         );
 
     }
@@ -514,29 +453,142 @@ function findAll(filters = {}) {
 
 /* ==========================================================
    Statistics
+   ----------------------------------------------------------
+   Customer Feedback Activity:
+   - Jika tidak ada filter tanggal:
+     otomatis menggunakan bulan berjalan
+   - Jika ada filter tanggal:
+     gunakan tanggal yang diberikan
+   - Data lama tidak dihapus / diubah
+   - Ticket periode lama dianggap EXPIRED secara logic
 ========================================================== */
 
 function getStatistics(filters = {}) {
 
-    const rows =
-        findAll(filters);
+    const {
+        startDate = null,
+        endDate = null,
+        location = null,
+        team = "ALL",
+        keyword = ""
+    } = filters;
 
+
+    /*
+    ==========================================================
+    PERIODE DEFAULT
+    ==========================================================
+
+    Kalau Activity tidak memberikan tanggal,
+    otomatis gunakan:
+
+    tanggal 1 bulan berjalan
+            sampai
+    hari ini
+    */
+
+    let effectiveStartDate =
+        startDate;
+
+    let effectiveEndDate =
+        endDate;
+
+
+    if (!effectiveStartDate && !effectiveEndDate) {
+
+        const now =
+            new Date();
+
+        const year =
+            now.getFullYear();
+
+        const month =
+            String(
+                now.getMonth() + 1
+            ).padStart(2, "0");
+
+        const day =
+            String(
+                now.getDate()
+            ).padStart(2, "0");
+
+
+        effectiveStartDate =
+            `${year}-${month}-01`;
+
+        effectiveEndDate =
+            `${year}-${month}-${day}`;
+
+    }
+
+
+    /*
+    ==========================================================
+    AMBIL DATA
+    ==========================================================
+    */
+
+    const rows =
+        findAll({
+
+            startDate:
+                effectiveStartDate,
+
+            endDate:
+                effectiveEndDate,
+
+            location,
+
+            team,
+
+            keyword
+
+        });
+
+
+    /*
+    ==========================================================
+    TOTAL LINK TERKIRIM
+    ==========================================================
+    */
 
     const totalLinkSent =
         rows.length;
 
 
+    /*
+    ==========================================================
+    TOTAL FEEDBACK DITERIMA
+    ==========================================================
+    */
+
     const totalFeedback =
         rows.filter(
             row =>
-                row.feedback_status === "received"
+                row.feedback_status ===
+                "received"
         ).length;
 
 
-    const waitingFeedback =
-        totalLinkSent -
-        totalFeedback;
+    /*
+    ==========================================================
+    BELUM MENGISI
+    ==========================================================
+    */
 
+    const waitingFeedback =
+        rows.filter(
+            row =>
+                row.feedback_status ===
+                "waiting"
+        ).length;
+
+
+    /*
+    ==========================================================
+    RESPONSE RATING
+    ==========================================================
+    */
 
     const responseRatings =
         rows
@@ -546,9 +598,17 @@ function getStatistics(filters = {}) {
             )
             .map(
                 row =>
-                    Number(row.response_rating)
+                    Number(
+                        row.response_rating
+                    )
             );
 
+
+    /*
+    ==========================================================
+    SOLUTION RATING
+    ==========================================================
+    */
 
     const solutionRatings =
         rows
@@ -558,15 +618,24 @@ function getStatistics(filters = {}) {
             )
             .map(
                 row =>
-                    Number(row.solution_rating)
+                    Number(
+                        row.solution_rating
+                    )
             );
 
+
+    /*
+    ==========================================================
+    AVERAGE RESPONSE
+    ==========================================================
+    */
 
     const averageResponseRating =
         responseRatings.length
             ? (
                 responseRatings.reduce(
-                    (a, b) => a + b,
+                    (a, b) =>
+                        a + b,
                     0
                 ) /
                 responseRatings.length
@@ -574,17 +643,30 @@ function getStatistics(filters = {}) {
             : 0;
 
 
+    /*
+    ==========================================================
+    AVERAGE SOLUTION
+    ==========================================================
+    */
+
     const averageSolutionRating =
         solutionRatings.length
             ? (
                 solutionRatings.reduce(
-                    (a, b) => a + b,
+                    (a, b) =>
+                        a + b,
                     0
                 ) /
                 solutionRatings.length
             ).toFixed(2)
             : 0;
 
+
+    /*
+    ==========================================================
+    RESULT
+    ==========================================================
+    */
 
     return {
 

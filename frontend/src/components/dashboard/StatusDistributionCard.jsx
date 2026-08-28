@@ -32,7 +32,7 @@ const STATUS_CONFIG = [
 
     {
         key: "OPEN",
-        label: "Open",
+        label: "Terbuka",
         color: COLORS.OPEN
     },
 
@@ -108,6 +108,7 @@ export default function StatusDistributionCard({
     data
 
 }) {
+
 
     const total =
         Number(
@@ -278,7 +279,7 @@ export default function StatusDistributionCard({
                                     </strong>
 
                                     <span>
-                                        Total Ticket
+                                        Total Tiket
                                     </span>
 
                                 </>
@@ -292,12 +293,13 @@ export default function StatusDistributionCard({
                                     </strong>
 
                                     <span>
-                                        No Data
+                                        Tidak Ada Data
                                     </span>
 
                                 </>
 
                             )}
+
 
                         </div>
 
@@ -312,12 +314,17 @@ export default function StatusDistributionCard({
 
                         {statusData.map(
                             item => {
+
                                 const percent =
                                     total === 0
                                         ? null
                                         : Number(
-                                            ((item.value / total) * 100).toFixed(1)
+                                            (
+                                                (item.value / total) *
+                                                100
+                                            ).toFixed(1)
                                         );
+
                                 return (
 
                                     <div

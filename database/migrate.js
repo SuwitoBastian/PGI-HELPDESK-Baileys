@@ -107,9 +107,31 @@ function migrate() {
     );
 
     migration.addColumn(
-    "tickets",
-    "close_type",
-    "TEXT DEFAULT 'MANUAL'"
+        "tickets",
+        "feedback_reminder_sent_at",
+        "TEXT"
+    );
+
+    migration.addColumn(
+        "tickets",
+        "close_type",
+        "TEXT DEFAULT 'MANUAL'"
+    );
+
+    /* ==========================
+       Ticket Location
+    ========================== */
+
+    migration.addColumn(
+        "tickets",
+        "location",
+        "TEXT"
+    );
+
+    migration.addColumn(
+        "tickets",
+        "location_selesai",
+        "TEXT"
     );
 
     /* ==========================
@@ -143,6 +165,7 @@ function migrate() {
     console.log("✅ Database migration completed.");
 
 }
+
 if (require.main === module) {
     migrate();
 }

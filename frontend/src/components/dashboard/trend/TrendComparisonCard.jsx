@@ -5,13 +5,25 @@ import {
     Minus
 } from "lucide-react";
 
-export default function TrendComparisonCard({ comparison }) {
+
+export default function TrendComparisonCard({
+    comparison
+}) {
 
     if (!comparison) return null;
 
-    const isUp = comparison.trend === "up";
-    const isDown = comparison.trend === "down";
-    const isNew = comparison.isNew;
+
+    const isUp =
+        comparison.trend === "up";
+
+
+    const isDown =
+        comparison.trend === "down";
+
+
+    const isNew =
+        comparison.isNew;
+
 
     const color =
         isNew
@@ -22,6 +34,7 @@ export default function TrendComparisonCard({ comparison }) {
                     ? "#dc2626"
                     : "#6b7280";
 
+
     const Icon =
         isNew
             ? Sparkles
@@ -31,57 +44,86 @@ export default function TrendComparisonCard({ comparison }) {
                     ? TrendingDown
                     : Minus;
 
+
     const title =
         isNew
-            ? "New Activity"
+            ? "Aktivitas Baru"
             : isUp
-                ? "Performance Growth"
+                ? "Pertumbuhan Performa"
                 : isDown
-                    ? "Performance Declined"
-                    : "No Performance Change";
+                    ? "Penurunan Performa"
+                    : "Tidak Ada Perubahan Performa";
+
 
     const description =
         isNew
-            ? "No previous data available."
-            : "Compared to previous period.";
+            ? "Belum ada data pada periode sebelumnya."
+            : "Dibandingkan dengan periode sebelumnya.";
+
 
     return (
 
         <div className="trend-card">
 
+
             <div
                 className="trend-card-accent"
-                style={{ background: color }}
+                style={{
+                    background: color
+                }}
             />
 
+
             <div className="trend-card-body">
+
+
+                {/* =================================================
+                    HEADER
+                ================================================= */}
 
                 <div className="trend-header">
 
                     <div>
 
                         <div className="trend-title">
-                            Comparison
+
+                            Perbandingan
+
                         </div>
 
+
                         <div className="trend-subtitle">
-                            Ticket comparison with previous period.
+
+                            Perbandingan tiket dengan
+                            periode sebelumnya.
+
                         </div>
 
                     </div>
 
+
                     <div
                         className="trend-icon"
-                        style={{ background: `${color}15` }}
+                        style={{
+                            background:
+                                `${color}15`
+                        }}
                     >
+
                         <Icon
                             size={24}
                             color={color}
                             strokeWidth={2.3}
                         />
+
                     </div>
 
                 </div>
+
+
+                {/* =================================================
+                    HERO
+                ================================================= */}
 
                 <div className="trend-hero">
 
@@ -92,40 +134,74 @@ export default function TrendComparisonCard({ comparison }) {
                             fontSize: 52
                         }}
                     >
+
                         {
+
                             isNew
-                                ? "NEW"
-                                : `${Math.abs(comparison.percentage)}%`
+
+                                ? "BARU"
+
+                                : `${Math.abs(
+                                    comparison.percentage
+                                )}%`
+
                         }
+
                     </div>
+
 
                     <div className="trend-hero-title">
+
                         {title}
+
                     </div>
 
+
                     <div className="trend-subtitle">
+
                         {description}
+
                     </div>
 
                 </div>
 
+
                 <hr className="trend-divider" />
+
+
+                {/* =================================================
+                    STATISTICS
+                ================================================= */}
 
                 <div className="trend-list">
 
                     <StatRow
-                        label="Current"
-                        value={comparison.current}
+                        label="Periode Saat Ini"
+                        value={
+                            comparison.current
+                        }
                     />
 
-                    <StatRow
-                        label="Previous"
-                        value={comparison.previous}
-                    />
 
                     <StatRow
-                        label="Difference"
-                        value={`${comparison.difference > 0 ? "+" : ""}${comparison.difference}`}
+                        label="Periode Sebelumnya"
+                        value={
+                            comparison.previous
+                        }
+                    />
+
+
+                    <StatRow
+                        label="Selisih"
+                        value={
+                            `${
+                                comparison.difference > 0
+                                    ? "+"
+                                    : ""
+                            }${
+                                comparison.difference
+                            }`
+                        }
                         color={color}
                     />
 
@@ -138,6 +214,7 @@ export default function TrendComparisonCard({ comparison }) {
     );
 
 }
+
 
 function StatRow({
     label,
@@ -154,14 +231,23 @@ function StatRow({
                 <div className="trend-item-row">
 
                     <span className="trend-item-label">
+
                         {label}
+
                     </span>
+
 
                     <strong
                         className="trend-item-value"
-                        style={color ? { color } : undefined}
+                        style={
+                            color
+                                ? { color }
+                                : undefined
+                        }
                     >
+
                         {value}
+
                     </strong>
 
                 </div>

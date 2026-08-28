@@ -41,16 +41,16 @@ function getCapacityLabel(level) {
     switch (level) {
 
         case "LOW":
-            return "Available";
+            return "Tersedia";
 
         case "MEDIUM":
-            return "Busy";
+            return "Sibuk";
 
         case "HIGH":
-            return "High Load";
+            return "Beban Tinggi";
 
         case "FULL":
-            return "Full Capacity";
+            return "Kapasitas Penuh";
 
         default:
             return level || "-";
@@ -93,6 +93,7 @@ export default function EngineerLeaderboardCard({
     location = ""
 
 }) {
+
 
     const [
         selectedEngineer,
@@ -141,7 +142,7 @@ export default function EngineerLeaderboardCard({
                     />
 
                     <span>
-                        Engineer Leaderboard
+                        Peringkat PIC
                     </span>
 
                 </div>
@@ -149,7 +150,7 @@ export default function EngineerLeaderboardCard({
 
                 <p className="card-description">
 
-                    Performa engineer berdasarkan
+                    Performa PIC berdasarkan
                     penyelesaian tiket dan skor.
 
                 </p>
@@ -174,7 +175,7 @@ export default function EngineerLeaderboardCard({
 
                         <div className="leaderboard-empty">
 
-                            Belum ada data engineer.
+                            Belum ada data PIC.
 
                         </div>
 
@@ -239,7 +240,7 @@ export default function EngineerLeaderboardCard({
 
 
                                             {/* =============================================
-                                                ENGINEER
+                                                PIC
                                             ============================================= */}
 
                                             <div>
@@ -294,14 +295,14 @@ export default function EngineerLeaderboardCard({
 
                                                     Jangan tampilkan Team A / Team B.
 
-                                                    Cukup beri label engineer.
+                                                    Cukup beri label PIC.
                                                 ============================================= */}
 
                                                 {!showEngineerLocation && (
 
                                                     <div className="leaderboard-team">
 
-                                                        Engineer
+                                                        PIC
 
                                                     </div>
 
@@ -326,7 +327,7 @@ export default function EngineerLeaderboardCard({
 
                                             <span>
 
-                                                Score
+                                                Skor
 
                                             </span>
 
@@ -371,7 +372,7 @@ export default function EngineerLeaderboardCard({
                                         <div className="leaderboard-metric">
 
                                             <span>
-                                                Completed
+                                                Selesai
                                             </span>
 
                                             <strong>
@@ -381,7 +382,7 @@ export default function EngineerLeaderboardCard({
                                             </strong>
 
                                             <small>
-                                                Ticket
+                                                Tiket
                                             </small>
 
                                         </div>

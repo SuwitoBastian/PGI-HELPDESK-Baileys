@@ -27,6 +27,40 @@ function getLocationLabel(location) {
 
 
 // =====================================================
+// PERFORMANCE LABEL
+// =====================================================
+
+function getPerformanceLabel(status) {
+
+    switch (status) {
+
+        case "STANDBY":
+            return "Siaga";
+
+        case "EXCELLENT":
+            return "Sangat Baik";
+
+        case "GOOD":
+            return "Baik";
+
+        case "FAIR":
+            return "Cukup";
+
+        case "NEEDS ATTENTION":
+            return "Perlu Perhatian";
+
+        case "NO DATA":
+            return "Tidak Ada Data";
+
+        default:
+            return status || "Tidak Ada Data";
+
+    }
+
+}
+
+
+// =====================================================
 // PERFORMANCE CLASS
 // =====================================================
 
@@ -72,6 +106,12 @@ function LocationCard({
     const performanceClass =
         getPerformanceClass(
             location?.status
+        );
+
+
+    const performanceLabel =
+        getPerformanceLabel(
+            performance
         );
 
 
@@ -129,19 +169,21 @@ function LocationCard({
                 <span
                     className={
                         `team-status ${
-                            location?.status?.toLowerCase()
-                                .replace(/\s+/g, "-") || ""
+                            performance
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")
                         }`
                     }
                 >
 
                     <span className="status-dot"></span>
 
-                    {performance}
+                    {performanceLabel}
 
                 </span>
 
             </div>
+
 
             {/* =================================================
                 COMPLETION
@@ -150,7 +192,7 @@ function LocationCard({
             <div className="team-completion">
 
                 <small>
-                    Completion Rate
+                    Tingkat Penyelesaian
                 </small>
 
 
@@ -164,7 +206,9 @@ function LocationCard({
                         `team-performance ${performanceClass}`
                     }
                 >
-                    {performance}
+
+                    {performanceLabel}
+
                 </span>
 
             </div>
@@ -210,7 +254,7 @@ function LocationCard({
                 <div className="metric">
 
                     <span>
-                        Assigned
+                        Ditugaskan
                     </span>
 
                     <strong>
@@ -225,7 +269,7 @@ function LocationCard({
                 <div className="metric">
 
                     <span>
-                        Completed
+                        Selesai
                     </span>
 
                     <strong>
@@ -240,7 +284,7 @@ function LocationCard({
                 <div className="metric">
 
                     <span>
-                        Process
+                        Dalam Proses
                     </span>
 
                     <strong>
@@ -248,6 +292,7 @@ function LocationCard({
                     </strong>
 
                 </div>
+
 
             </div>
 
@@ -269,14 +314,15 @@ export default function TeamPerformanceCard({
 
 }) {
 
-console.log(
-    "TEAM PERFORMANCE DEBUG:",
-    {
-        count: teams.length,
-        ids: teams.map(t => t.id),
-        names: teams.map(t => t.name)
-    }
-);
+    console.log(
+        "TEAM PERFORMANCE DEBUG:",
+        {
+            count: teams.length,
+            ids: teams.map(t => t.id),
+            names: teams.map(t => t.name)
+        }
+    );
+
 
     return (
 
@@ -301,7 +347,7 @@ console.log(
                     />
 
                     <span>
-                        Location Performance
+                        Performa Lokasi
                     </span>
 
                 </div>
@@ -350,17 +396,18 @@ console.log(
                             <div className="team-top">
 
                                 <h4>
-                                    No Data
+                                    Tidak Ada Data
                                 </h4>
 
                             </div>
+
 
                             <div className="team-metrics">
 
                                 <div className="metric">
 
                                     <span>
-                                        Location
+                                        Lokasi
                                     </span>
 
                                     <strong>
@@ -407,7 +454,7 @@ console.log(
                                 <div className="location-card-title">
 
                                     <h4>
-                                        Location Overview
+                                        Ringkasan Lokasi
                                     </h4>
 
 
@@ -419,11 +466,13 @@ console.log(
                                         />
 
                                         <span>
+
                                             {
                                                 getLocationLabel(
                                                     teams[0]?.id
                                                 )
                                             }
+
                                         </span>
 
                                     </div>
@@ -437,21 +486,22 @@ console.log(
 
                                 <span className="overview-badge-dot" />
 
-                                OVERVIEW
+                                RINGKASAN
 
                             </span>
 
                         </div>
 
+
                         <div className="team-metrics">
 
 
-                            {/* TOTAL ENGINEER */}
+                            {/* TOTAL PIC */}
 
                             <div className="metric">
 
                                 <span>
-                                    Total Engineer
+                                    Total PIC
                                 </span>
 
                                 <strong>
@@ -473,7 +523,7 @@ console.log(
                             <div className="metric">
 
                                 <span>
-                                    Avg Ticket / Engineer
+                                    Rata-rata Tiket / PIC
                                 </span>
 
                                 <strong>
@@ -495,7 +545,7 @@ console.log(
                             <div className="metric">
 
                                 <span>
-                                    Waiting Feedback
+                                    Menunggu Feedback
                                 </span>
 
                                 <strong>
@@ -517,7 +567,7 @@ console.log(
                             <div className="metric">
 
                                 <span>
-                                    Branch Handled
+                                    Cabang Ditangani
                                 </span>
 
                                 <strong>

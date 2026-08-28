@@ -154,6 +154,40 @@ async function handleAutoTroubleshooting(
             .trim()
             .toUpperCase();
 
+    // ==========================================================
+    // NORMALISASI JAWABAN CUSTOMER
+    //
+    // BELUM BERHASIL:
+    // - BELUM BERHASIL
+    // - BELUM BISA
+    //
+    // BERHASIL:
+    // - BERHASIL
+    // - BISA
+    //
+    // Label internal tetap:
+    // BELUM BERHASIL / BERHASIL
+    // ==========================================================
+
+    if (
+        /^2$/.test(jawaban) ||
+        /\bBELUM\s+BISA\b/.test(jawaban) ||
+        /\bTIDAK\s+BISA\b/.test(jawaban) ||
+        /\bBELUM\s+BERHASIL\b/.test(jawaban)
+    ) {
+
+        jawaban += " BELUM BERHASIL";
+
+    } else if (
+        /^1$/.test(jawaban) ||
+        /\bBISA\b/.test(jawaban) ||
+        /\bBERHASIL\b/.test(jawaban)
+    ) {
+
+        jawaban += " BERHASIL";
+
+    }
+
 
     // ==========================================================
     // NORMALISASI EMOJI

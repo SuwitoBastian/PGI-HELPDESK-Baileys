@@ -10,6 +10,7 @@ app.locals.appVersion = packageInfo.version;
 
 const config = require("./config");
 
+
 /* ==========================================================
    Database Migration
 ========================================================== */
@@ -18,6 +19,7 @@ const migrate =
     require("./database/migrate");
 
 migrate();
+
 
 /* ==========================================================
    Scheduler
@@ -29,12 +31,14 @@ const {
 
 startSLAScheduler();
 
+
 /* ==========================================================
    WhatsApp
 ========================================================== */
 
 const whatsapp =
     require("./services/whatsapp");
+
 
 /* ==========================================================
    Auth Middleware
@@ -43,6 +47,7 @@ const whatsapp =
 const {
     requireAuth
 } = require("./middleware/authMiddleware");
+
 
 /* ==========================================================
    Routes
@@ -81,6 +86,7 @@ const operationalAssignmentRoutes =
 const knowledgeRoutes =
     require("./routes/knowledgeRoutes");
 
+
 /* ==========================================================
    Express
 ========================================================== */
@@ -99,6 +105,7 @@ app.use(
         extended: true
     })
 );
+
 
 /* ==========================================================
    WEB SESSION
@@ -134,6 +141,7 @@ app.use(
     })
 );
 
+
 /* ==========================================================
    STATIC PUBLIC
 ========================================================== */
@@ -142,6 +150,7 @@ app.use(
     express.static("public")
 );
 
+
 /* ==========================================================
    AUTH
 ========================================================== */
@@ -149,6 +158,7 @@ app.use(
 app.use(
     authRoutes
 );
+
 
 /* ==========================================================
    PUBLIC KNOWLEDGE BASE
@@ -166,6 +176,29 @@ app.use(
     "/api/knowledge",
     knowledgeRoutes
 );
+
+
+/* ==========================================================
+   CUSTOMER FEEDBACK API
+========================================================== */
+
+/*
+    POST /api/feedback
+    menggunakan API Key.
+
+    Endpoint GET / reminder
+    dilindungi oleh requireAuth
+    di dalam feedbackRoutes.js.
+
+    Posisi route feedback HARUS berada
+    sebelum private /api router.
+*/
+
+app.use(
+    "/api/feedback",
+    feedbackRoutes
+);
+
 
 /* ==========================================================
    PRIVATE API ROUTES
@@ -207,12 +240,6 @@ app.use(
 );
 
 app.use(
-    "/api/feedback",
-    requireAuth,
-    feedbackRoutes
-);
-
-app.use(
     "/api/engineers",
     requireAuth,
     engineerRoutes
@@ -224,6 +251,7 @@ app.use(
     operationalAssignmentRoutes
 );
 
+
 /* ==========================================================
    Legacy Dashboard
 ========================================================== */
@@ -232,6 +260,7 @@ app.use(
     "/legacy",
     dashboardRoute
 );
+
 
 /* ==========================================================
    React Dashboard
@@ -247,6 +276,7 @@ const distDir =
 app.use(
     express.static(distDir)
 );
+
 
 /* ==========================================================
    React SPA FALLBACK
@@ -286,6 +316,7 @@ app.use(
 
     }
 );
+
 
 /* ==========================================================
    Start Server

@@ -4390,28 +4390,111 @@ c
 
 }
 /* ==========================================================
-   SIDEBAR LOGOUT
+   LOGOUT
 ========================================================== */
 
 .sidebar-logout {
 
-    padding: 8px 12px 4px;
+    padding: 8px 12px 10px;
 
 }
 
-.sidebar-logout .nav-link {
+.logout-button {
 
     width: 100%;
 
-    color: #dc2626;
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 0 18px;
+
+    margin: 0;
+
+    background: transparent;
+
+    border: 1px solid transparent;
+
+    border-radius: 8px;
+
+    color: rgba(255, 255, 255, .78);
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        border-color .18s ease,
+        transform .18s ease;
 
 }
 
-.sidebar-logout .nav-link:hover {
+.logout-button svg {
 
-    background: rgba(220, 38, 38, 0.08);
+    flex-shrink: 0;
 
-    color: #b91c1c;
+}
+
+.logout-button:hover {
+
+    background: rgba(255, 255, 255, .07);
+
+    border-color: rgba(255, 255, 255, .10);
+
+    color: #fff;
+
+    transform: translateX(2px);
+
+}
+
+.logout-button:active {
+
+    transform: translateX(1px);
+
+    background: rgba(255, 255, 255, .10);
+
+}
+
+.logout-button:focus-visible {
+
+    outline: 2px solid rgba(255, 255, 255, .45);
+
+    outline-offset: 2px;
+
+}
+
+
+/* ==========================================================
+   LOGOUT — COLLAPSED
+========================================================== */
+
+.sidebar.collapsed .sidebar-logout {
+
+    padding: 8px 8px 10px;
+
+}
+
+.sidebar.collapsed .logout-button {
+
+    justify-content: center;
+
+    padding: 0;
+
+}
+
+.sidebar.collapsed .logout-button:hover {
+
+    transform: none;
 
 }
 

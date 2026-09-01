@@ -688,7 +688,7 @@ export default function Sidebar({
 
                 <button
                     type="button"
-                    className="nav-link"
+                    className="logout-button"
                     onClick={async () => {
 
                         try {
@@ -715,15 +715,14 @@ export default function Sidebar({
                 >
 
                     <LogOut
-                        size={14}
+                        size={16}
+                        strokeWidth={2.2}
                     />
 
                     {!collapsed && (
 
-                        <span className="nav-text">
-
+                        <span className="logout-text">
                             Logout
-
                         </span>
 
                     )}

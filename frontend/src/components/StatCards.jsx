@@ -14,7 +14,7 @@ const CARDS = [
   {
     key: 'open',
     label: 'Terbuka',
-    subtitle: 'Menunggu assignment',
+    subtitle: 'Menunggu PIC',
     icon: <CircleAlert size={20} />,
     cls: 'kpi-open'
   },

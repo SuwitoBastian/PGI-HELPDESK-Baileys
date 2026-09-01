@@ -159,6 +159,61 @@ CREATE TABLE IF NOT EXISTS operational_assignment (
     UNIQUE(rotation_id, engineer_code)
 
 )
+`,
+
+`
+CREATE TABLE IF NOT EXISTS users (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    username TEXT NOT NULL UNIQUE,
+
+    password_hash TEXT NOT NULL,
+
+    name TEXT NOT NULL,
+
+    aktif INTEGER NOT NULL DEFAULT 1,
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+
+)
+`,
+
+`
+CREATE TABLE IF NOT EXISTS knowledge_base (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    title TEXT NOT NULL,
+
+    slug TEXT NOT NULL UNIQUE,
+
+    category TEXT NOT NULL,
+
+    content TEXT NOT NULL,
+
+    keywords TEXT,
+
+    status TEXT NOT NULL
+        DEFAULT 'DRAFT'
+        CHECK(status IN ('DRAFT', 'PUBLISHED')),
+
+    views INTEGER NOT NULL
+        DEFAULT 0,
+
+    created_by INTEGER,
+
+    created_at DATETIME
+        DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at DATETIME
+        DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(created_by)
+        REFERENCES users(id)
+        ON DELETE SET NULL
+
+)
 `
 
 ];

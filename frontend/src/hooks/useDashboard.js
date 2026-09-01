@@ -23,6 +23,10 @@ import { getDailyTrend } from "../services/dashboard/trendService";
 //   "AKR" = HO - AKR Tower
 //   "HO"  = Head Office
 //
+// enabled:
+//   true  = fetch data
+//   false = tidak fetch
+//
 // Polling setiap 30 detik.
 // =====================================================
 
@@ -30,12 +34,13 @@ export function useDashboard(
     start = "",
     end = "",
     location = "",
-    intervalMs = 30000
+    intervalMs = 30000,
+    enabled = true
 ) {
 
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     const timer = useRef(null);
 
@@ -46,7 +51,20 @@ export function useDashboard(
 
     const refresh = useCallback(async () => {
 
+        // -------------------------------------------------
+        // JANGAN FETCH JIKA TIDAK ENABLED
+        // -------------------------------------------------
+
+        if (!enabled) {
+
+            return;
+
+        }
+
+
         try {
+
+            setLoading(true);
 
             const [
                 dashboard,
@@ -87,13 +105,18 @@ export function useDashboard(
             // =====================================================
 
             setData({
+
                 ...dashboard,
 
                 analytics,
 
                 rotation,
 
-                trend: trend?.trend || trend || []
+                trend:
+                    trend?.trend ||
+                    trend ||
+                    []
+
             });
 
 
@@ -107,7 +130,8 @@ export function useDashboard(
             );
 
             setError(
-                e?.message || "Gagal memuat data dashboard."
+                e?.message ||
+                "Gagal memuat data dashboard."
             );
 
         } finally {
@@ -119,7 +143,8 @@ export function useDashboard(
     }, [
         start,
         end,
-        location
+        location,
+        enabled
     ]);
 
 
@@ -129,7 +154,46 @@ export function useDashboard(
 
     useEffect(() => {
 
+        // -------------------------------------------------
+        // CLEAR TIMER LAMA
+        // -------------------------------------------------
+
+        if (timer.current) {
+
+            clearInterval(
+                timer.current
+            );
+
+            timer.current = null;
+
+        }
+
+
+        // -------------------------------------------------
+        // GUEST
+        // -------------------------------------------------
+
+        if (!enabled) {
+
+            setData(null);
+            setError(null);
+            setLoading(false);
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // INITIAL LOAD
+        // -------------------------------------------------
+
         refresh();
+
+
+        // -------------------------------------------------
+        // POLLING 30 DETIK
+        // -------------------------------------------------
 
         timer.current = setInterval(
             refresh,
@@ -137,17 +201,28 @@ export function useDashboard(
         );
 
 
+        // -------------------------------------------------
+        // CLEANUP
+        // -------------------------------------------------
+
         return () => {
 
             if (timer.current) {
-                clearInterval(timer.current);
+
+                clearInterval(
+                    timer.current
+                );
+
+                timer.current = null;
+
             }
 
         };
 
     }, [
         refresh,
-        intervalMs
+        intervalMs,
+        enabled
     ]);
 
 
@@ -156,10 +231,15 @@ export function useDashboard(
     // =====================================================
 
     return {
+
         data,
+
         error,
+
         loading,
+
         refresh
+
     };
 
 }

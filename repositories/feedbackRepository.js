@@ -281,37 +281,107 @@ function findAll(filters = {}) {
     } = filters;
 
 
+    /*
+     * ==========================================================
+     * PERIODE TICKET
+     * ==========================================================
+     *
+     * Format ticket:
+     *
+     * 260831-XXXXXX
+     *
+     * 26 = tahun
+     * 08 = bulan
+     * 31 = tanggal
+     *
+     * Hasil:
+     *
+     * 2026-08-31
+     *
+     * Jika format ticket tidak valid,
+     * periode menggunakan feedback_at.
+     */
+
+    const periodDateSql = `
+        CASE
+
+            WHEN
+                t.id IS NOT NULL
+                AND t.id GLOB '[0-9][0-9][0-9][0-9][0-9][0-9]-*'
+                AND length(t.id) >= 7
+
+            THEN
+                '20'
+                || substr(t.id, 1, 2)
+                || '-'
+                || substr(t.id, 3, 2)
+                || '-'
+                || substr(t.id, 5, 2)
+
+            ELSE
+                date(f.feedback_at)
+
+        END
+    `;
+
+
     let sql = `
         SELECT
+
             t.id AS ticket_id,
+
             t.cabang AS branch,
+
             f.issue_category AS issue_category,
+
             t.pic_selesai AS engineer,
+
             t.pic_selesai_team AS team,
+
             t.status,
+
             t.waktu,
+
             t.assigned_at,
+
             t.selesai,
+
             t.durasi,
+
             t.feedback_sent,
+
             t.feedback_sent_at,
 
             f.id,
+
             f.response_rating,
+
             f.solution_rating,
+
             f.comment,
+
             f.feedback_at,
 
+            ${periodDateSql} AS period_date,
+
+
             CASE
+
                 WHEN f.id IS NULL
                     THEN 'waiting'
+
                 ELSE 'received'
+
             END AS feedback_status
+
 
         FROM tickets t
 
+
         LEFT JOIN feedback f
+
             ON f.ticket_id = t.id
+
 
         WHERE t.feedback_sent = 1
     `;
@@ -321,21 +391,19 @@ function findAll(filters = {}) {
 
 
     /* ======================================================
-       Filter Tanggal
-    ====================================================== */
+       FILTER TANGGAL
+       ====================================================== */
 
     if (startDate) {
 
         sql += `
             AND date(
-                COALESCE(
-                    f.feedback_at,
-                    t.feedback_sent_at
-                )
+                ${periodDateSql}
             ) >= date(?)
         `;
 
         params.push(startDate);
+
     }
 
 
@@ -343,20 +411,18 @@ function findAll(filters = {}) {
 
         sql += `
             AND date(
-                COALESCE(
-                    f.feedback_at,
-                    t.feedback_sent_at
-                )
+                ${periodDateSql}
             ) <= date(?)
         `;
 
         params.push(endDate);
+
     }
 
 
     /* ======================================================
-       Filter Location
-    ====================================================== */
+       FILTER LOCATION
+       ====================================================== */
 
     const normalizedLocation =
         normalizeLocation(location);
@@ -376,11 +442,11 @@ function findAll(filters = {}) {
 
 
     /* ======================================================
-       Legacy Team Filter
+       LEGACY TEAM FILTER
        
-       Hanya digunakan apabila LOCATION tidak diberikan.
-       Jadi sistem lama tetap kompatibel.
-    ====================================================== */
+       Hanya digunakan apabila LOCATION
+       tidak diberikan.
+       ====================================================== */
 
     else if (
         team &&
@@ -397,8 +463,8 @@ function findAll(filters = {}) {
 
 
     /* ======================================================
-       Search
-    ====================================================== */
+       SEARCH
+       ====================================================== */
 
     if (keyword?.trim()) {
 
@@ -408,46 +474,75 @@ function findAll(filters = {}) {
 
         sql += `
             AND (
+
                 t.id LIKE ?
+
                 OR t.cabang LIKE ?
-                OR IFNULL(f.issue_category, '') LIKE ?
+
+                OR IFNULL(
+                    f.issue_category,
+                    ''
+                ) LIKE ?
+
                 OR t.pic_selesai LIKE ?
-                OR IFNULL(f.comment, '') LIKE ?
+
+                OR IFNULL(
+                    f.comment,
+                    ''
+                ) LIKE ?
+
             )
         `;
 
 
         params.push(
+
             search,
+
             search,
+
             search,
+
             search,
+
             search
+
         );
 
     }
 
 
     /* ======================================================
-       Order
-    ====================================================== */
+       ORDER
+       ====================================================== */
 
     sql += `
         ORDER BY datetime(
+
             COALESCE(
+
                 f.feedback_at,
+
                 t.feedback_sent_at,
+
                 t.selesai,
+
                 t.assigned_at,
+
                 t.waktu
+
             )
+
         ) DESC
     `;
 
 
     return db
+
         .prepare(sql)
+
         .all(...params);
+
 }
 
 

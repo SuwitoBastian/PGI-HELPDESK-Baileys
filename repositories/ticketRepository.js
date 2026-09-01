@@ -973,7 +973,7 @@ function countOpenByDate(
         SELECT COUNT(*) total
         FROM tickets
         WHERE status = 'OPEN'
-        AND DATE(waktu)
+        AND DATE(datetime(waktu, '+7 hours'))
             BETWEEN DATE(?)
             AND DATE(?)
     `;
@@ -1022,7 +1022,7 @@ function countProcessByDate(
         SELECT COUNT(*) total
         FROM tickets
         WHERE status = 'PROCESS'
-        AND DATE(waktu)
+        AND DATE(datetime(waktu, '+7 hours'))
             BETWEEN DATE(?)
             AND DATE(?)
     `;
@@ -1071,7 +1071,7 @@ function countClosedByDate(
         SELECT COUNT(*) total
         FROM tickets
         WHERE status = 'CLOSED'
-        AND DATE(selesai)
+        AND DATE(datetime(waktu, '+7 hours'))
             BETWEEN DATE(?)
             AND DATE(?)
     `;

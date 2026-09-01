@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { LayoutDashboard, Headset } from "lucide-react";
+import {
+  LayoutDashboard,
+  Headset,
+  BookOpen
+} from "lucide-react";
 
 import { useDashboard } from "./hooks/useDashboard";
 import { MASTER_PIC } from "./constants/picList";
@@ -13,6 +17,9 @@ import TicketTable from "./components/TicketTable";
 import SummaryView from "./components/SummaryView";
 import FilterCard from "./components/FilterCard";
 import TeamRotation from "./components/settings/TeamRotation";
+import KnowledgeBase from "./components/settings/KnowledgeBase";
+import KnowledgeHome from "./components/knowledge/KnowledgeHome";
+import GuestPortal from "./components/guest/GuestPortal";
 
 
 // =====================================================
@@ -111,6 +118,12 @@ const PAGES = {
     icon: LayoutDashboard,
   },
 
+  "knowledge-base": {
+  title: "Knowledge Base",
+  subtitle: "Kelola artikel dan video troubleshooting IT.",
+  icon: BookOpen,
+  },
+
 
   // =====================================================
   // LEGACY
@@ -130,7 +143,95 @@ const PAGES = {
 // =====================================================
 
 export default function App() {
+  const [authChecking, setAuthChecking] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
 
+
+  // =====================================================
+  // AUTH STATUS
+  // =====================================================
+
+  async function checkAuthStatus() {
+
+      try {
+
+          const response =
+              await fetch(
+                  "/auth/status",
+                  {
+                      method: "GET",
+                      credentials: "same-origin",
+                      cache: "no-store"
+                  }
+              );
+
+          if (!response.ok) {
+
+              throw new Error(
+                  "Gagal mengecek status login."
+              );
+
+          }
+
+          const result =
+              await response.json();
+
+          setAuthenticated(
+              Boolean(
+                  result.authenticated
+              )
+          );
+
+      } catch (err) {
+
+          console.error(
+              "Auth status error:",
+              err
+          );
+
+          setAuthenticated(false);
+
+      } finally {
+
+          setAuthChecking(false);
+
+      }
+
+  }
+
+
+  useEffect(() => {
+
+      checkAuthStatus();
+
+
+      // =================================================
+      // BROWSER BACK / FORWARD GUARD
+      // =================================================
+
+      const handlePageShow = () => {
+
+          checkAuthStatus();
+
+      };
+
+
+      window.addEventListener(
+          "pageshow",
+          handlePageShow
+      );
+
+
+      return () => {
+
+          window.removeEventListener(
+              "pageshow",
+              handlePageShow
+          );
+
+      };
+
+  }, []);
 
   // =====================================================
   // PAGE
@@ -182,7 +283,6 @@ export default function App() {
         "ho-trend",
 
     };
-
 
     return (
 
@@ -436,14 +536,16 @@ export default function App() {
   // =====================================================
 
   const {
-    data,
-    error,
-    loading,
-    refresh
+      data,
+      error,
+      loading,
+      refresh
   } = useDashboard(
-    startFilter,
-    endFilter,
-    selectedLocation
+      startFilter,
+      endFilter,
+      selectedLocation,
+      30000,
+      authenticated
   );
 
 
@@ -719,12 +821,55 @@ const year =
 
 
   // =====================================================
+  // AUTH LOADING
+  // =====================================================
+
+  if (authChecking) {
+
+    return (
+
+      <div className="state">
+
+        Memeriksa sesi...
+
+      </div>
+
+    );
+
+  }
+
+
+  // =====================================================
+  // GUEST PORTAL
+  // =====================================================
+
+  if (!authenticated) {
+
+      return (
+
+        <GuestPortal
+          onKnowledgeBase={() =>
+            setView("knowledge-home")
+          }
+        />
+
+      );
+
+  }
+
+
+  // =====================================================
   // RENDER
   // =====================================================
 
   return (
 
     <ToastProvider>
+      {view === "knowledge-home" ? (
+
+    <KnowledgeHome />
+
+) : (
 
 
       <div
@@ -790,7 +935,10 @@ const year =
                 PAGE HEADER
             ================================================= */}
 
-            <div className="page-head">
+            {view !== "knowledge-home" &&
+            view !== "knowledge-base" && (
+
+              <div className="page-head">
 
 
               <div className="page-head-icon">
@@ -820,6 +968,8 @@ const year =
               </div>
 
             </div>
+
+            )}
 
 
             {/* =================================================
@@ -863,75 +1013,87 @@ const year =
                 LOADING
             ================================================= */}
 
-            {loading && !data ? (
+          {loading && !data && view !== "knowledge-base" ? (
 
-              <div className="state">
+            <div className="state">
+              Memuat data...
+            </div>
 
-                Memuat data...
+          ) : error && !data && view !== "knowledge-base" ? (
 
-              </div>
-
-
-            ) : error && !data ? (
-
-              <div className="state error">
-
-                ⚠️ {error}
-
-              </div>
-
+            <div className="state error">
+              ⚠️ {error}
+            </div>
 
             ) : view === "team-rotation" ? (
 
-              <TeamRotation />
+                <TeamRotation />
 
+            ) : view === "knowledge-home" ? (
 
-            ) : (
-              view !== "helpdesk" &&
-              view !== "legacy"
-            ) ? (
+                <KnowledgeHome />
 
-              // =================================================
-              // PERFORMANCE PAGES
-              // =================================================
+            ) : view === "knowledge-base" ? (
 
-              <SummaryView
+                <KnowledgeBase />
 
-                data={data}
+) : (
 
-                /*
-                -------------------------------------------------
-                Compatibility prop.
-                Filtering sekarang menggunakan location.
-                -------------------------------------------------
-                */
+    view !== "helpdesk" &&
+    view !== "legacy"
 
-                team="ALL"
+) ? (
 
-                location={
-                  selectedLocation
-                }
+    // =================================================
+    // PERFORMANCE PAGES
+    // =================================================
 
-                page={
+    data ? (
 
-                  view.endsWith(
+        <SummaryView
+
+            data={data}
+
+            /*
+            -------------------------------------------------
+            Compatibility prop.
+            Filtering sekarang menggunakan location.
+            -------------------------------------------------
+            */
+
+            team="ALL"
+
+            location={
+                selectedLocation
+            }
+
+            page={
+
+                view.endsWith(
                     "trend"
-                  )
+                )
 
                     ? "trend"
 
                     : view.endsWith(
                         "analytics"
-                      )
+                    )
 
-                      ? "analytics"
+                        ? "analytics"
 
-                      : "overview"
+                        : "overview"
 
-                }
+            }
 
-              />
+        />
 
+    ) : (
+
+        <div className="state">
+            Memuat data...
+        </div>
+
+    )
 
             ) : (
 
@@ -981,7 +1143,7 @@ const year =
         </div>
 
       </div>
-
+    )}
     </ToastProvider>
 
   );

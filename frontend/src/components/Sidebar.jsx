@@ -8,7 +8,9 @@ import {
     RefreshCw,
     Settings2,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    LogOut,
+    BookOpen
 } from "lucide-react";
 
 
@@ -636,6 +638,33 @@ export default function Sidebar({
 
                                 </button>
 
+                                <button
+                                  type="button"
+                                  className={`nav-link ${
+                                      view ===
+                                      "knowledge-base"
+                                          ? "active"
+                                          : ""
+                                  }`}
+                                  onClick={() =>
+                                      onNavigate(
+                                          "knowledge-base"
+                                      )
+                                  }
+                              >
+
+                                  <BookOpen
+                                      size={14}
+                                  />
+
+                                  <span className="nav-text">
+
+                                      Knowledge Base
+
+                                  </span>
+
+                              </button>
+
                             </div>
 
                         </>
@@ -650,6 +679,58 @@ export default function Sidebar({
             {/* =================================================
                 FOOTER
             ================================================= */}
+
+            {/* =================================================
+                LOGOUT
+            ================================================= */}
+
+            <div className="sidebar-logout">
+
+                <button
+                    type="button"
+                    className="nav-link"
+                    onClick={async () => {
+
+                        try {
+
+                            await fetch(
+                                "/logout",
+                                {
+                                    method: "POST"
+                                }
+                            );
+
+                            window.location.replace("/");
+
+                        } catch (err) {
+
+                            console.error(
+                                "Logout gagal:",
+                                err
+                            );
+
+                        }
+
+                    }}
+                >
+
+                    <LogOut
+                        size={14}
+                    />
+
+                    {!collapsed && (
+
+                        <span className="nav-text">
+
+                            Logout
+
+                        </span>
+
+                    )}
+
+                </button>
+
+            </div>
 
             <div className="sidebar-foot">
 

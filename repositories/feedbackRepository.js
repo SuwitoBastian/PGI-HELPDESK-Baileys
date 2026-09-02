@@ -181,7 +181,7 @@ function findLatest(
 
             t.feedback_sent = 1
 
-            AND t.location_selesai = ?
+            AND COALESCE(t.location_selesai, t.location) = ?
 
 
         ORDER BY datetime(
@@ -431,7 +431,7 @@ function findAll(filters = {}) {
     if (normalizedLocation) {
 
         sql += `
-            AND t.location_selesai = ?
+            AND COALESCE(t.location_selesai, t.location) = ?
         `;
 
         params.push(

@@ -114,6 +114,12 @@ function migrate() {
 
     migration.addColumn(
         "tickets",
+        "feedback_reminder_count",
+        "INTEGER DEFAULT 0"
+    );
+
+    migration.addColumn(
+        "tickets",
         "close_type",
         "TEXT DEFAULT 'MANUAL'"
     );

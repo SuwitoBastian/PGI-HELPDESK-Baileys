@@ -2,8 +2,7 @@ const ticketRepository = require("../repositories/ticketRepository");
 
 const http = require("http");
 
-const BATCH_SIZE = 5;
-const BATCH_INTERVAL_MS = 10 * 60 * 1000; // 10 menit
+const BATCH_SIZE = 10;
 
 const QC_INVENTARIS_HOST =
     process.env.QC_INVENTARIS_HOST || "127.0.0.1";
@@ -248,7 +247,6 @@ function buildReminderMessage(customer) {
 
 }
 
-
 /* ==========================================================
    Kirim Reminder 1 Customer
 ========================================================== */
@@ -266,12 +264,8 @@ async function sendReminder(customer) {
     ) {
 
         return {
-
             status: "SKIPPED",
-
-            reason:
-                "NO_PENDING_TICKETS"
-
+            reason: "NO_PENDING_TICKETS"
         };
 
     }
@@ -280,21 +274,18 @@ async function sendReminder(customer) {
     /*
      * Ambil ulang ticket dari database.
      *
-     * Tujuannya agar sebelum mengirim reminder,
-     * kondisi ticket benar-benar masih valid.
+     * Pengecekan dilakukan kembali tepat sebelum
+     * reminder dikirim agar kondisi database terbaru
+     * yang digunakan.
      */
 
     const pendingTickets = [];
 
 
-    for (
-        const ticket of customer.tickets
-    ) {
+    for (const ticket of customer.tickets) {
 
         const latestTicket =
-            ticketRepository.findById(
-                ticket.id
-            );
+            ticketRepository.findById(ticket.id);
 
 
         /*
@@ -313,14 +304,12 @@ async function sendReminder(customer) {
 
 
         /*
-         * Cek ulang apakah feedback sudah diisi.
+         * Feedback sudah masuk.
          */
 
         const feedback =
             require("../repositories/feedbackRepository")
-                .findByTicket(
-                    ticket.id
-                );
+                .findByTicket(ticket.id);
 
 
         if (feedback) {
@@ -346,6 +335,66 @@ async function sendReminder(customer) {
             );
 
             continue;
+
+        }
+
+
+        /*
+         * Reminder maksimal 3x.
+         */
+
+        const reminderCount =
+            Number(
+                latestTicket.feedback_reminder_count || 0
+            );
+
+
+        if (reminderCount >= 3) {
+
+            console.log(
+                `⏭️ Maksimal reminder tercapai → ${ticket.id}`
+            );
+
+            continue;
+
+        }
+
+
+        /*
+         * Pastikan jeda minimal 24 jam.
+         */
+
+        if (
+            latestTicket.feedback_reminder_sent_at
+        ) {
+
+            const lastReminder =
+                new Date(
+                    latestTicket.feedback_reminder_sent_at
+                );
+
+            const now =
+                new Date();
+
+            const elapsed =
+                now.getTime() -
+                lastReminder.getTime();
+
+            const twentyFourHours =
+                24 * 60 * 60 * 1000;
+
+
+            if (
+                elapsed < twentyFourHours
+            ) {
+
+                console.log(
+                    `⏭️ Belum 24 jam → ${ticket.id}`
+                );
+
+                continue;
+
+            }
 
         }
 
@@ -386,12 +435,8 @@ async function sendReminder(customer) {
     if (!pendingTickets.length) {
 
         return {
-
             status: "SKIPPED",
-
-            reason:
-                "NO_PENDING_TICKETS"
-
+            reason: "NO_PENDING_TICKETS"
         };
 
     }
@@ -403,12 +448,13 @@ async function sendReminder(customer) {
      */
 
     const chatId =
-        pendingTickets[0].chatId;
+        String(
+            pendingTickets[0].chatId
+        ).trim();
 
 
     /*
-     * Buat object customer baru yang hanya
-     * berisi ticket yang benar-benar pending.
+     * Buat object customer baru.
      */
 
     const reminderCustomer = {
@@ -443,14 +489,6 @@ async function sendReminder(customer) {
 
     /*
      * Kirim melalui QC-Inventaris.
-     *
-     * Helpdesk
-     *    ↓
-     * QC-Inventaris
-     *    ↓
-     * Baileys
-     *    ↓
-     * WhatsApp Customer
      */
 
     await sendToQCInventaris(
@@ -460,28 +498,39 @@ async function sendReminder(customer) {
 
 
     /*
-     * Hanya tandai ticket sebagai reminder
-     * setelah pengiriman berhasil.
+     * Hanya tandai reminder setelah
+     * pengiriman berhasil.
+     *
+     * markFeedbackReminderSent()
+     * akan menyinkronkan count reminder
+     * seluruh ticket customer berdasarkan chatId.
      */
 
-    for (
-        const ticket of pendingTickets
-    ) {
+    /*
+     * Cukup tandai satu ticket.
+     *
+     * Repository akan mencari chatId customer
+     * lalu menyinkronkan seluruh ticket customer
+     * pada bulan berjalan.
+     */
 
-        ticketRepository.markFeedbackReminderSent(
-            ticket.id
-        );
+    ticketRepository.markFeedbackReminderSent(
+        pendingTickets[0].id
+    );
 
 
-        console.log(
-            `🔔 Feedback reminder terkirim → ${ticket.id}`
-        );
+    console.log(
+        `🔔 Feedback reminder terkirim → ${chatId}`
+    );
 
-    }
 
-        console.log(
-            `📨 Reminder terkirim ke ${customer.nama || "Customer"} → ${pendingTickets.length} ticket`
-        );
+    console.log(
+        `📨 Reminder terkirim ke ${
+            reminderCustomer.nama || "Customer"
+        } → ${
+            pendingTickets.length
+        } ticket`
+    );
 
 
     return {
@@ -517,39 +566,26 @@ async function runReminder(
     if (reminderRunning) {
 
         return {
-
             ok: false,
-
-            reason:
-                "REMINDER_ALREADY_RUNNING"
-
+            reason: "REMINDER_ALREADY_RUNNING"
         };
 
     }
 
-
     reminderRunning = true;
 
-
     const result = {
-
         total: 0,
-
         sent: 0,
-
         skipped: 0,
-
         failed: 0
-
     };
-
 
     try {
 
         console.log(
             "🔔 Feedback Reminder dimulai"
         );
-
 
         if (referenceDate) {
 
@@ -559,142 +595,102 @@ async function runReminder(
 
         }
 
-
-        while (true) {
-
-            /*
-             * Ambil maksimal 5 ticket.
-             *
-             * Kalau referenceDate diberikan,
-             * repository akan menggunakan bulan
-             * tersebut sebagai bulan referensi.
-             */
-            const tickets =
-                ticketRepository
-                    .findFeedbackReminderTickets(
-                        BATCH_SIZE,
-                        referenceDate
-                    );
-
-
-            /*
-             * Tidak ada ticket lagi.
-             */
-            if (!tickets.length) {
-
-                console.log(
-                    "✅ Feedback Reminder selesai"
+        /*
+         * =====================================================
+         * 1 KLIK = 1 BATCH
+         * Maksimal 10 customer.
+         *
+         * Tidak ada loop batch.
+         * Tidak ada jeda 10 menit.
+         */
+        const customers =
+            ticketRepository
+                .findFeedbackReminderTickets(
+                    BATCH_SIZE,
+                    referenceDate
                 );
 
-                break;
-
-            }
-
+        /*
+         * Tidak ada customer yang eligible.
+         */
+        if (!customers.length) {
 
             console.log(
-                `📦 Batch ditemukan: ${tickets.length} customer`
+                "ℹ️ Tidak ada customer yang eligible untuk reminder"
             );
 
-
-            /*
-             * Proses satu per satu.
-             *
-             * Sengaja tidak Promise.all()
-             * supaya pesan tidak bersamaan.
-             */
-            for (const customer of tickets) {
-
-                result.total++;
-
-
-                try {
-
-                    const response =
-                        await sendReminder(customer);
-
-
-                    if (
-                        response.status === "SENT"
-                    ) {
-
-                        result.sent++;
-
-
-                    } else if (
-                        response.status === "SKIPPED"
-                    ) {
-
-                        result.skipped++;
-
-
-                    } else {
-
-                        result.failed++;
-
-                    }
-
-
-                } catch (err) {
-
-                    result.failed++;
-
-
-                    console.error(
-                        `❌ Reminder gagal → ${customer.nama || customer.chatId}`
-                    );
-
-
-                    console.error(
-                        err.message
-                    );
-
-                }
-
-            }
-
-
-            /*
-             * Kalau batch kurang dari 5,
-             * berarti kemungkinan besar sudah
-             * batch terakhir.
-             */
-            if (
-                tickets.length < BATCH_SIZE
-            ) {
-
-                console.log(
-                    "ℹ️ Batch terakhir selesai"
-                );
-
-                break;
-
-            }
-
-
-            /*
-             * Tunggu 10 menit sebelum mengambil
-             * batch berikutnya.
-             */
-            console.log(
-                "⏳ Menunggu 10 menit sebelum batch berikutnya..."
-            );
-
-
-            await sleep(
-                BATCH_INTERVAL_MS
-            );
+            return {
+                ok: true,
+                ...result
+            };
 
         }
 
+        console.log(
+            `📦 Batch reminder: ${customers.length} customer`
+        );
+
+        /*
+         * Proses satu per satu.
+         *
+         * Sengaja tidak Promise.all()
+         * supaya pesan tidak dikirim bersamaan.
+         */
+        for (const customer of customers) {
+
+            result.total++;
+
+            try {
+
+                const response =
+                    await sendReminder(customer);
+
+                if (
+                    response.status === "SENT"
+                ) {
+
+                    result.sent++;
+
+                } else if (
+                    response.status === "SKIPPED"
+                ) {
+
+                    result.skipped++;
+
+                } else {
+
+                    result.failed++;
+
+                }
+
+            } catch (err) {
+
+                result.failed++;
+
+                console.error(
+                    `❌ Reminder gagal → ${customer.nama || customer.chatId}`
+                );
+
+                console.error(
+                    err.message
+                );
+
+            }
+
+        }
+
+        console.log(
+            `✅ Feedback Reminder selesai → ` +
+            `Total: ${result.total}, ` +
+            `Terkirim: ${result.sent}, ` +
+            `Skip: ${result.skipped}, ` +
+            `Gagal: ${result.failed}`
+        );
 
         return {
-
             ok: true,
-
             ...result
-
         };
-
 
     } finally {
 

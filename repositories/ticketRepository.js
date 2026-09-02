@@ -1630,128 +1630,125 @@ function markOpenReminderSent(ticketIds)
  * BUKAN jumlah ticket.
  */
 function findFeedbackReminderTickets(
-    limit = 5,
+    limit = 10,
     referenceDate = null
 ) {
 
     /*
-     * Kalau referenceDate diberikan,
-     * gunakan tanggal tersebut untuk testing.
-     *
-     * Kalau tidak diberikan,
-     * gunakan tanggal sekarang.
+     * Reference date:
+     * - Production  : tanggal sekarang
+     * - Testing     : bisa kirim tanggal manual
      */
-
     const dateReference =
         referenceDate ||
         new Date().toISOString();
 
-
     /*
      * Ambil YYYY-MM dari tanggal referensi.
+     * Reminder hanya berlaku untuk bulan berjalan.
      */
-
     const yearMonth =
         dateReference.substring(0, 7);
 
-
     /*
-     * Ambil seluruh ticket yang memenuhi syarat.
+     * Ambil ticket yang:
      *
-     * Belum dilakukan LIMIT di SQL karena kita
-     * harus mengelompokkan ticket berdasarkan chatId
-     * terlebih dahulu.
+     * 1. feedback sudah pernah dikirim
+     * 2. ticket berada di bulan berjalan
+     * 3. belum ada feedback dari customer
+     * 4. reminder belum mencapai 3x
+     * 5. belum pernah reminder ATAU
+     *    reminder terakhir sudah >= 24 jam
+     * 6. memiliki chatId
      */
+    const tickets = db.prepare(`
+        SELECT
+            t.id,
+            t.nama,
+            t.nomor,
+            t.chatId,
+            t.cabang,
+            t.kendala,
+            t.waktu,
+            t.selesai,
+            t.pic,
+            t.pic_selesai,
+            t.feedback_sent,
+            t.feedback_sent_at,
+            t.feedback_reminder_sent_at,
+            t.feedback_reminder_count,
+            t.location,
+            t.location_selesai
 
-    const tickets =
-        db.prepare(`
-            SELECT
-                t.id,
-                t.nama,
-                t.nomor,
-                t.chatId,
-                t.cabang,
-                t.kendala,
-                t.waktu,
-                t.selesai,
-                t.pic,
-                t.pic_selesai,
-                t.feedback_sent,
-                t.feedback_sent_at,
-                t.feedback_reminder_sent_at,
-                t.location,
-                t.location_selesai
+        FROM tickets t
 
-            FROM tickets t
+        LEFT JOIN feedback f
+            ON f.ticket_id = t.id
 
-            LEFT JOIN feedback f
-                ON f.ticket_id = t.id
+        WHERE
 
-            WHERE
+            /* Feedback sudah pernah dikirim */
+            t.feedback_sent = 1
 
-                /* ==================================================
-                   Feedback sudah pernah dikirim
-                ================================================== */
+            /* Hanya ticket bulan berjalan */
+            AND strftime(
+                '%Y-%m',
+                t.waktu
+            ) = ?
 
-                t.feedback_sent = 1
+            /* Customer belum mengisi feedback */
+            AND f.id IS NULL
 
+            /* Maksimal 3 reminder */
+            AND COALESCE(
+                t.feedback_reminder_count,
+                0
+            ) < 3
 
-                /* ==================================================
-                   Hanya ticket bulan referensi
-                ================================================== */
+            /*
+             * Belum pernah reminder
+             * ATAU sudah lewat 24 jam
+             */
+            AND (
+                t.feedback_reminder_sent_at IS NULL
 
-                AND strftime(
-                    '%Y-%m',
-                    t.waktu
-                ) = ?
+                OR datetime(
+                    t.feedback_reminder_sent_at,
+                    '+24 hours'
+                ) <= datetime('now', 'localtime')
+            )
 
+            /* Chat WhatsApp harus tersedia */
+            AND t.chatId IS NOT NULL
+            AND TRIM(t.chatId) <> ''
 
-                /* ==================================================
-                   Customer belum mengisi feedback
-                ================================================== */
-
-                AND f.id IS NULL
-
-
-                /* ==================================================
-                   Belum pernah mendapat reminder
-                ================================================== */
-
-                AND t.feedback_reminder_sent_at IS NULL
-
-
-                /* ==================================================
-                   Chat WhatsApp harus tersedia
-                ================================================== */
-
-                AND t.chatId IS NOT NULL
-
-                AND TRIM(t.chatId) <> ''
-
-
-            ORDER BY
-                t.waktu ASC
-        `)
-        .all(
-            yearMonth
-        );
-
+        ORDER BY
+            CASE
+                WHEN t.feedback_reminder_sent_at IS NULL
+                THEN 0
+                ELSE 1
+            END,
+            t.feedback_reminder_sent_at ASC,
+            t.waktu ASC
+    `).all(
+        yearMonth
+    );
 
     /*
      * Kelompokkan ticket berdasarkan chatId.
      *
-     * Satu chatId = satu customer/pelapor.
+     * 1 chatId = 1 customer.
+     *
+     * Kalau satu customer punya beberapa ticket,
+     * semua ticket pending feedback-nya digabung
+     * menjadi satu reminder.
      */
-
-    const grouped =
-        new Map();
-
+    const grouped = new Map();
 
     for (const ticket of tickets) {
 
         const chatId =
             String(ticket.chatId).trim();
-
 
         if (!grouped.has(chatId)) {
 
@@ -1769,12 +1766,10 @@ function findFeedbackReminderTickets(
                         "",
 
                     tickets: []
-
                 }
             );
 
         }
-
 
         grouped
             .get(chatId)
@@ -1783,17 +1778,13 @@ function findFeedbackReminderTickets(
 
     }
 
-
     /*
      * Ambil maksimal sejumlah customer
      * sesuai limit batch.
      *
-     * Contoh:
-     * limit = 5
-     * berarti maksimal 5 customer
-     * per batch.
+     * Default:
+     * 10 customer per klik.
      */
-
     return Array
         .from(grouped.values())
         .slice(0, limit)
@@ -1819,21 +1810,108 @@ function findFeedbackReminderTickets(
 }
 
 /**
- * Tandai ticket bahwa reminder
- * sudah berhasil dikirim.
+ * Tandai reminder customer sudah berhasil dikirim.
+ *
+ * Reminder dihitung berdasarkan chatId/customer,
+ * bukan berdasarkan masing-masing ticket.
+ *
+ * Semua ticket customer pada bulan berjalan
+ * disinkronkan dengan count dan timestamp yang sama.
  */
 function markFeedbackReminderSent(
     ticketId
 ) {
 
+    const ticket =
+        db.prepare(`
+            SELECT
+                chatId
+            FROM tickets
+            WHERE id = ?
+        `).get(ticketId);
+
+
+    if (
+        !ticket ||
+        !ticket.chatId ||
+        !String(ticket.chatId).trim()
+    ) {
+
+        return;
+
+    }
+
+
+    const chatId =
+        String(ticket.chatId).trim();
+
+    const now =
+        nowWIB();
+
+
+    /*
+     * Ambil count reminder customer saat ini.
+     *
+     * Gunakan count terbesar dari seluruh
+     * ticket customer pada bulan berjalan.
+     */
+    const current =
+        db.prepare(`
+            SELECT
+                MAX(
+                    COALESCE(
+                        feedback_reminder_count,
+                        0
+                    )
+                ) AS reminder_count
+            FROM tickets
+            WHERE
+                chatId = ?
+                AND strftime(
+                    '%Y-%m',
+                    waktu
+                ) = strftime(
+                    '%Y-%m',
+                    ?
+                )
+        `).get(
+            chatId,
+            now
+        );
+
+
+    const nextCount =
+        Math.min(
+            3,
+            Number(
+                current?.reminder_count || 0
+            ) + 1
+        );
+
+
+    /*
+     * Sinkronkan seluruh ticket customer
+     * pada bulan berjalan.
+     */
     db.prepare(`
         UPDATE tickets
         SET
-            feedback_reminder_sent_at = ?
-        WHERE id = ?
+            feedback_reminder_sent_at = ?,
+            feedback_reminder_count = ?
+        WHERE
+            chatId = ?
+            AND strftime(
+                '%Y-%m',
+                waktu
+            ) = strftime(
+                '%Y-%m',
+                ?
+            )
     `).run(
-        nowWIB(),
-        ticketId
+        now,
+        nextCount,
+        chatId,
+        now
     );
 
 }

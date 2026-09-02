@@ -32,7 +32,9 @@ const EMPTY_FORM = {
     keywords: "",
     content: "",
     status: "DRAFT",
-    videoUrl: ""
+    videoUrl: "",
+    attachmentUrl: "",
+    attachmentName: ""
 };
 
 
@@ -92,6 +94,12 @@ export default function KnowledgeBase() {
 
     const previewVideoRef =
         useRef(null);
+
+    const attachmentInputRef =
+        useRef(null);
+
+    const [uploadingAttachment, setUploadingAttachment] =
+        useState(false);
 
 
     // ======================================================
@@ -437,6 +445,16 @@ function getYoutubeEmbedUrl(url) {
             videoUrl:
                 item.video_url ||
                 item.videoUrl ||
+                "",
+
+            attachmentUrl:
+                item.attachment_url ||
+                item.attachmentUrl ||
+                "",
+
+            attachmentName:
+                item.attachment_name ||
+                item.attachmentName ||
                 ""
 
         });
@@ -600,7 +618,13 @@ function getYoutubeEmbedUrl(url) {
                                     form.status,
 
                                 videoUrl:
-                                    form.videoUrl
+                                    form.videoUrl,
+
+                                attachmentUrl:
+                                    form.attachmentUrl,
+
+                                attachmentName:
+                                    form.attachmentName
 
                             })
 
@@ -934,6 +958,98 @@ function getYoutubeEmbedUrl(url) {
 
     }
 
+    // ======================================================
+// UPLOAD ARTICLE ATTACHMENT
+// ======================================================
+
+async function handleAttachmentUpload(file) {
+
+    if (!file) {
+        return;
+    }
+
+    if (
+        !file.name
+            .toLowerCase()
+            .endsWith(".pdf")
+    ) {
+        setError("Materi harus berformat PDF.");
+        return;
+    }
+
+    const maxSize =
+        20 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+        setError("Ukuran materi maksimal 20 MB.");
+        return;
+    }
+
+    try {
+
+        setUploadingAttachment(true);
+        setError("");
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "attachment",
+            file
+        );
+
+        const response =
+            await fetch(
+                "/api/knowledge/upload-attachment",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                "Gagal upload materi."
+            );
+
+        }
+
+        setForm(current => ({
+            ...current,
+
+            attachmentUrl:
+                result.data.url,
+
+            attachmentName:
+                result.data.originalName ||
+                file.name
+        }));
+
+    } catch (err) {
+
+        console.error(
+            "Attachment upload error:",
+            err
+        );
+
+        setError(
+            err.message ||
+            "Gagal upload materi."
+        );
+
+    } finally {
+
+        setUploadingAttachment(false);
+
+    }
+
+}
+
 
     // ======================================================
     // RENDER
@@ -1164,42 +1280,7 @@ function getYoutubeEmbedUrl(url) {
                         </span>
 
 
-                        <div className="knowledge-empty-actions">
-
-                            <button
-                                type="button"
-                                className="knowledge-secondary-action"
-                                onClick={() =>
-                                    openCreate("ARTICLE")
-                                }
-                            >
-
-                                <FileText
-                                    size={16}
-                                />
-
-                                Tambah Artikel
-
-                            </button>
-
-
-                            <button
-                                type="button"
-                                className="knowledge-primary-button"
-                                onClick={() =>
-                                    openCreate("VIDEO")
-                                }
-                            >
-
-                                <Video
-                                    size={16}
-                                />
-
-                                Post Video
-
-                            </button>
-
-                        </div>
+                        
 
                     </div>
 
@@ -1808,6 +1889,130 @@ function getYoutubeEmbedUrl(url) {
 
                             )}
 
+                                {form.type === "ARTICLE" && (
+
+                                <div className="knowledge-field">
+
+                                    <label>
+                                        Materi / Lampiran Artikel
+                                    </label>
+
+                                    <div
+                                        className="knowledge-upload-box"
+                                        onClick={() =>
+                                            !uploadingAttachment &&
+                                            attachmentInputRef.current?.click()
+                                        }
+                                        onDragOver={event =>
+                                            event.preventDefault()
+                                        }
+                                        onDrop={event => {
+
+                                            event.preventDefault();
+
+                                            if (uploadingAttachment) {
+                                                return;
+                                            }
+
+                                            const file =
+                                                event.dataTransfer.files?.[0];
+
+                                            handleAttachmentUpload(file);
+
+                                        }}
+                                        style={{
+                                            cursor:
+                                                uploadingAttachment
+                                                    ? "wait"
+                                                    : "pointer"
+                                        }}
+                                    >
+
+                                        <input
+                                            ref={attachmentInputRef}
+                                            type="file"
+                                            accept="application/pdf,.pdf"
+                                            hidden
+                                            onChange={event => {
+
+                                                const file =
+                                                    event.target.files?.[0];
+
+                                                handleAttachmentUpload(file);
+
+                                                event.target.value = "";
+
+                                            }}
+                                        />
+
+                                        {uploadingAttachment ? (
+
+                                            <>
+
+                                                <Upload size={30} />
+
+                                                <strong>
+                                                    Mengupload materi...
+                                                </strong>
+
+                                                <span>
+                                                    Mohon tunggu sebentar
+                                                </span>
+
+                                            </>
+
+                                        ) : form.attachmentName ? (
+
+                                            <>
+
+                                                <FileText size={30} />
+
+                                                <strong>
+                                                    {form.attachmentName}
+                                                </strong>
+
+                                                <span>
+                                                    Materi PDF berhasil diupload
+                                                </span>
+
+                                                <span>
+                                                    Klik untuk mengganti file
+                                                </span>
+
+                                            </>
+
+                                        ) : (
+
+                                            <>
+
+                                                <Upload size={30} />
+
+                                                <strong>
+                                                    Upload materi PDF
+                                                </strong>
+
+                                                <span>
+                                                    PDF, maksimal 20 MB
+                                                </span>
+
+                                                <span>
+                                                    atau drag &amp; drop file di sini
+                                                </span>
+
+                                            </>
+
+                                        )}
+
+                                    </div>
+
+                                    <small>
+                                        Opsional. Materi ini dapat didownload
+                                        dari GuestPortal.
+                                    </small>
+
+                                </div>
+
+                            )}
 
                             {/* ==================================================
                                 VIDEO
@@ -2238,7 +2443,6 @@ function getYoutubeEmbedUrl(url) {
                                     ref={previewVideoRef}
                                     src={previewVideo.url}
                                     controls
-                                    controlsList="nodownload"
                                     preload="metadata"
                                     playsInline
                                 />

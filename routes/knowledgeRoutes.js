@@ -174,6 +174,76 @@ const uploadVideo =
 
     });
 
+// ==========================================================
+// ARTICLE ATTACHMENT CONFIG
+// ==========================================================
+
+function attachmentFileFilter(
+    req,
+    file,
+    cb
+) {
+
+    const extension =
+        path.extname(
+            file.originalname
+        ).toLowerCase();
+
+
+    if (
+        extension !== ".pdf"
+    ) {
+
+        return cb(
+            new Error(
+                "Materi artikel harus berformat PDF."
+            )
+        );
+
+    }
+
+
+    if (
+        file.mimetype !==
+            "application/pdf" &&
+
+        file.mimetype !==
+            "application/octet-stream"
+    ) {
+
+        return cb(
+            new Error(
+                "File yang diupload bukan PDF."
+            )
+        );
+
+    }
+
+
+    cb(
+        null,
+        true
+    );
+
+}
+
+
+const uploadAttachment =
+    multer({
+
+        storage,
+
+        fileFilter:
+            attachmentFileFilter,
+
+        limits: {
+
+            fileSize:
+                20 * 1024 * 1024
+
+        }
+
+    });
 
 // ==========================================================
 // PUBLIC
@@ -282,6 +352,72 @@ router.post(
     },
 
     knowledgeController.uploadVideo
+);
+
+// ==========================================================
+// UPLOAD ARTICLE ATTACHMENT
+// ==========================================================
+
+router.post(
+    "/upload-attachment",
+
+    requireAuth,
+
+    (req, res, next) => {
+
+        uploadAttachment.single(
+            "attachment"
+        )(req, res, err => {
+
+            if (err) {
+
+                console.error(
+                    "Knowledge attachment upload error:",
+                    err
+                );
+
+
+                if (
+                    err.code ===
+                    "LIMIT_FILE_SIZE"
+                ) {
+
+                    return res
+                        .status(400)
+                        .json({
+
+                            ok: false,
+
+                            message:
+                                "Ukuran PDF maksimal 20 MB."
+
+                        });
+
+                }
+
+
+                return res
+                    .status(400)
+                    .json({
+
+                        ok: false,
+
+                        message:
+                            err.message ||
+                            "Gagal upload materi artikel."
+
+                    });
+
+            }
+
+
+            next();
+
+        });
+
+    },
+
+    knowledgeController.uploadAttachment
 );
 
 

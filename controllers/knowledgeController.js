@@ -9,7 +9,7 @@ const knowledgeRepository =
 
 
 // ==========================================================
-// VIDEO UPLOAD DIRECTORY
+// VIDEO / ATTACHMENT UPLOAD DIRECTORY
 // ==========================================================
 
 const uploadDir =
@@ -35,20 +35,20 @@ if (!fs.existsSync(uploadDir)) {
 
 
 // ==========================================================
-// DELETE LOCAL VIDEO FILE
+// DELETE LOCAL KNOWLEDGE FILE
 // ==========================================================
 
-function deleteVideoFile(videoUrl) {
+function deleteKnowledgeFile(fileUrl) {
 
-    if (!videoUrl) {
+    if (!fileUrl) {
         return;
     }
 
 
     // Hanya hapus file lokal.
-    // URL YouTube tidak disentuh.
+    // YouTube / external URL tidak disentuh.
     if (
-        !videoUrl.startsWith(
+        !fileUrl.startsWith(
             "/uploads/knowledge/"
         )
     ) {
@@ -60,7 +60,7 @@ function deleteVideoFile(videoUrl) {
 
     const filename =
         path.basename(
-            videoUrl
+            fileUrl
         );
 
 
@@ -88,11 +88,39 @@ function deleteVideoFile(videoUrl) {
     } catch (err) {
 
         console.error(
-            "Gagal menghapus video:",
+            "Gagal menghapus file Knowledge Base:",
             err
         );
 
     }
+
+}
+
+
+// ==========================================================
+// DELETE LOCAL VIDEO FILE
+// ==========================================================
+
+function deleteVideoFile(videoUrl) {
+
+    deleteKnowledgeFile(
+        videoUrl
+    );
+
+}
+
+
+// ==========================================================
+// DELETE LOCAL ATTACHMENT FILE
+// ==========================================================
+
+function deleteAttachmentFile(
+    attachmentUrl
+) {
+
+    deleteKnowledgeFile(
+        attachmentUrl
+    );
 
 }
 
@@ -120,17 +148,21 @@ function getAll(req, res) {
 
             MASTER:
             Frontend Master bisa meminta
-            ?status=DRAFT atau status=PUBLISHED.
+            ?status=ALL / DRAFT / PUBLISHED.
         */
 
         const contents =
             knowledgeRepository.getAll({
+
                 status:
                     status === "ALL"
                         ? undefined
                         : status || "PUBLISHED",
+
                 category,
+
                 search
+
             });
 
 
@@ -322,7 +354,11 @@ function create(req, res) {
 
             type,
 
-            videoUrl
+            videoUrl,
+
+            attachmentUrl,
+
+            attachmentName
 
         } = req.body;
 
@@ -427,6 +463,18 @@ function create(req, res) {
                 videoUrl:
                     videoUrl ||
                     null,
+
+                attachmentUrl:
+                    contentType === "ARTICLE"
+                        ? attachmentUrl ||
+                          null
+                        : null,
+
+                attachmentName:
+                    contentType === "ARTICLE"
+                        ? attachmentName ||
+                          null
+                        : null,
 
                 createdBy:
                     req.session.user.id
@@ -552,6 +600,76 @@ function uploadVideo(req, res) {
 
 
 // ==========================================================
+// UPLOAD ARTICLE ATTACHMENT
+// ==========================================================
+
+function uploadAttachment(req, res) {
+
+    try {
+
+        if (!req.file) {
+
+            return res.status(400).json({
+
+                ok: false,
+
+                message:
+                    "File materi artikel wajib dipilih."
+
+            });
+
+        }
+
+
+        const relativeUrl =
+            `/uploads/knowledge/${req.file.filename}`;
+
+
+        return res.status(201).json({
+
+            ok: true,
+
+            data: {
+
+                filename:
+                    req.file.filename,
+
+                originalName:
+                    req.file.originalname,
+
+                size:
+                    req.file.size,
+
+                url:
+                    relativeUrl
+
+            }
+
+        });
+
+    } catch (err) {
+
+        console.error(
+            "Knowledge ATTACHMENT UPLOAD error:",
+            err
+        );
+
+
+        return res.status(500).json({
+
+            ok: false,
+
+            message:
+                "Gagal upload materi artikel."
+
+        });
+
+    }
+
+}
+
+
+// ==========================================================
 // UPDATE
 // MASTER
 // ==========================================================
@@ -596,7 +714,11 @@ function update(req, res) {
 
             type,
 
-            videoUrl
+            videoUrl,
+
+            attachmentUrl,
+
+            attachmentName
 
         } = req.body;
 
@@ -696,8 +818,22 @@ function update(req, res) {
                         contentType,
 
                     videoUrl:
-                        videoUrl ||
-                        null
+                        contentType === "VIDEO"
+                            ? videoUrl ||
+                              null
+                            : null,
+
+                    attachmentUrl:
+                        contentType === "ARTICLE"
+                            ? attachmentUrl ||
+                              null
+                            : null,
+
+                    attachmentName:
+                        contentType === "ARTICLE"
+                            ? attachmentName ||
+                              null
+                            : null
 
                 }
 
@@ -738,6 +874,45 @@ function update(req, res) {
 
             deleteVideoFile(
                 existing.video_url
+            );
+
+        }
+
+
+        /*
+            Kalau attachment artikel lama
+            diganti dengan attachment baru,
+            hapus file lama.
+
+            Hanya file lokal.
+        */
+
+        if (
+            existing.attachment_url &&
+            existing.attachment_url !== attachmentUrl &&
+            contentType === "ARTICLE"
+        ) {
+
+            deleteAttachmentFile(
+                existing.attachment_url
+            );
+
+        }
+
+
+        /*
+            Kalau konten berubah dari ARTICLE
+            menjadi VIDEO, attachment lama
+            juga dihapus.
+        */
+
+        if (
+            existing.attachment_url &&
+            contentType === "VIDEO"
+        ) {
+
+            deleteAttachmentFile(
+                existing.attachment_url
             );
 
         }
@@ -846,11 +1021,28 @@ function remove(req, res) {
         */
 
         if (
-            existing.type === "VIDEO"
+            existing.video_url
         ) {
 
             deleteVideoFile(
                 existing.video_url
+            );
+
+        }
+
+
+        /*
+            Hapus attachment artikel lokal
+            setelah record database berhasil
+            dihapus.
+        */
+
+        if (
+            existing.attachment_url
+        ) {
+
+            deleteAttachmentFile(
+                existing.attachment_url
             );
 
         }
@@ -902,6 +1094,8 @@ module.exports = {
     create,
 
     uploadVideo,
+
+    uploadAttachment,
 
     update,
 

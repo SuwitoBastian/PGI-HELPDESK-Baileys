@@ -146,6 +146,10 @@ function create({
 
     videoUrl = null,
 
+    attachmentUrl = null,
+
+    attachmentName = null,
+
     createdBy = null
 
 }) {
@@ -171,6 +175,10 @@ function create({
 
                     video_url,
 
+                    attachment_url,
+
+                    attachment_name,
+
                     created_by
 
                 )
@@ -193,6 +201,10 @@ function create({
 
                     @videoUrl,
 
+                    @attachmentUrl,
+
+                    @attachmentName,
+
                     @createdBy
 
                 )
@@ -214,6 +226,10 @@ function create({
                 type,
 
                 videoUrl,
+
+                attachmentUrl,
+
+                attachmentName,
 
                 createdBy
 
@@ -251,7 +267,11 @@ function update(
 
         type = "ARTICLE",
 
-        videoUrl = null
+        videoUrl = null,
+
+        attachmentUrl = null,
+
+        attachmentName = null
 
     }
 
@@ -280,6 +300,10 @@ function update(
 
                     video_url = @videoUrl,
 
+                    attachment_url = @attachmentUrl,
+
+                    attachment_name = @attachmentName,
+
                     updated_at = CURRENT_TIMESTAMP
 
                 WHERE id = @id
@@ -302,7 +326,11 @@ function update(
 
                 type,
 
-                videoUrl
+                videoUrl,
+
+                attachmentUrl,
+
+                attachmentName
 
             });
 

@@ -479,7 +479,7 @@ export default function GuestPortal() {
         const isUploadedVideo =
             selectedContent.type === "VIDEO" &&
             selectedContent.video_url &&
-            !youtubeUrl;
+            selectedContent.video_url.startsWith("/uploads/knowledge/");
 
 
         return (
@@ -583,18 +583,29 @@ export default function GuestPortal() {
                                         allowFullScreen
                                     />
 
-                                ) : isUploadedVideo ? (
+                                    ) : isUploadedVideo ? (
 
-                                    <video
-                                        src={
-                                            selectedContent.video_url
-                                        }
-                                        controls
-                                        preload="metadata"
-                                        playsInline
-                                    />
+                                        <div>
+                                            <video
+                                                src={
+                                                    selectedContent.video_url
+                                                }
+                                                controls
+                                                preload="metadata"
+                                                playsInline
+                                            />
 
-                                ) : (
+                                            <a
+                                                href={selectedContent.video_url}
+                                                download
+                                                className="guest-download-button"
+                                                onClick={event => event.stopPropagation()}
+                                            >
+                                                Download Video
+                                            </a>
+                                        </div>
+
+                                    ) : (
 
                                     <div className="guest-detail-video-error">
 
@@ -615,14 +626,44 @@ export default function GuestPortal() {
 
                         {selectedContent.type !== "VIDEO" && (
 
-                            <div
-                                className="guest-detail-content"
-                                dangerouslySetInnerHTML={{
-                                    __html:
-                                        selectedContent.content ||
-                                        "<p>Belum ada konten.</p>"
-                                }}
-                            />
+                            <>
+
+                                <div
+                                    className="guest-detail-content"
+                                    dangerouslySetInnerHTML={{
+                                        __html:
+                                            selectedContent.content ||
+                                            "<p>Belum ada konten.</p>"
+                                    }}
+                                />
+
+                                {selectedContent.attachment_url && (
+
+                                    <div className="guest-detail-attachment">
+
+                                        <a
+                                            href={selectedContent.attachment_url}
+                                            download={
+                                                selectedContent.attachment_name ||
+                                                true
+                                            }
+                                            className="guest-download-button"
+                                            onClick={event =>
+                                                event.stopPropagation()
+                                            }
+                                        >
+                                            Download Materi
+                                            {selectedContent.attachment_name
+                                                ? ` - ${selectedContent.attachment_name}`
+                                                : ""
+                                            }
+                                        </a>
+
+                                    </div>
+
+                                )}
+
+                            </>
 
                         )}
 

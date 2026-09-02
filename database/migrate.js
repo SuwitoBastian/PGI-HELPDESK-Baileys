@@ -163,6 +163,38 @@ function migrate() {
     );
 
     /* ==========================
+        Knowledge Base
+    ========================== */
+
+    migration.addColumn(
+        "knowledge_base",
+        "type",
+        "TEXT DEFAULT 'ARTICLE'"
+    );
+
+    migration.addColumn(
+        "knowledge_base",
+        "video_url",
+        "TEXT"
+    );
+
+    /* ==========================
+       Knowledge Base Attachment
+    ========================== */
+
+    migration.addColumn(
+        "knowledge_base",
+        "attachment_url",
+        "TEXT"
+    );
+
+    migration.addColumn(
+        "knowledge_base",
+        "attachment_name",
+        "TEXT"
+    );
+
+    /* ==========================
        Seed Default Data
     ========================== */
 

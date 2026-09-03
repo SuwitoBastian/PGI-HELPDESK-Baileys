@@ -79,6 +79,110 @@ function getYoutubeEmbedUrl(url) {
 
 
 /* ==========================================================
+   TIKTOK EMBED
+========================================================== */
+
+function getTiktokEmbedUrl(url) {
+
+    if (!url) {
+        return null;
+    }
+
+    try {
+
+        const parsedUrl =
+            new URL(url.trim());
+
+        const hostname =
+            parsedUrl.hostname
+                .toLowerCase()
+                .replace(/^www\./, "");
+
+        if (
+            hostname !== "tiktok.com" &&
+            hostname !== "m.tiktok.com"
+        ) {
+            return null;
+        }
+
+        const match =
+            parsedUrl.pathname.match(
+                /\/video\/(\d+)/
+            );
+
+        if (!match) {
+            return null;
+        }
+
+        return (
+            `https://www.tiktok.com/player/v1/${match[1]}`
+        );
+
+    } catch {
+
+        return null;
+
+    }
+
+}
+
+
+/* ==========================================================
+   TIKTOK RESOLVER
+========================================================== */
+
+async function resolveTikTokEmbedUrl(url) {
+
+    if (!url) {
+        return null;
+    }
+
+    const directEmbed =
+        getTiktokEmbedUrl(url);
+
+    if (directEmbed) {
+        return directEmbed;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/knowledge/tiktok-resolve?url=${encodeURIComponent(
+                    url.trim()
+                )}`
+            );
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const result =
+            await response.json();
+
+        if (
+            result.ok &&
+            result.data &&
+            result.data.embedUrl
+        ) {
+            return result.data.embedUrl;
+        }
+
+        return null;
+
+    } catch (error) {
+
+        console.error(
+            "TikTok resolver error:",
+            error
+        );
+
+        return null;
+
+    }
+
+}
+/* ==========================================================
    GUEST PORTAL
 ========================================================== */
 
@@ -101,6 +205,13 @@ export default function GuestPortal() {
 
     const [selectedContent, setSelectedContent] =
         useState(null);
+
+    const [tiktokEmbedUrl, setTiktokEmbedUrl] =
+        useState(null);
+
+    const [tiktokLoading, setTiktokLoading] =
+        useState(false);
+
 
 
     /* ======================================================
@@ -173,6 +284,59 @@ export default function GuestPortal() {
         loadKnowledge();
 
     }, []);
+
+
+    /* ======================================================
+       RESOLVE TIKTOK
+    ====================================================== */
+
+    useEffect(() => {
+
+        let cancelled = false;
+
+        async function resolveSelectedTikTok() {
+
+            setTiktokEmbedUrl(null);
+
+            if (
+                !selectedContent ||
+                selectedContent.type !== "VIDEO" ||
+                !selectedContent.video_url
+            ) {
+                setTiktokLoading(false);
+                return;
+            }
+
+            const url =
+                selectedContent.video_url.trim();
+
+            if (
+                getYoutubeEmbedUrl(url) ||
+                url.startsWith("/uploads/knowledge/")
+            ) {
+                setTiktokLoading(false);
+                return;
+            }
+
+            setTiktokLoading(true);
+
+            const embedUrl =
+                await resolveTikTokEmbedUrl(url);
+
+            if (!cancelled) {
+                setTiktokEmbedUrl(embedUrl);
+                setTiktokLoading(false);
+            }
+
+        }
+
+        resolveSelectedTikTok();
+
+        return () => {
+            cancelled = true;
+        };
+
+    }, [selectedContent]);
 
 
     /* ======================================================
@@ -476,7 +640,12 @@ export default function GuestPortal() {
                 : null;
 
 
-        const isUploadedVideo =
+        const tiktokUrl =
+            selectedContent.type === "VIDEO"
+                ? tiktokEmbedUrl
+                : null;
+
+const isUploadedVideo =
             selectedContent.type === "VIDEO" &&
             selectedContent.video_url &&
             selectedContent.video_url.startsWith("/uploads/knowledge/");
@@ -583,7 +752,27 @@ export default function GuestPortal() {
                                         allowFullScreen
                                     />
 
-                                    ) : isUploadedVideo ? (
+                                ) : tiktokUrl ? (
+
+                                    <iframe
+                                        src={tiktokUrl}
+                                        title={
+                                            selectedContent.title
+                                        }
+                                        allow="
+                                            autoplay;
+                                            encrypted-media;
+                                            fullscreen;
+                                            picture-in-picture
+                                        "
+                                        allowFullScreen
+                                    /> ) : tiktokLoading ? (
+
+                                    <div className="guest-detail-video-error">
+                                        Memuat video TikTok...
+                                    </div>
+
+                                ) : isUploadedVideo ? (
 
                                         <div>
                                             <video

@@ -180,12 +180,6 @@ function seedHelpdeskGroups() {
             1
         ],
 
-        [
-            "PRIVATE",
-            "120363402182254408@g.us",
-            1
-        ]
-
     ];
 
     const insert = db.prepare(`

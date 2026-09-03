@@ -1080,6 +1080,55 @@ function remove(req, res) {
 
 
 // ==========================================================
+// TIKTOK RESOLVER
+// ==========================================================
+
+async function resolveTikTok(req, res) {
+    try {
+        const { url } = req.query;
+
+        if (!url) {
+            return res.status(400).json({
+                ok: false,
+                message: "URL TikTok wajib diisi."
+            });
+        }
+
+        const { resolveTikTokUrl } =
+            require("../utils/tiktok");
+
+        const result =
+            await resolveTikTokUrl(url);
+
+        if (!result) {
+            return res.status(400).json({
+                ok: false,
+                message:
+                    "URL TikTok tidak dapat diproses."
+            });
+        }
+
+        return res.json({
+            ok: true,
+            data: result
+        });
+
+    } catch (error) {
+        console.error(
+            "TikTok resolver error:",
+            error
+        );
+
+        return res.status(500).json({
+            ok: false,
+            message:
+                "Gagal memproses URL TikTok."
+        });
+    }
+}
+
+
+// ==========================================================
 // EXPORT
 // ==========================================================
 
@@ -1099,6 +1148,8 @@ module.exports = {
 
     update,
 
-    remove
+    remove,
+
+    resolveTikTok
 
 };

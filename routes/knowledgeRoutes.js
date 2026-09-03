@@ -256,6 +256,14 @@ router.get(
     knowledgeController.getAll
 );
 
+// ==========================================================
+// TIKTOK RESOLVER
+// ==========================================================
+
+router.get(
+    "/tiktok-resolve",
+    knowledgeController.resolveTikTok
+);
 
 // Konten berdasarkan slug
 router.get(

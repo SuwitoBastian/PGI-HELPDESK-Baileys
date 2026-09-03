@@ -1,8 +1,8 @@
 const ticketEngine =
     require("../services/ticketEngine");
 
-const allowedGroups =
-    require("../config/groups");
+const helpdeskGroupService =
+    require("../services/helpdeskGroupService");
 
 module.exports = async (msg) => {
 
@@ -42,7 +42,7 @@ module.exports = async (msg) => {
     if (selisih > 60) {
 
         console.log(
-            `⏩ Skip pesan lama (${selisih} detik)`
+            `⏭️ Skip pesan lama (${selisih} detik)`
         );
 
         return;
@@ -54,10 +54,24 @@ module.exports = async (msg) => {
     // ========================
     if (msg.from.endsWith("@g.us")) {
 
-        const daftarGrup =
-            Object.values(allowedGroups);
+        const group =
+            helpdeskGroupService.getByGroupId(
+                msg.from
+            );
 
-        if (!daftarGrup.includes(msg.from)) {
+        // ========================
+        // Grup tidak terdaftar
+        // ========================
+        if (!group) {
+
+            return;
+
+        }
+
+        // ========================
+        // Grup terdaftar tapi OFF
+        // ========================
+        if (!group.enabled) {
 
             return;
 

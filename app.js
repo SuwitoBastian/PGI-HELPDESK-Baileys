@@ -86,6 +86,9 @@ const operationalAssignmentRoutes =
 const knowledgeRoutes =
     require("./routes/knowledgeRoutes");
 
+const helpdeskGroupRoutes =
+    require("./routes/helpdeskGroupRoutes");
+
 
 /* ==========================================================
    Express
@@ -219,6 +222,12 @@ app.use(
     "/api/operational-rotation",
     requireAuth,
     operationalRotationRoutes
+);
+
+app.use(
+    "/api/helpdesk-groups",
+    requireAuth,
+    helpdeskGroupRoutes
 );
 
 app.use(

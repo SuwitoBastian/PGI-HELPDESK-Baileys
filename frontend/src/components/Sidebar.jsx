@@ -639,6 +639,33 @@ export default function Sidebar({
                                 </button>
 
                                 <button
+                                    type="button"
+                                    className={`nav-link ${
+                                        view ===
+                                        "helpdesk-group-management"
+                                            ? "active"
+                                            : ""
+                                    }`}
+                                    onClick={() =>
+                                        onNavigate(
+                                            "helpdesk-group-management"
+                                        )
+                                    }
+                                >
+
+                                    <Users
+                                        size={14}
+                                    />
+
+                                    <span className="nav-text">
+
+                                        Manajemen Grup Helpdesk
+
+                                    </span>
+
+                                </button>
+
+                                <button
                                   type="button"
                                   className={`nav-link ${
                                       view ===

@@ -215,5 +215,27 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
 
 )
 `
+,
+
+`
+CREATE TABLE IF NOT EXISTS helpdesk_groups (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    group_name TEXT NOT NULL UNIQUE,
+
+    group_id TEXT NOT NULL UNIQUE,
+
+    enabled INTEGER NOT NULL DEFAULT 1
+        CHECK(enabled IN (0, 1)),
+
+    created_at DATETIME
+        DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at DATETIME
+        DEFAULT CURRENT_TIMESTAMP
+
+)
+`
 
 ];

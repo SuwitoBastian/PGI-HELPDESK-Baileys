@@ -456,6 +456,55 @@ export async function getOperationalRotation() {
 
 }
 
+/* ==========================================================
+   Helpdesk Groups
+========================================================== */
+
+export async function getHelpdeskGroups() {
+
+    const res =
+        await fetch(
+            `${BASE}/helpdesk-groups`
+        );
+
+    if (!res.ok) {
+
+        throw new Error(
+            `Gagal memuat Helpdesk Groups (${res.status})`
+        );
+
+    }
+
+    return res.json();
+
+}
+
+
+export async function toggleHelpdeskGroup(id) {
+
+    const res =
+        await fetch(
+            `${BASE}/helpdesk-groups/${id}/toggle`,
+            {
+                method: "POST"
+            }
+        );
+
+    const result =
+        await res.json();
+
+    if (!res.ok || !result.success) {
+
+        throw new Error(
+            result.message ||
+            "Gagal mengubah status grup Helpdesk."
+        );
+
+    }
+
+    return result;
+
+}
 
 /* ==========================================================
    Ticket Actions

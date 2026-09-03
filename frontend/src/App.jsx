@@ -17,6 +17,7 @@ import TicketTable from "./components/TicketTable";
 import SummaryView from "./components/SummaryView";
 import FilterCard from "./components/FilterCard";
 import TeamRotation from "./components/settings/TeamRotation";
+import HelpdeskGroupManagement from "./components/settings/HelpdeskGroupManagement";
 import KnowledgeBase from "./components/settings/KnowledgeBase";
 import KnowledgeHome from "./components/knowledge/KnowledgeHome";
 import GuestPortal from "./components/guest/GuestPortal";
@@ -115,6 +116,12 @@ const PAGES = {
   "team-rotation": {
     title: "Pengaturan Operasional",
     subtitle: "Konfigurasi Team Rotation.",
+    icon: LayoutDashboard,
+  },
+
+  "helpdesk-group-management": {
+    title: "Pengaturan Operasional",
+    subtitle: "Manajemen Grup Helpdesk.",
     icon: LayoutDashboard,
   },
 
@@ -1028,6 +1035,10 @@ const year =
             ) : view === "team-rotation" ? (
 
                 <TeamRotation />
+
+            ) : view === "helpdesk-group-management" ? (
+
+                <HelpdeskGroupManagement />
 
             ) : view === "knowledge-home" ? (
 

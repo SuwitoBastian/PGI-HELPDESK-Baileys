@@ -137,6 +137,83 @@ function seedEngineers() {
 }
 
 /* ==========================================================
+   Helpdesk Groups
+========================================================== */
+
+function seedHelpdeskGroups() {
+
+    const groups = [
+
+        [
+            "IT-AM Faiz",
+            "120363407392228654@g.us",
+            1
+        ],
+
+        [
+            "IT-AM Indah",
+            "120363403420498048@g.us",
+            0
+        ],
+
+        [
+            "IT-AM Deliviani",
+            "120363408078086135@g.us",
+            1
+        ],
+
+        [
+            "IT-AM Naya",
+            "120363426146761749@g.us",
+            1
+        ],
+
+        [
+            "IT-AM Fathur",
+            "120363405503402810@g.us",
+            1
+        ],
+
+        [
+            "IT-AM Amantha",
+            "120363422562446752@g.us",
+            1
+        ],
+
+        [
+            "PRIVATE",
+            "120363402182254408@g.us",
+            1
+        ]
+
+    ];
+
+    const insert = db.prepare(`
+        INSERT OR IGNORE INTO helpdesk_groups (
+            group_name,
+            group_id,
+            enabled
+        )
+        VALUES (?, ?, ?)
+    `);
+
+    const transaction = db.transaction(() => {
+
+        for (const group of groups) {
+
+            insert.run(...group);
+
+        }
+
+    });
+
+    transaction();
+
+    console.log("âœ… helpdesk_groups seeded");
+
+}
+
+/* ==========================================================
    Run All Seeds
 ========================================================== */
 
@@ -145,6 +222,8 @@ function runSeeds() {
     seedOperationalRotation();
 
     seedEngineers();
+
+    seedHelpdeskGroups();
 
 }
 

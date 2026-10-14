@@ -653,8 +653,8 @@ async function handleIdle(msg) {
     // ==========================================================
 
     if (
-        !text.includes("Cabang") ||
-        !text.includes("Kendala")
+        !/\bCabang\s*:/i.test(text) ||
+        !/\bKendala\s*:/i.test(text)
     ) {
 
         return;

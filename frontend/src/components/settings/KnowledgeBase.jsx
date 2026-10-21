@@ -962,93 +962,64 @@ function getYoutubeEmbedUrl(url) {
 // UPLOAD ARTICLE ATTACHMENT
 // ======================================================
 
+
 async function handleAttachmentUpload(file) {
+    if (!file) return;
 
-    if (!file) {
+    const allowedExtensions = [".pdf", ".exe", ".rar"];
+    const extension = file.name
+        .substring(file.name.lastIndexOf("."))
+        .toLowerCase();
+
+    if (!allowedExtensions.includes(extension)) {
+        setError("Materi hanya boleh berformat PDF, EXE, atau RAR.");
         return;
     }
 
-    if (
-        !file.name
-            .toLowerCase()
-            .endsWith(".pdf")
-    ) {
-        setError("Materi harus berformat PDF.");
-        return;
-    }
-
-    const maxSize =
-        20 * 1024 * 1024;
+    const maxSize = 300 * 1024 * 1024;
 
     if (file.size > maxSize) {
-        setError("Ukuran materi maksimal 20 MB.");
+        setError("Ukuran materi maksimal 300 MB.");
         return;
     }
 
     try {
-
         setUploadingAttachment(true);
         setError("");
 
-        const formData =
-            new FormData();
+        const formData = new FormData();
+        formData.append("attachment", file);
 
-        formData.append(
-            "attachment",
-            file
+        const response = await fetch(
+            "/api/knowledge/upload-attachment",
+            {
+                method: "POST",
+                body: formData
+            }
         );
 
-        const response =
-            await fetch(
-                "/api/knowledge/upload-attachment",
-                {
-                    method: "POST",
-                    body: formData
-                }
-            );
-
-        const result =
-            await response.json();
+        const result = await response.json();
 
         if (!response.ok) {
-
             throw new Error(
-                result.message ||
-                "Gagal upload materi."
+                result.message || "Gagal upload materi."
             );
-
         }
 
         setForm(current => ({
             ...current,
-
-            attachmentUrl:
-                result.data.url,
-
+            attachmentUrl: result.data.url,
             attachmentName:
-                result.data.originalName ||
-                file.name
+                result.data.originalName || file.name
         }));
-
     } catch (err) {
-
-        console.error(
-            "Attachment upload error:",
-            err
-        );
-
-        setError(
-            err.message ||
-            "Gagal upload materi."
-        );
-
+        console.error("Attachment upload error:", err);
+        setError(err.message || "Gagal upload materi.");
     } finally {
-
         setUploadingAttachment(false);
-
     }
-
 }
+
 
 
     // ======================================================
@@ -1931,17 +1902,16 @@ async function handleAttachmentUpload(file) {
                                         <input
                                             ref={attachmentInputRef}
                                             type="file"
-                                            accept="application/pdf,.pdf"
+                                            accept=".pdf,.exe,.rar,application/pdf,application/x-rar-compressed,application/vnd.rar,application/octet-stream"
                                             hidden
                                             onChange={event => {
+                                                const file = event.target.files?.[0];
 
-                                                const file =
-                                                    event.target.files?.[0];
-
-                                                handleAttachmentUpload(file);
+                                                if (file) {
+                                                    handleAttachmentUpload(file);
+                                                }
 
                                                 event.target.value = "";
-
                                             }}
                                         />
 
@@ -1972,7 +1942,7 @@ async function handleAttachmentUpload(file) {
                                                 </strong>
 
                                                 <span>
-                                                    Materi PDF berhasil diupload
+                                                    Materi berhasil diupload
                                                 </span>
 
                                                 <span>
@@ -1988,11 +1958,11 @@ async function handleAttachmentUpload(file) {
                                                 <Upload size={30} />
 
                                                 <strong>
-                                                    Upload materi PDF
+                                                    Upload materi atau lampiran
                                                 </strong>
 
                                                 <span>
-                                                    PDF, maksimal 20 MB
+                                                    PDF, EXE, atau RAR, maksimal 100 MB
                                                 </span>
 
                                                 <span>

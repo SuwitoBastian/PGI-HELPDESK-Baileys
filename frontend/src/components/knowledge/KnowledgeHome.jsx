@@ -593,6 +593,32 @@ export default function KnowledgeHome() {
 
                     )}
 
+                    
+                    {/* LAMPIRAN ARTIKEL */}
+                    {selectedContent.type !== "VIDEO" &&
+                        (selectedContent.attachment_url ||
+                            selectedContent.attachmentUrl) && (
+                            <div className="knowledge-home-attachment">
+                                <strong>Materi atau Lampiran</strong>
+
+                                <a
+                                    href={
+                                        selectedContent.attachment_url ||
+                                        selectedContent.attachmentUrl
+                                    }
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    📎{" "}
+                                    {selectedContent.attachment_name ||
+                                        selectedContent.attachmentName ||
+                                        "Unduh materi"}
+                                </a>
+                            </div>
+                        )}
+
+
 
                     {/* ==================================================
                         VIDEO DESCRIPTION

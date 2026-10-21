@@ -178,72 +178,31 @@ const uploadVideo =
 // ARTICLE ATTACHMENT CONFIG
 // ==========================================================
 
-function attachmentFileFilter(
-    req,
-    file,
-    cb
-) {
+function attachmentFileFilter(req, file, cb) {
+    const extension = path.extname(file.originalname).toLowerCase();
 
-    const extension =
-        path.extname(
-            file.originalname
-        ).toLowerCase();
+    const allowedExtensions = [".pdf", ".exe", ".rar"];
 
-
-    if (
-        extension !== ".pdf"
-    ) {
-
+    if (!allowedExtensions.includes(extension)) {
         return cb(
-            new Error(
-                "Materi artikel harus berformat PDF."
-            )
+            new Error("Format file hanya PDF, EXE, atau RAR.")
         );
-
     }
 
-
-    if (
-        file.mimetype !==
-            "application/pdf" &&
-
-        file.mimetype !==
-            "application/octet-stream"
-    ) {
-
-        return cb(
-            new Error(
-                "File yang diupload bukan PDF."
-            )
-        );
-
-    }
-
-
-    cb(
-        null,
-        true
-    );
-
+    // MIME type dapat berbeda tergantung browser dan sistem operasi.
+    // Ekstensi sudah dibatasi ke PDF, EXE, dan RAR.
+    cb(null, true);
 }
 
+const uploadAttachment = multer({
+    storage,
 
-const uploadAttachment =
-    multer({
+    fileFilter: attachmentFileFilter,
 
-        storage,
-
-        fileFilter:
-            attachmentFileFilter,
-
-        limits: {
-
-            fileSize:
-                20 * 1024 * 1024
-
-        }
-
-    });
+    limits: {
+        fileSize: 300 * 1024 * 1024
+    }
+});
 
 // ==========================================================
 // PUBLIC
@@ -397,7 +356,7 @@ router.post(
                             ok: false,
 
                             message:
-                                "Ukuran PDF maksimal 20 MB."
+                                "Ukuran file maksimal 300 MB."
 
                         });
 

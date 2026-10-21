@@ -464,6 +464,31 @@ export default function KnowledgeDetail({
                 )}
 
             </article>
+            
+            {/* LAMPIRAN ARTIKEL */}
+            {content.type !== "VIDEO" &&
+                (content.attachment_url ||
+                    content.attachmentUrl) && (
+                    <div className="knowledge-detail-attachment">
+                        <strong>Materi atau Lampiran</strong>
+
+                        <a
+                            href={
+                                content.attachment_url ||
+                                content.attachmentUrl
+                            }
+                            download
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            📎{" "}
+                            {content.attachment_name ||
+                                content.attachmentName ||
+                                "Unduh materi"}
+                        </a>
+                    </div>
+                )}
+
 
 
         </div>

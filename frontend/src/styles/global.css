@@ -6856,6 +6856,36 @@ c
 
 
 /* ==========================================================
+   KNOWLEDGE BASE - LAMPIRAN ARTIKEL
+========================================================== */
+
+.knowledge-home-attachment,
+.knowledge-detail-attachment {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid #dbe2ea;
+    border-radius: 10px;
+}
+
+.knowledge-home-attachment a,
+.knowledge-detail-attachment a {
+    width: fit-content;
+    color: #2563eb;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+}
+
+.knowledge-home-attachment a:hover,
+.knowledge-detail-attachment a:hover {
+    text-decoration: underline;
+}
+
+
+
+/* ==========================================================
    VIDEO DESCRIPTION
 ========================================================== */
 

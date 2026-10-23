@@ -101,6 +101,9 @@ export default function KnowledgeBase() {
     const [uploadingAttachment, setUploadingAttachment] =
         useState(false);
 
+    const [attachmentUploadProgress, setAttachmentUploadProgress] =
+        useState(0);
+
 
     // ======================================================
     // LOAD KNOWLEDGE BASE
@@ -977,49 +980,123 @@ async function handleAttachmentUpload(file) {
     }
 
     const maxSize = 300 * 1024 * 1024;
+    const chunkSize = 10 * 1024 * 1024;
 
     if (file.size > maxSize) {
         setError("Ukuran materi maksimal 300 MB.");
         return;
     }
 
+    const uploadId = (
+        globalThis.crypto?.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
+    const totalChunks = Math.ceil(file.size / chunkSize);
+
+    // XMLHttpRequest dipakai agar progres upload tiap potongan bisa ditampilkan.
+    function sendChunk(chunk, chunkIndex) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append("chunk", chunk, `chunk-${chunkIndex}.part`);
+
+            xhr.open(
+                "POST",
+                `/api/knowledge/upload-attachment/chunk/${encodeURIComponent(uploadId)}/${chunkIndex}/${totalChunks}`
+            );
+            xhr.withCredentials = true;
+
+            xhr.upload.onprogress = event => {
+                if (event.lengthComputable) {
+                    const uploadedBytes =
+                        chunkIndex * chunkSize + Math.min(event.loaded, chunk.size);
+                    const percent = Math.min(
+                        99,
+                        Math.round((uploadedBytes / file.size) * 100)
+                    );
+                    setAttachmentUploadProgress(percent);
+                }
+            };
+
+            xhr.onload = () => {
+                let result = {};
+                try {
+                    result = JSON.parse(xhr.responseText || "{}");
+                } catch {
+                    reject(new Error("Respons server upload tidak valid."));
+                    return;
+                }
+
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    reject(new Error(result.message || `Gagal mengupload bagian ${chunkIndex + 1}.`));
+                    return;
+                }
+
+                resolve(result);
+            };
+
+            xhr.onerror = () => reject(new Error("Koneksi upload terputus. Periksa koneksi lalu coba lagi."));
+            xhr.onabort = () => reject(new Error("Upload dibatalkan."));
+            xhr.send(formData);
+        });
+    }
+
     try {
         setUploadingAttachment(true);
+        setAttachmentUploadProgress(0);
         setError("");
 
-        const formData = new FormData();
-        formData.append("attachment", file);
+        // Upload potongan secara berurutan agar tidak membebani server.
+        for (let index = 0; index < totalChunks; index += 1) {
+            const chunk = file.slice(
+                index * chunkSize,
+                Math.min((index + 1) * chunkSize, file.size)
+            );
+            await sendChunk(chunk, index);
+            setAttachmentUploadProgress(
+                Math.min(99, Math.round(((index + 1) / totalChunks) * 100))
+            );
+        }
 
         const response = await fetch(
-            "/api/knowledge/upload-attachment",
+            "/api/knowledge/upload-attachment/complete",
             {
                 method: "POST",
-                body: formData
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    uploadId,
+                    originalName: file.name,
+                    totalChunks
+                })
             }
         );
 
         const result = await response.json();
 
         if (!response.ok) {
-            throw new Error(
-                result.message || "Gagal upload materi."
-            );
+            throw new Error(result.message || "Gagal menyelesaikan upload materi.");
         }
 
+        setAttachmentUploadProgress(100);
         setForm(current => ({
             ...current,
             attachmentUrl: result.data.url,
-            attachmentName:
-                result.data.originalName || file.name
+            attachmentName: result.data.originalName || file.name
         }));
     } catch (err) {
         console.error("Attachment upload error:", err);
         setError(err.message || "Gagal upload materi.");
+
+        // Best-effort cleanup untuk potongan yang sempat terkirim.
+        fetch("/api/knowledge/upload-attachment/cancel", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uploadId })
+        }).catch(() => {});
     } finally {
         setUploadingAttachment(false);
     }
 }
-
 
 
     // ======================================================
@@ -1922,11 +1999,36 @@ async function handleAttachmentUpload(file) {
                                                 <Upload size={30} />
 
                                                 <strong>
-                                                    Mengupload materi...
+                                                    Mengupload materi... {attachmentUploadProgress}%
                                                 </strong>
 
+                                                <div
+                                                    role="progressbar"
+                                                    aria-valuemin={0}
+                                                    aria-valuemax={100}
+                                                    aria-valuenow={attachmentUploadProgress}
+                                                    style={{
+                                                        width: "80%",
+                                                        maxWidth: "320px",
+                                                        height: "7px",
+                                                        background: "#e5e7eb",
+                                                        borderRadius: "999px",
+                                                        overflow: "hidden",
+                                                        margin: "8px 0"
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            width: `${attachmentUploadProgress}%`,
+                                                            height: "100%",
+                                                            background: "#2563eb",
+                                                            transition: "width 120ms linear"
+                                                        }}
+                                                    />
+                                                </div>
+
                                                 <span>
-                                                    Mohon tunggu sebentar
+                                                    Bagian kecil dikirim bertahap. Mohon jangan tutup halaman.
                                                 </span>
 
                                             </>
@@ -1962,7 +2064,7 @@ async function handleAttachmentUpload(file) {
                                                 </strong>
 
                                                 <span>
-                                                    PDF, EXE, atau RAR, maksimal 100 MB
+                                                    PDF, EXE, atau RAR, maksimal 300 MB
                                                 </span>
 
                                                 <span>

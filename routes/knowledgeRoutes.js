@@ -7,6 +7,12 @@ const multer =
 const path =
     require("path");
 
+const fs =
+    require("fs");
+
+const crypto =
+    require("crypto");
+
 const router =
     express.Router();
 
@@ -203,6 +209,543 @@ const uploadAttachment = multer({
         fileSize: 300 * 1024 * 1024
     }
 });
+
+
+ // ==========================================================
+ // CHUNKED ARTICLE ATTACHMENT UPLOAD
+ // ==========================================================
+
+const ATTACHMENT_CHUNK_SIZE = 10 * 1024 * 1024;
+const ATTACHMENT_MAX_SIZE = 300 * 1024 * 1024;
+const MAX_ATTACHMENT_CHUNKS = 30;
+
+const attachmentChunkDir = path.join(
+    process.cwd(),
+    "tmp",
+    "knowledge-attachment-chunks"
+);
+
+const uploadAttachmentChunk = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: ATTACHMENT_CHUNK_SIZE,
+        files: 1
+    }
+});
+
+function isValidUploadId(uploadId) {
+    return (
+        typeof uploadId === "string" &&
+        /^[a-zA-Z0-9-]{1,100}$/.test(uploadId)
+    );
+}
+
+function getChunkDirectory(uploadId) {
+    return path.join(attachmentChunkDir, uploadId);
+}
+
+function getUploadOwner(req) {
+    return crypto
+        .createHash("sha256")
+        .update(req.sessionID)
+        .digest("hex");
+}
+
+async function verifyUploadOwner(req, uploadId, totalChunks) {
+    const manifestPath = path.join(
+        getChunkDirectory(uploadId),
+        "manifest.json"
+    );
+
+    let manifest;
+
+    try {
+        manifest = JSON.parse(
+            await fs.promises.readFile(manifestPath, "utf8")
+        );
+    } catch {
+        return false;
+    }
+
+    return (
+        manifest.owner === getUploadOwner(req) &&
+        (
+            totalChunks == null ||
+            manifest.totalChunks === totalChunks
+        )
+    );
+}
+
+async function removeChunkDirectory(uploadId) {
+    if (!isValidUploadId(uploadId)) return;
+
+    await fs.promises.rm(
+        getChunkDirectory(uploadId),
+        { recursive: true, force: true }
+    );
+}
+
+
+const CHUNK_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const CHUNK_CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+async function cleanupStaleAttachmentChunks() {
+    try {
+        const now = Date.now();
+
+        let entries;
+
+        try {
+            entries = await fs.promises.readdir(
+                attachmentChunkDir,
+                { withFileTypes: true }
+            );
+        } catch (err) {
+            if (err.code === "ENOENT") return;
+            throw err;
+        }
+
+        for (const entry of entries) {
+            // Hanya proses folder, bukan file lain.
+            if (!entry.isDirectory()) continue;
+
+            const folderPath = path.join(
+                attachmentChunkDir,
+                entry.name
+            );
+
+            try {
+                const stat = await fs.promises.stat(folderPath);
+                const age = now - stat.mtimeMs;
+
+                if (age > CHUNK_MAX_AGE_MS) {
+                    await fs.promises.rm(folderPath, {
+                        recursive: true,
+                        force: true
+                    });
+
+                    console.log(
+                        `[Knowledge Upload] Folder sementara kedaluwarsa dibersihkan: ${entry.name}`
+                    );
+                }
+            } catch (err) {
+                console.error(
+                    `[Knowledge Upload] Gagal membersihkan ${entry.name}:`,
+                    err.message
+                );
+            }
+        }
+    } catch (err) {
+        console.error(
+            "[Knowledge Upload] Pembersihan folder sementara gagal:",
+            err.message
+        );
+    }
+}
+
+// Bersihkan saat aplikasi berjalan dan ulangi setiap 6 jam.
+cleanupStaleAttachmentChunks();
+
+const chunkCleanupTimer = setInterval(
+    cleanupStaleAttachmentChunks,
+    CHUNK_CLEANUP_INTERVAL_MS
+);
+
+// Jangan sampai timer menghambat proses Node.js berhenti.
+if (typeof chunkCleanupTimer.unref === "function") {
+    chunkCleanupTimer.unref();
+}
+
+
+function safeAttachmentFilename(originalName) {
+    const extension = path.extname(originalName).toLowerCase();
+
+    const baseName = path
+        .basename(originalName, path.extname(originalName))
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80);
+
+    return `${baseName || "materi"}-${Date.now()}-${crypto.randomBytes(6).toString("hex")}${extension}`;
+}
+
+// ----------------------------------------------------------
+// TERIMA SATU POTONGAN FILE
+// ----------------------------------------------------------
+
+router.post(
+    "/upload-attachment/chunk/:uploadId/:chunkIndex/:totalChunks",
+    requireAuth,
+    (req, res, next) => {
+        uploadAttachmentChunk.single("chunk")(req, res, err => {
+            if (err) {
+                const message =
+                    err.code === "LIMIT_FILE_SIZE"
+                        ? "Ukuran potongan maksimal 10 MB."
+                        : err.message || "Gagal menerima potongan file.";
+
+                return res.status(400).json({
+                    ok: false,
+                    message
+                });
+            }
+
+            next();
+        });
+    },
+    async (req, res) => {
+        const {
+            uploadId,
+            chunkIndex: indexRaw,
+            totalChunks: totalRaw
+        } = req.params;
+
+        const index = Number(indexRaw);
+        const totalChunks = Number(totalRaw);
+
+        if (!isValidUploadId(uploadId)) {
+            return res.status(400).json({
+                ok: false,
+                message: "ID upload tidak valid."
+            });
+        }
+
+        if (
+            !req.file ||
+            !Number.isInteger(totalChunks) ||
+            totalChunks < 1 ||
+            totalChunks > MAX_ATTACHMENT_CHUNKS ||
+            !Number.isInteger(index) ||
+            index < 0 ||
+            index >= totalChunks
+        ) {
+            return res.status(400).json({
+                ok: false,
+                message: "Data potongan upload tidak valid."
+            });
+        }
+
+        try {
+            const chunkDir = getChunkDirectory(uploadId);
+
+            await fs.promises.mkdir(chunkDir, {
+                recursive: true
+            });
+
+            const manifestPath = path.join(
+                chunkDir,
+                "manifest.json"
+            );
+
+            const manifest = {
+                owner: getUploadOwner(req),
+                totalChunks
+            };
+
+            try {
+                await fs.promises.writeFile(
+                    manifestPath,
+                    JSON.stringify(manifest),
+                    { flag: "wx" }
+                );
+            } catch (err) {
+                if (err.code !== "EEXIST") {
+                    throw err;
+                }
+
+                const isOwner = await verifyUploadOwner(
+                    req,
+                    uploadId,
+                    totalChunks
+                );
+
+                if (!isOwner) {
+                    return res.status(403).json({
+                        ok: false,
+                        message: "Upload ini bukan milik sesi kamu."
+                    });
+                }
+            }
+
+            await fs.promises.writeFile(
+                path.join(chunkDir, `${index}.part`),
+                req.file.buffer
+            );
+
+            return res.json({
+                ok: true,
+                data: {
+                    chunkIndex: index,
+                    totalChunks
+                }
+            });
+        } catch (err) {
+            console.error("Attachment chunk error:", err);
+
+            return res.status(500).json({
+                ok: false,
+                message: "Gagal menyimpan potongan file."
+            });
+        }
+    }
+);
+
+// ----------------------------------------------------------
+// GABUNGKAN POTONGAN MENJADI FILE UTUH
+// ----------------------------------------------------------
+
+router.post(
+    "/upload-attachment/complete",
+    requireAuth,
+    async (req, res) => {
+
+        const {
+            uploadId,
+            originalName,
+            totalChunks: totalRaw
+        } = req.body || {};
+
+        if (!isValidUploadId(uploadId)) {
+            return res.status(400).json({
+                ok: false,
+                message: "ID upload tidak valid."
+            });
+        }
+
+        const totalChunks = Number(totalRaw);
+
+        if (
+            !Number.isInteger(totalChunks) ||
+            totalChunks < 1 ||
+            totalChunks > MAX_ATTACHMENT_CHUNKS
+        ) {
+            return res.status(400).json({
+                ok: false,
+                message: "Jumlah potongan tidak valid."
+            });
+        }
+
+        const isOwner = await verifyUploadOwner(
+            req,
+            uploadId,
+            totalChunks
+        );
+
+        if (!isOwner) {
+            return res.status(403).json({
+                ok: false,
+                message: "Upload tidak ditemukan atau bukan milik sesi kamu."
+            });
+        }
+
+        if (
+            typeof originalName !== "string" ||
+            !originalName.trim() ||
+            originalName.length > 255
+        ) {
+            return res.status(400).json({
+                ok: false,
+                message: "Nama file tidak valid."
+            });
+        }
+
+        const extension = path.extname(originalName).toLowerCase();
+
+        if (![".pdf", ".exe", ".rar"].includes(extension)) {
+            return res.status(400).json({
+                ok: false,
+                message: "Format file hanya PDF, EXE, atau RAR."
+            });
+        }
+
+
+        const chunkDir = getChunkDirectory(uploadId);
+        const uploadDir = path.join(
+            process.cwd(),
+            "public",
+            "uploads",
+            "knowledge"
+        );
+
+        const filename = safeAttachmentFilename(
+            path.basename(originalName)
+        );
+
+        const outputPath = path.join(uploadDir, filename);
+
+        let totalSize = 0;
+        let outputCreated = false;
+
+        try {
+            // Pastikan semua potongan tersedia dan ukuran total aman.
+            for (let index = 0; index < totalChunks; index += 1) {
+                const chunkPath = path.join(
+                    chunkDir,
+                    `${index}.part`
+                );
+
+                let stat;
+
+                try {
+                    stat = await fs.promises.stat(chunkPath);
+                } catch {
+                    return res.status(400).json({
+                        ok: false,
+                        message: `Potongan ${index + 1} dari ${totalChunks} belum diterima.`
+                    });
+                }
+
+                if (!stat.isFile() || stat.size <= 0) {
+                    return res.status(400).json({
+                        ok: false,
+                        message: `Potongan ${index + 1} tidak valid.`
+                    });
+                }
+
+                // Setiap potongan selain potongan terakhir harus 10 MB.
+                if (
+                    index < totalChunks - 1 &&
+                    stat.size !== ATTACHMENT_CHUNK_SIZE
+                ) {
+                    return res.status(400).json({
+                        ok: false,
+                        message: `Ukuran potongan ${index + 1} tidak sesuai.`
+                    });
+                }
+
+                if (stat.size > ATTACHMENT_CHUNK_SIZE) {
+                    return res.status(400).json({
+                        ok: false,
+                        message: `Potongan ${index + 1} terlalu besar.`
+                    });
+                }
+
+                totalSize += stat.size;
+
+                if (totalSize > ATTACHMENT_MAX_SIZE) {
+                    await removeChunkDirectory(uploadId);
+
+                    return res.status(400).json({
+                        ok: false,
+                        message: "Ukuran materi maksimal 300 MB."
+                    });
+                }
+            }
+
+            if (totalSize <= 0) {
+                return res.status(400).json({
+                    ok: false,
+                    message: "File kosong tidak dapat diupload."
+                });
+            }
+
+            await fs.promises.mkdir(uploadDir, {
+                recursive: true
+            });
+
+            // "wx" mencegah file yang sudah ada tertimpa.
+            await fs.promises.writeFile(
+                outputPath,
+                Buffer.alloc(0),
+                { flag: "wx" }
+            );
+
+            outputCreated = true;
+
+            // Gabungkan satu potongan pada satu waktu.
+            for (let index = 0; index < totalChunks; index += 1) {
+                const chunkPath = path.join(
+                    chunkDir,
+                    `${index}.part`
+                );
+
+                const chunk = await fs.promises.readFile(chunkPath);
+
+                await fs.promises.appendFile(outputPath, chunk);
+            }
+
+            // Pastikan ukuran file hasil gabungan sesuai.
+            const finalStat = await fs.promises.stat(outputPath);
+
+            if (finalStat.size !== totalSize) {
+                throw new Error("Ukuran file hasil gabungan tidak sesuai.");
+            }
+
+            await removeChunkDirectory(uploadId);
+
+            return res.status(201).json({
+                ok: true,
+                data: {
+                    filename,
+                    originalName: path.basename(originalName),
+                    size: totalSize,
+                    url: `/uploads/knowledge/${filename}`
+                }
+            });
+        } catch (err) {
+            console.error("Attachment merge error:", err);
+
+            if (outputCreated) {
+                await fs.promises.unlink(outputPath).catch(() => {});
+            }
+
+            return res.status(500).json({
+                ok: false,
+                message: "Gagal menggabungkan potongan file di server."
+            });
+        }
+    }
+);
+
+// ----------------------------------------------------------
+// BATALKAN UPLOAD DAN HAPUS POTONGAN SEMENTARA
+// ----------------------------------------------------------
+
+router.post(
+    "/upload-attachment/cancel",
+    requireAuth,
+    async (req, res) => {
+        const { uploadId } = req.body || {};
+
+        if (!isValidUploadId(uploadId)) {
+            return res.status(400).json({
+                ok: false,
+                message: "ID upload tidak valid."
+            });
+        }
+
+        const isOwner = await verifyUploadOwner(
+            req,
+            uploadId,
+            null
+        );
+
+        if (!isOwner) {
+            return res.status(403).json({
+                ok: false,
+                message: "Upload tidak ditemukan atau bukan milik sesi kamu."
+            });
+        }
+
+        try {
+            await removeChunkDirectory(uploadId);
+
+            return res.json({
+                ok: true,
+                message: "Potongan upload dibersihkan."
+            });
+        } catch (err) {
+            console.error("Attachment cleanup error:", err);
+
+            return res.status(500).json({
+                ok: false,
+                message: "Gagal membersihkan potongan upload."
+            });
+        }
+    }
+);
+
 
 // ==========================================================
 // PUBLIC

@@ -228,7 +228,7 @@ const attachmentChunkDir = path.join(
 const uploadAttachmentChunk = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: ATTACHMENT_CHUNK_SIZE,
+        fileSize: ATTACHMENT_CHUNK_SIZE + 1024 * 1024,
         files: 1
     }
 });
@@ -382,7 +382,7 @@ router.post(
             if (err) {
                 const message =
                     err.code === "LIMIT_FILE_SIZE"
-                        ? "Ukuran potongan maksimal 10 MB."
+                        ? "DEBUG: MULTER_LIMIT_FILE_SIZE"
                         : err.message || "Gagal menerima potongan file.";
 
                 return res.status(400).json({
@@ -423,6 +423,13 @@ router.post(
             return res.status(400).json({
                 ok: false,
                 message: "Data potongan upload tidak valid."
+            });
+        }
+
+        if (req.file.size > ATTACHMENT_CHUNK_SIZE) {
+            return res.status(400).json({
+                ok: false,
+                message: "Ukuran potongan maksimal 10 MB."
             });
         }
 
